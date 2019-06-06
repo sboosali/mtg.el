@@ -55,10 +55,6 @@
 (declare-function eww-open-file "eww")
 
 ;;----------------------------------------------;;
-;; Macros --------------------------------------;;
-;;----------------------------------------------;;
-
-;;----------------------------------------------;;
 ;; Constants -----------------------------------;;
 ;;----------------------------------------------;;
 
@@ -71,6 +67,134 @@
 a `regexpp's.
 
 (Conforms to `auto-mode-alist'.)")
+
+;;----------------------------------------------;;
+
+(defconst mtg-block-separator-regexp
+
+  (rx "\n" (0+ (any " \t\n\f")) "\n")  ; "\n[\n\t\f ]*\n"
+
+  "Regular expression for matching block boundaries.")
+
+;;----------------------------------------------;;
+;; Macros: `rx' --------------------------------;;
+;;----------------------------------------------;;
+
+(eval-when-compile
+
+  ;;--------------------------;;
+
+  (defconst mtg-rx-constituents
+
+    `((block-start          . ,(rx symbol-start
+                                   (or "def" "class" "if" "elif" "else" "try"
+                                       "except" "finally" "for" "while" "with")
+                                   symbol-end))
+      (decorator            . ,(rx line-start (* space) ?@ (any letter ?_)
+                                   (* (any word ?_))))
+      (defun                . ,(rx symbol-start (or "def" "class") symbol-end))
+      (if-name-main         . ,(rx line-start "if" (+ space) "__name__"
+                                   (+ space) "==" (+ space)
+                                   (any ?' ?\") "__main__" (any ?' ?\")
+                                   (* space) ?:))
+      (symbol-name          . ,(rx (any letter ?_) (* (any word ?_))))
+      (open-paren           . ,(rx (or "{" "[" "(")))
+      (close-paren          . ,(rx (or "}" "]" ")")))
+      (simple-operator      . ,(rx (any ?+ ?- ?/ ?& ?^ ?~ ?| ?* ?< ?> ?= ?%)))
+      ;; FIXME: rx should support (not simple-operator).
+      (not-simple-operator  . ,(rx
+                                (not
+                                 (any ?+ ?- ?/ ?& ?^ ?~ ?| ?* ?< ?> ?= ?%))))
+      ;; FIXME: Use regexp-opt.
+      (operator             . ,(rx (or "+" "-" "/" "&" "^" "~" "|" "*" "<" ">"
+                                       "=" "%" "**" "//" "<<" ">>" "<=" "!="
+                                       "==" ">=" "is" "not")))
+      ;; FIXME: Use regexp-opt.
+      (assignment-operator  . ,(rx (or "=" "+=" "-=" "*=" "/=" "//=" "%=" "**="
+                                       ">>=" "<<=" "&=" "^=" "|=")))
+      (string-delimiter . ,(rx (and
+                                ;; Match even number of backslashes.
+                                (or (not (any ?\\ ?\' ?\")) point
+                                    ;; Quotes might be preceded by a escaped quote.
+                                    (and (or (not (any ?\\)) point) ?\\
+                                         (* ?\\ ?\\) (any ?\' ?\")))
+                                (* ?\\ ?\\)
+                                ;; Match single or triple quotes of any kind.
+                                (group (or  "\"" "\"\"\"" "'" "'''"))))))
+
+    "Additional Mtg specific sexps for `mtg-rx'")
+
+  ;;--------------------------;;
+
+  (defmacro mtg-rx (&rest regexps)
+
+    "`rx' extended with `mtg-mode' regexps.
+
+This variant of `rx' supports common mtg named REGEXPS."
+
+    ;; (declare (indent 1))    
+
+    (let ((rx-constituents (append mtg-rx-constituents rx-constituents))
+          )
+
+      (cond ((null regexps)
+             (error "No regexp"))
+
+            ((cdr regexps)
+             (rx-to-string `(and ,@regexps) t))
+
+            (t
+             (rx-to-string (car regexps) t))))))
+
+;;----------------------------------------------;;
+;;; Utilities ----------------------------------;;
+;;----------------------------------------------;;
+
+(defun mtg/regexp-opt (strings)
+
+  "Return a regular expression matching anything in STRINGS.
+
+Inputs:
+
+• STRINGS — a `listp' of `stringp's.
+
+Output:
+
+• a `regexp'.
+  Matches a syntactic symbol (see Info Node `(emacs) ') which is in STRINGS.
+
+Examples:
+
+• M-: (mtg/regexp-opt '(\"abc\" \"123\"))
+      \"\\_<\\(123\\|abc\\)\\_>\"
+
+Notes:
+
+• Boundaries are respected.
+  i.e. the output doesn't match substrings
+  within a word or symbol, only the entire string.
+
+Related:
+
+• Calls `regexp-opt'"
+
+  (let* ((STRINGS (identity strings))
+         )
+    (regexp-opt STRINGS 'symbols)))
+
+;; ^ e.g.:
+;;
+;; • M-: (mtg/regexp-opt '("def" "123"))
+;;     → "\\_<\\(123\\|def\\)\\_>"
+;;
+;; • M-: (if (string-match-p (mtg/regexp-opt '("def" "123")) "def") t nil)
+;;     → t
+;; • M-: (if (string-match-p (mtg/regexp-opt '("def" "123")) "abcdef") t nil)
+;;     → nil
+;; • M-: (if (string-match-p (mtg/regexp-opt '("def" "123")) "defghi") t nil)
+;;     → nil
+;;
+;; 
 
 ;;----------------------------------------------;;
 ;; Variables -----------------------------------;;
@@ -127,7 +251,7 @@ Links:
   :group 'mtg)
 
 ;;----------------------------------------------;;
-;; Accessors: Lists ----------------------------;;
+;; Accessors: `listp's -------------------------;;
 ;;----------------------------------------------;;
 
 (defun mtg-keywords ()
@@ -147,6 +271,387 @@ Links:
   (let* ()
 
     (concat mtg-keywords-list)))
+
+;;----------------------------------------------;;
+;; Accessors: `regexpp's -----------------------;;
+;;----------------------------------------------;;
+
+(defvar mtg-quotation-regexp
+
+  (rx (or ?“ ?\") (not (or ?“ ?” ?\")) (or ?” ?\"))
+
+  "Match 
+
+a `regexpp'.
+
+Examples:
+
+• Llanowar Mentor includes the following sentence in its rules text —
+  « Create a 1/1 green Elf Druid creature token named Llanowar Elves. It has “{T}: Add {G}.” ».")
+
+;;----------------------------------------------;;
+
+(defvar mtg-card-namesake-regexp
+
+  (rx (or (and word-start "~" word-end))
+          (and word-start (or ?t ?T) "his creature" word-end))
+
+  "Match namesakes of the current card.
+
+a `regexpp'.")
+
+;;----------------------------------------------;;
+
+(defvar mtg-card-name-reference-regexp
+
+  (mtg-rx word-start "named" word-end
+          mtg-card-name)
+
+  "Match-Maximally a reference to a known card name.
+
+a `regexpp'.")
+
+;;----------------------------------------------;;
+
+(defvar mtg-symbol-regexp
+
+  (rx "{" (group-n 1 (1+ (any "-" "@#$_&+/*:;!?" alnum))) "}")
+
+  "Match 
+
+a `regexpp'.
+
+See URL `https://mtg.gamepedia.com/Numbers_and_symbol'.")
+
+;;----------------------------------------------;;
+
+(defvar mtg-color-white-regexp
+
+  (rx word-start
+      (or (and (any "wW") "hite")
+          (and "{" (any "wW") "}")
+          "Plains")
+      word-end)
+
+  "Match a word/symbol associated with the color white.
+
+a `regexpp'.")
+
+;;----------------------------------------------;;
+
+(defvar mtg-color-blue-regexp
+
+  (rx word-start
+      (or (and (any "Uu") "blue")
+          (and "{" (any  "Uu") "}")
+          "Island")
+      word-end)
+
+  "Match a word/symbol associated with the color ue.
+
+a `regexpp'.")
+
+;;----------------------------------------------;;
+
+(defvar mtg-color-black-regexp
+
+  (rx word-start
+      (or (and (any "Bb") "black")
+          (and "{" (any  "Bb") "}")
+          "Swamp")
+      word-end)
+
+  "Match a word/symbol associated with the color black.
+
+a `regexpp'.")
+
+;;----------------------------------------------;;
+
+(defvar mtg-color-red-regexp
+
+  (rx word-start
+      (or (and (any "Rr") "red")
+          (and "{" (any  "Rr") "}")
+          "Mountain")
+      word-end)
+
+  "Match a word/symbol associated with the color red.
+
+a `regexpp'.")
+
+;;----------------------------------------------;;
+
+(defvar mtg-color-green-regexp
+
+  (rx word-start
+      (or (and (any "Gg") "green")
+          (and "{" (any  "Gg") "}")
+          "Forest")
+      word-end)
+
+  "Match a word/symbol associated with the color green.
+
+a `regexpp'.")
+
+;;----------------------------------------------;;
+;; Syntax --------------------------------------;;
+;;----------------------------------------------;;
+
+;;;###autoload
+(defvar mtg-mode-syntax-table
+
+  (let ((TABLE (make-syntax-table))
+        )
+
+    ;; « - » is punctuation (as an operator),
+    ;; but « -- » is a comment-starter:
+
+    (modify-syntax-entry ?- ". 123" TABLE)
+
+    ;; « \n » is a comment-ender:
+
+    (modify-syntax-entry ?\n ">" TABLE)
+
+    ;; Whitespace (i.e. spaces, tabs, newlines) is conventional:
+
+    (modify-syntax-entry ?\  " " TABLE)
+    (modify-syntax-entry ?\t " " TABLE)
+    ;; (see above for the Syntax Class of « \n »):
+
+    ;; Brackets (i.e. parens, curly braces, square braces):
+
+    (modify-syntax-entry ?\( "()"    TABLE)
+    (modify-syntax-entry ?\) ")("    TABLE)
+    (modify-syntax-entry ?\[ "(]"    TABLE)
+    (modify-syntax-entry ?\] ")["    TABLE)
+    (modify-syntax-entry ?\{ "(}1nb" TABLE) ; « "n" » means: Multi-Line Coments can be nested.
+    (modify-syntax-entry ?\} "){4nb" TABLE)
+
+    ;; Operator identifiers are like Haskell
+
+    (modify-syntax-entry ?~  "." TABLE)
+    (modify-syntax-entry ?!  "." TABLE)
+    (modify-syntax-entry ?@  "." TABLE)
+    (modify-syntax-entry ?\# "." TABLE)
+    (modify-syntax-entry ?$  "." TABLE)
+    (modify-syntax-entry ?%  "." TABLE)
+    (modify-syntax-entry ?^  "." TABLE)
+    (modify-syntax-entry ?&  "." TABLE)
+    (modify-syntax-entry ?*  "." TABLE)
+    ;; (see above for the Syntax Class of « - »)
+    (modify-syntax-entry ?=  "." TABLE) ; the equal sign is the definition operator.
+    (modify-syntax-entry ?+  "." TABLE)
+    (modify-syntax-entry ?,  "." TABLE) ; the comma is the delimiter within any bracket.
+    (modify-syntax-entry ?.  "." TABLE) ; the period is the record selection operator.
+    (modify-syntax-entry ?<  "." TABLE)
+    (modify-syntax-entry ?>  "." TABLE)
+    (modify-syntax-entry ?/  "." TABLE)
+    (modify-syntax-entry ?:  "." TABLE)
+    (modify-syntax-entry ?\? "." TABLE)
+    (modify-syntax-entry ?\\ "." TABLE) ; the backslash is the Lacks-Constraint type operator.
+    (modify-syntax-entry ?|  "." TABLE) ; the vertical bar is the record extension operator.
+
+    ;; « " » is a string delimiter:
+
+    (modify-syntax-entry ?\" "\"" TABLE)
+
+    ;; Identifiers can have apostrophes and underscores (like Haskell)
+    ;; (« _ » is the “Symbol” Syntax Class):
+
+    (modify-syntax-entry ?\' "_" TABLE)
+    (modify-syntax-entry ?\_ "_" TABLE)
+
+    ;; Identifiers can have (uppercase or lowercase) letters
+    ;: and digits (like Haskell).
+    ;; (« w » is the “Word” Syntax Class):
+
+    (modify-syntax-entry ?0 "w" TABLE)  ; digits...
+    (modify-syntax-entry ?1 "w" TABLE)
+    (modify-syntax-entry ?2 "w" TABLE)
+    (modify-syntax-entry ?3 "w" TABLE)
+    (modify-syntax-entry ?4 "w" TABLE)
+    (modify-syntax-entry ?5 "w" TABLE)
+    (modify-syntax-entry ?6 "w" TABLE)
+    (modify-syntax-entry ?7 "w" TABLE)
+    (modify-syntax-entry ?8 "w" TABLE)
+    (modify-syntax-entry ?9 "w" TABLE)
+    (modify-syntax-entry ?a "w" TABLE)  ; letters...
+    (modify-syntax-entry ?A "w" TABLE)
+    (modify-syntax-entry ?b "w" TABLE)
+    (modify-syntax-entry ?B "w" TABLE)
+    (modify-syntax-entry ?c "w" TABLE)
+    (modify-syntax-entry ?C "w" TABLE)
+    (modify-syntax-entry ?d "w" TABLE)
+    (modify-syntax-entry ?D "w" TABLE)
+    (modify-syntax-entry ?e "w" TABLE)
+    (modify-syntax-entry ?E "w" TABLE)
+    (modify-syntax-entry ?f "w" TABLE)
+    (modify-syntax-entry ?F "w" TABLE)
+    (modify-syntax-entry ?g "w" TABLE)
+    (modify-syntax-entry ?G "w" TABLE)
+    (modify-syntax-entry ?h "w" TABLE)
+    (modify-syntax-entry ?H "w" TABLE)
+    (modify-syntax-entry ?i "w" TABLE)
+    (modify-syntax-entry ?I "w" TABLE)
+    (modify-syntax-entry ?j "w" TABLE)
+    (modify-syntax-entry ?J "w" TABLE)
+    (modify-syntax-entry ?k "w" TABLE)
+    (modify-syntax-entry ?K "w" TABLE)
+    (modify-syntax-entry ?l "w" TABLE)
+    (modify-syntax-entry ?L "w" TABLE)
+    (modify-syntax-entry ?m "w" TABLE)
+    (modify-syntax-entry ?M "w" TABLE)
+    (modify-syntax-entry ?n "w" TABLE)
+    (modify-syntax-entry ?N "w" TABLE)
+    (modify-syntax-entry ?o "w" TABLE)
+    (modify-syntax-entry ?O "w" TABLE)
+    (modify-syntax-entry ?p "w" TABLE)
+    (modify-syntax-entry ?P "w" TABLE)
+    (modify-syntax-entry ?q "w" TABLE)
+    (modify-syntax-entry ?Q "w" TABLE)
+    (modify-syntax-entry ?r "w" TABLE)
+    (modify-syntax-entry ?R "w" TABLE)
+    (modify-syntax-entry ?s "w" TABLE)
+    (modify-syntax-entry ?S "w" TABLE)
+    (modify-syntax-entry ?t "w" TABLE)
+    (modify-syntax-entry ?T "w" TABLE)
+    (modify-syntax-entry ?u "w" TABLE)
+    (modify-syntax-entry ?U "w" TABLE)
+    (modify-syntax-entry ?v "w" TABLE)
+    (modify-syntax-entry ?V "w" TABLE)
+    (modify-syntax-entry ?w "w" TABLE)
+    (modify-syntax-entry ?W "w" TABLE)
+    (modify-syntax-entry ?x "w" TABLE)
+    (modify-syntax-entry ?X "w" TABLE)
+    (modify-syntax-entry ?y "w" TABLE)
+    (modify-syntax-entry ?Y "w" TABLE)
+    (modify-syntax-entry ?z "w" TABLE)
+    (modify-syntax-entry ?Z "w" TABLE)
+
+    TABLE)
+
+  "Mtg Mode's `syntax-table-p'.
+
+For example, the hyphen character (i.e. « - ») in Mtg Mode plays several roles:
+
+• a punctuation character (« - ») — e.g. `(2 - 3)` or `(xs --. y)`.
+• the characters of a (single-line) *start-of-comment* sequence (« -- ») — e.g. « -- ... ».
+• the second character of a (multi-line) *start-of-comment* sequence (« {- ») — e.g. « {- ... ».
+• the first character of a (multi-line) *end-of-comment* sequence (« -} ») — e.g. « ... -} ».
+
+These roles (punctuation and single-line comment and multi-line comment) are represented by this Syntax Entry:
+
+    (modify-syntax-entry ?- \". 123\" `mtg-mode-syntax-table')")
+
+;;==============================================;;
+;; Paragraphs:
+
+(defcustom mtg-paragraph-start
+
+  (concat " *{-\\| *-- |\\|" page-delimiter)
+
+  "`paragraph-start' for `mtg-mode'."
+
+  :type '(regexp)
+  :safe #'stringp
+  :group 'mtg)
+
+;;----------------------------;;
+
+(defcustom mtg-paragraph-separate
+
+  (concat " *$\\| *\\({-\\|-}\\) *$\\|" page-delimiter)
+
+  "`paragraph-separate' for `mtg-mode'."
+
+  :type '(regexp)
+  :safe #'stringp
+  :group 'mtg)
+
+;;==============================================;;
+;; Accessors:
+
+(defsubst mtg-syntax-within-comment-p (&optional position)
+
+  "Return non-nil if POSITION is within a comment.
+
+Inputs:
+
+• POSITION — a `number-or-marker-p'.
+  Defaults to `point'."
+
+  (nth 4 (syntax-ppss position)))
+
+;;----------------------------------------------;;
+;; Comments ------------------------------------;;
+;;----------------------------------------------;;
+
+(defcustom mtg-comment-start "-- "
+
+  "`comment-start' for `mtg-mode'."
+
+  :type '(regexp)
+  :safe #'stringp
+  :group 'mtg)
+
+;;----------------------------;;
+
+(defcustom mtg-comment-start-skip
+
+  (rx (or "--" "{-" (syntax comment-start)) (0+ blank))
+
+  "`comment-start-skip' for `mtg-mode'."
+
+  :type '(regexp)
+  :safe #'stringp
+  :group 'mtg)
+
+;;----------------------------------------------;;
+
+(defcustom mtg-comment-padding 0
+
+  "`comment-padding' for `mtg-mode'."
+
+  :type '(choice (string  :tag "Padding (string)          ")
+                 (integer :tag "Padding (number of spaces)"))
+  :safe t
+  :group 'mtg)
+
+;;----------------------------------------------;;
+
+(defcustom mtg-comment-end
+
+  ""
+
+  "`comment-end' for `mtg-mode'."
+
+  :type '(regexp)
+  :safe #'stringp
+  :group 'mtg)
+
+;;----------------------------;;
+
+(defcustom mtg-comment-end-skip
+
+  "\\(-}\\|\\s>\\)"
+
+  (rx (0+ blank) (or "-}" (syntax comment-end)))
+
+  "`comment-end-skip' for `mtg-mode'."
+
+  :type '(regexp)
+  :safe #'stringp
+  :group 'mtg)
+
+;;----------------------------------------------;;
+
+(defcustom mtg-comment-column 40
+
+  "`comment-columnt' for `mtg-mode'."
+
+  :type '(integer :tag "Column")
+  :safe #'integerp
+  :group 'mtg)
 
 ;;----------------------------------------------;;
 ;; Hooks ---------------------------------------;;
@@ -398,6 +903,45 @@ Customize:
 
   "Image Specification for “{2}”, the Generic Two-Mana Symbol.")
 
+;;==============================================;;
+
+(defun mtg-toggle-inline-images (&optional force)
+
+  "Display Image URIs inline as Images.
+
+Inputs:
+
+ • FORCE — an optional `numberp'.
+  the Prefix-Argument.
+  Values:
+      ° positive — enable.
+      ° `zerop' or `nil' — toggle. the default.
+      ° negative — disable.
+
+Effects:
+
+• Toggles `iimage-mode'."
+
+  (interactive "P")
+
+  (let* ((FORCE (cond
+                 ((or (not force) (zerop force)) 'toggle)
+                 ((> force 0) 'enable)
+                 ((< force 0) 'disable)))
+         )
+
+    (save-excursion
+
+      (goto-point (point-min))
+
+      (pcase FORCE
+        ('toggle (iimage-mode))
+        ('enable (turn-on-iimage-mode))
+        ('disable (turn-off-iimage-mode))
+        (_ nil))
+
+      ())))
+
 ;;----------------------------------------------;;
 ;; Font Lock -----------------------------------;;
 ;;----------------------------------------------;;
@@ -444,250 +988,56 @@ a.k.a. “Keyword-based Syntax-Highlighting”).")
   "`font-lock-defaults' for `mtg-mode'.")
 
 ;;----------------------------------------------;;
-;; Syntax --------------------------------------;;
+;; Movement ------------------------------------;;
 ;;----------------------------------------------;;
 
-;;;###autoload
-(defvar mtg-mode-syntax-table
+(put 'mtg-card-name 'forward-op
 
-  (let ((TABLE (make-syntax-table))
-        )
+     (defun mtg-forward-card-name (&optional count)
 
-    ;; « - » is punctuation (as an operator),
-    ;; but « -- » is a comment-starter:
+       "Move across MTG Card Names.
 
-    (modify-syntax-entry ?- ". 123" TABLE)
+Inputs:
 
-    ;; « \n » is a comment-ender:
+ • COUNT — an optional `numberp'.
+  the Prefix-Argument. 
+  If:
 
-    (modify-syntax-entry ?\n ">" TABLE)
+      ° positive — Move forwards to (the end of) the next card name.
+      ° negative — Move backwards to (the end of) the prior card name.
 
-    ;; Whitespace (i.e. spaces, tabs, newlines) is conventional:
+Effects:
 
-    (modify-syntax-entry ?\  " " TABLE)
-    (modify-syntax-entry ?\t " " TABLE)
-    ;; (see above for the Syntax Class of « \n »):
+• Moves `point'.
 
-    ;; Brackets (i.e. parens, curly braces, square braces):
+Metadata:
 
-    (modify-syntax-entry ?\( "()"    TABLE)
-    (modify-syntax-entry ?\) ")("    TABLE)
-    (modify-syntax-entry ?\[ "(]"    TABLE)
-    (modify-syntax-entry ?\] ")["    TABLE)
-    (modify-syntax-entry ?\{ "(}1nb" TABLE) ; « "n" » means: Multi-Line Coments can be nested.
-    (modify-syntax-entry ?\} "){4nb" TABLE)
+• Implements the property `forward-op'
+  for the “thing” symbol `mtg-card-name'.
 
-    ;; Operator identifiers are like Haskell
+Examples:
 
-    (modify-syntax-entry ?~  "." TABLE)
-    (modify-syntax-entry ?!  "." TABLE)
-    (modify-syntax-entry ?@  "." TABLE)
-    (modify-syntax-entry ?\# "." TABLE)
-    (modify-syntax-entry ?$  "." TABLE)
-    (modify-syntax-entry ?%  "." TABLE)
-    (modify-syntax-entry ?^  "." TABLE)
-    (modify-syntax-entry ?&  "." TABLE)
-    (modify-syntax-entry ?*  "." TABLE)
-    ;; (see above for the Syntax Class of « - »)
-    (modify-syntax-entry ?=  "." TABLE) ; the equal sign is the definition operator.
-    (modify-syntax-entry ?+  "." TABLE)
-    (modify-syntax-entry ?,  "." TABLE) ; the comma is the delimiter within any bracket.
-    (modify-syntax-entry ?.  "." TABLE) ; the period is the record selection operator.
-    (modify-syntax-entry ?<  "." TABLE)
-    (modify-syntax-entry ?>  "." TABLE)
-    (modify-syntax-entry ?/  "." TABLE)
-    (modify-syntax-entry ?:  "." TABLE)
-    (modify-syntax-entry ?\? "." TABLE)
-    (modify-syntax-entry ?\\ "." TABLE) ; the backslash is the Lacks-Constraint type operator.
-    (modify-syntax-entry ?|  "." TABLE) ; the vertical bar is the record extension operator.
+• M-: (thing-at-point 'mtg-card-name)
 
-    ;; « " » is a string delimiter:
+Notes:
 
-    (modify-syntax-entry ?\" "\"" TABLE)
+• Card Names:
 
-    ;; Identifiers can have apostrophes and underscores (like Haskell)
-    ;; (« _ » is the “Symbol” Syntax Class):
+    ° May have commas and/or `downcase'd words.
+    ° Must end with (and should start with) a `capitalize'd word."
 
-    (modify-syntax-entry ?\' "_" TABLE)
-    (modify-syntax-entry ?\_ "_" TABLE)
+       (interactive "P")
 
-    ;; Identifiers can have (uppercase or lowercase) letters
-    ;: and digits (like Haskell).
-    ;; (« w » is the “Word” Syntax Class):
+       (let* ((COUNT (or count +1))
+              )
 
-    (modify-syntax-entry ?0 "w" TABLE)  ; digits...
-    (modify-syntax-entry ?1 "w" TABLE)
-    (modify-syntax-entry ?2 "w" TABLE)
-    (modify-syntax-entry ?3 "w" TABLE)
-    (modify-syntax-entry ?4 "w" TABLE)
-    (modify-syntax-entry ?5 "w" TABLE)
-    (modify-syntax-entry ?6 "w" TABLE)
-    (modify-syntax-entry ?7 "w" TABLE)
-    (modify-syntax-entry ?8 "w" TABLE)
-    (modify-syntax-entry ?9 "w" TABLE)
-    (modify-syntax-entry ?a "w" TABLE)  ; letters...
-    (modify-syntax-entry ?A "w" TABLE)
-    (modify-syntax-entry ?b "w" TABLE)
-    (modify-syntax-entry ?B "w" TABLE)
-    (modify-syntax-entry ?c "w" TABLE)
-    (modify-syntax-entry ?C "w" TABLE)
-    (modify-syntax-entry ?d "w" TABLE)
-    (modify-syntax-entry ?D "w" TABLE)
-    (modify-syntax-entry ?e "w" TABLE)
-    (modify-syntax-entry ?E "w" TABLE)
-    (modify-syntax-entry ?f "w" TABLE)
-    (modify-syntax-entry ?F "w" TABLE)
-    (modify-syntax-entry ?g "w" TABLE)
-    (modify-syntax-entry ?G "w" TABLE)
-    (modify-syntax-entry ?h "w" TABLE)
-    (modify-syntax-entry ?H "w" TABLE)
-    (modify-syntax-entry ?i "w" TABLE)
-    (modify-syntax-entry ?I "w" TABLE)
-    (modify-syntax-entry ?j "w" TABLE)
-    (modify-syntax-entry ?J "w" TABLE)
-    (modify-syntax-entry ?k "w" TABLE)
-    (modify-syntax-entry ?K "w" TABLE)
-    (modify-syntax-entry ?l "w" TABLE)
-    (modify-syntax-entry ?L "w" TABLE)
-    (modify-syntax-entry ?m "w" TABLE)
-    (modify-syntax-entry ?M "w" TABLE)
-    (modify-syntax-entry ?n "w" TABLE)
-    (modify-syntax-entry ?N "w" TABLE)
-    (modify-syntax-entry ?o "w" TABLE)
-    (modify-syntax-entry ?O "w" TABLE)
-    (modify-syntax-entry ?p "w" TABLE)
-    (modify-syntax-entry ?P "w" TABLE)
-    (modify-syntax-entry ?q "w" TABLE)
-    (modify-syntax-entry ?Q "w" TABLE)
-    (modify-syntax-entry ?r "w" TABLE)
-    (modify-syntax-entry ?R "w" TABLE)
-    (modify-syntax-entry ?s "w" TABLE)
-    (modify-syntax-entry ?S "w" TABLE)
-    (modify-syntax-entry ?t "w" TABLE)
-    (modify-syntax-entry ?T "w" TABLE)
-    (modify-syntax-entry ?u "w" TABLE)
-    (modify-syntax-entry ?U "w" TABLE)
-    (modify-syntax-entry ?v "w" TABLE)
-    (modify-syntax-entry ?V "w" TABLE)
-    (modify-syntax-entry ?w "w" TABLE)
-    (modify-syntax-entry ?W "w" TABLE)
-    (modify-syntax-entry ?x "w" TABLE)
-    (modify-syntax-entry ?X "w" TABLE)
-    (modify-syntax-entry ?y "w" TABLE)
-    (modify-syntax-entry ?Y "w" TABLE)
-    (modify-syntax-entry ?z "w" TABLE)
-    (modify-syntax-entry ?Z "w" TABLE)
+         ())))
 
-    TABLE)
-
-  "Mtg Mode's `syntax-table-p'.
-
-For example, the hyphen character (i.e. « - ») in Mtg Mode plays several roles:
-
-• a punctuation character (« - ») — e.g. `(2 - 3)` or `(xs --. y)`.
-• the characters of a (single-line) *start-of-comment* sequence (« -- ») — e.g. « -- ... ».
-• the second character of a (multi-line) *start-of-comment* sequence (« {- ») — e.g. « {- ... ».
-• the first character of a (multi-line) *end-of-comment* sequence (« -} ») — e.g. « ... -} ».
-
-These roles (punctuation and single-line comment and multi-line comment) are represented by this Syntax Entry:
-
-    (modify-syntax-entry ?- \". 123\" `mtg-mode-syntax-table')")
-
-;;----------------------------------------------;;
-;; Paragraphs:
-
-(defcustom mtg-paragraph-start
-
-  (concat " *{-\\| *-- |\\|" page-delimiter)
-
-  "`paragraph-start' for `mtg-mode'."
-
-  :type '(regexp)
-  :safe #'stringp
-  :group 'mtg)
-
-;;----------------------------;;
-
-(defcustom mtg-paragraph-separate
-
-  (concat " *$\\| *\\({-\\|-}\\) *$\\|" page-delimiter)
-
-  "`paragraph-separate' for `mtg-mode'."
-
-  :type '(regexp)
-  :safe #'stringp
-  :group 'mtg)
-
-;;----------------------------------------------;;
-;; Comments ------------------------------------;;
-;;----------------------------------------------;;
-
-(defcustom mtg-comment-start "-- "
-
-  "`comment-start' for `mtg-mode'."
-
-  :type '(regexp)
-  :safe #'stringp
-  :group 'mtg)
-
-;;----------------------------;;
-
-(defcustom mtg-comment-start-skip
-
-  (rx (or "--" "{-" (syntax comment-start)) (0+ blank))
-
-  "`comment-start-skip' for `mtg-mode'."
-
-  :type '(regexp)
-  :safe #'stringp
-  :group 'mtg)
-
-;;----------------------------------------------;;
-
-(defcustom mtg-comment-padding 0
-
-  "`comment-padding' for `mtg-mode'."
-
-  :type '(choice (string  :tag "Padding (string)          ")
-                 (integer :tag "Padding (number of spaces)"))
-  :safe t
-  :group 'mtg)
-
-;;----------------------------------------------;;
-
-(defcustom mtg-comment-end
-
-  ""
-
-  "`comment-end' for `mtg-mode'."
-
-  :type '(regexp)
-  :safe #'stringp
-  :group 'mtg)
-
-;;----------------------------;;
-
-(defcustom mtg-comment-end-skip
-
-  "\\(-}\\|\\s>\\)"
-
-  (rx (0+ blank) (or "-}" (syntax comment-end)))
-
-  "`comment-end-skip' for `mtg-mode'."
-
-  :type '(regexp)
-  :safe #'stringp
-  :group 'mtg)
-
-;;----------------------------------------------;;
-
-(defcustom mtg-comment-column 40
-
-  "`comment-columnt' for `mtg-mode'."
-
-  :type '(integer :tag "Column")
-  :safe #'integerp
-  :group 'mtg)
+;; ^ Notes:
+;;
+;; • « (put '_ 'forward-op #'_) » registers a “Thing” for `thingatpt'.
+;;
+;; • 
 
 ;;----------------------------------------------;;
 ;; Completion ----------------------------------;;
@@ -840,7 +1190,20 @@ its current bindings are:
 
 ;;----------------------------------------------;;
 
-(define-prefix-command 'mtg-mode-map nil "🍵 Mtg")
+(define-prefix-command 'mtg-mode-map nil "🂠 MTG")
+
+;;----------------------------------------------;;
+
+(defvar markdown-mode-mouse-map
+
+  (let ((KEYMAP (make-sparse-keymap)))
+
+    (define-key KEYMAP [follow-link] #'mouse-face)
+    (define-key KEYMAP [mouse-2]     #'markdown-follow-link-at-point)
+
+    KEYMAP)
+
+  "Keymap for following links with mouse.")
 
 ;;----------------------------------------------;;
 ;; Menu ----------------------------------------;;
@@ -869,18 +1232,10 @@ its current bindings are:
 ;; Mode ----------------------------------------;;
 ;;----------------------------------------------;;
 
-(define-derived-mode mtg-mode prog-mode "Mtg"
+;;;###autoload
+(define-derived-mode mtg-mode text-mode "MTG Cards"
 
-  "Major mode for editing Mtg files.
-
-Mtg is a (lightweight) records-based expression language. 
-From the language's homepage at URL `https://github.com/willtim/Mtg#readme':
-
-“Mtg is a minimal statically-typed functional programming
- language, designed with embedding and/or extensibility in mind.
- Possible use cases for such a minimal language include configuration
- (à la Nix), data exchange (à la JSON) or even a starting point for a
- custom external DSL.”
+  "Major mode for editing Magic cards.
 
 ========================================
 = Configuration ========================
@@ -996,6 +1351,10 @@ Call `mtg-program-version' to get the version of the currently-registered comman
 
     (setq-local imenu-create-index-function #'mtg-ds-create-imenu-index)
 
+    ;; Flyspell:
+
+    ;;(setq-local flyspell-generic-check-word-predicate #'mtg-flyspell-check-word-p)
+
     ;; Effects:
 
     (font-lock-fontify-buffer)
@@ -1039,7 +1398,7 @@ Output:
         )
 
    (when ECHO-VERSION?
-     (message "« mtg » program version: %s" ROGRAM-VERSION))
+     (message "« mtg » program version: %s" PROGRAM-VERSION))
 
    PROGRAM-VERSION))
 
@@ -1080,55 +1439,7 @@ Related:
     ()))
 
 ;;----------------------------------------------;;
-;;; Utilities ----------------------------------;;
-;;----------------------------------------------;;
-
-(defun mtg/regexp-opt (strings)
-
-  "Return a regular expression matching anything in STRINGS.
-
-Inputs:
-
-• STRINGS — a `listp' of `stringp's.
-
-Output:
-
-• a `regexp'.
-  Matches a syntactic symbol (see Info Node `(emacs) ') which is in STRINGS.
-
-Examples:
-
-• M-: (mtg/regexp-opt '(\"abc\" \"123\"))
-      \"\\_<\\(123\\|abc\\)\\_>\"
-
-Notes:
-
-• Boundaries are respected.
-  i.e. the output doesn't match substrings
-  within a word or symbol, only the entire string.
-
-Related:
-
-• Calls `regexp-opt'"
-
-  (let* ((STRINGS (identity strings))
-         )
-    (regexp-opt STRINGS 'symbols)))
-
-;; ^ e.g.:
-;;
-;; • M-: (mtg/regexp-opt '("def" "123"))
-;;     → "\\_<\\(123\\|def\\)\\_>"
-;;
-;; • M-: (if (string-match-p (mtg/regexp-opt '("def" "123")) "def") t nil)
-;;     → t
-;; • M-: (if (string-match-p (mtg/regexp-opt '("def" "123")) "abcdef") t nil)
-;;     → nil
-;; • M-: (if (string-match-p (mtg/regexp-opt '("def" "123")) "defghi") t nil)
-;;     → nil
-;;
-;; 
-
+;; Utilities -----------------------------------;;
 ;;----------------------------------------------;;
 
 (defun mtg/fontify-text (text regexp &rest faces)
