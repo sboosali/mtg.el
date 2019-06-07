@@ -1,9 +1,9 @@
-;;; mtg-helm.el --- -*- coding: utf-8; lexical-binding: t -*-
+;;; mtg-search.el --- -*- coding: utf-8; lexical-binding: t -*-
 
 ;; Copyright © 2019 Spiros Boosalis
 
 ;; Version: 0.0.0
-;; Package-Requires: ((emacs "25") seq pcase)
+;; Package-Requires: ((emacs "25"))
 ;; Author:  Spiros Boosalis <samboosalis@gmail.com>
 ;; Homepage: https://github.com/sboosali/mtg.el
 ;; Keywords: local
@@ -27,11 +27,8 @@
 
 ;;; Commentary:
 
-;; Helm Integration for MTG.
+;; .
 ;; 
-;; • `helm' source for `mtg-read-card'.
-;; • 
-;;
 ;; 
 
 ;;; Code:
@@ -52,40 +49,29 @@
   (require 'seq)
   (require 'cl-lib))
 
-;;==============================================;;
-
-;; project:
-
-(require 'mtg)
-
-;;----------------------------------------------;;
-;; Types ---------------------------------------;;
-;;----------------------------------------------;;
-
 ;;----------------------------------------------;;
 ;; Variables -----------------------------------;;
 ;;----------------------------------------------;;
 
-;;----------------------------------------------;;
-;; Functions -----------------------------------;;
-;;----------------------------------------------;;
+(defcustom mtg-max-length-of-card-name
 
-;;----------------------------------------------;;
-;; Commands ------------------------------------;;
-;;----------------------------------------------;;
+  0
 
-;;----------------------------------------------;;
-;; Utilities -----------------------------------;;
-;;----------------------------------------------;;
+  "The maximum length among card names.
+
+Used for vertically-aligning annotations (among other uses). 
+
+(a natural.)"
+
+  :type '(choice (const nil :tag "Unknown")
+                 (integer :tag "Natural"))
+
+  :safe #'integerp
+  :group 'mtg)
 
 ;;----------------------------------------------;;
 ;; Notes ---------------------------------------;;
 ;;----------------------------------------------;;
-
-;; Feature `helm-buffers':
-;; 
-;; • URL `https://github.com/emacs-helm/helm/wiki/Developing#creating-a-source'
-;;
 
 ;; 
 ;;
@@ -95,6 +81,6 @@
 ;; EOF -----------------------------------------;;
 ;;----------------------------------------------;;
 
-(provide 'mtg-helm)
+(provide 'mtg-search)
 
-;;; mtg-helm.el ends here
+;;; mtg-search.el ends here

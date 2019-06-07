@@ -1,0 +1,76 @@
+==============================================
+
+(defcustom mtg-language-list
+
+  '(
+    )
+
+  "Language names.
+
+`listp' of `symbolp's.
+
+Languages into which cards have been translated."
+
+  :type '(repeat (symbol :tag "Language Name"))
+
+  :safe #'listp
+  :group 'mtg)
+
+;;----------------------------------------------;;
+
+(defcustom mtg-language-alist
+
+  (list (mtg-language-create :language ' :abbreviation ')
+        (mtg-language-create :language ' :abbreviation ')
+        )
+
+  "Language metadata (abbreviations and endonyms).
+
+`listp' of `mtg-language-p's:
+
+• each ‘:language’ should be in `mtg-language-list'."
+
+  :type '(repeat (symbol :tag "Language Info"))
+
+  :safe #'listp
+  :group 'mtg)
+
+==============================================
+
+;; Package-Requires: ((emacs "25") (json "1.4"))
+
+;;----------------------------------------------;;
+
+(cl-defun make-mtg-symbol (&key symbol abbreviation (image nil) (char nil))
+
+  "Make an `mtg-symbol'. 
+
+A Smart Constructor — validation & defaulting.
+
+Inputs:
+
+• SYMBOL       — a `symbolp'.
+• ABBREVIATION — a `symbolp'.
+• IMAGE        — an optional `imagep', or `symbolp' thereof.
+• CHAR         — an optional `characterp', or `symbolp' thereof.
+
+Examples:
+
+• M-: (make-mtg-symbol :symbol 'blue-mana :abbreviation 'u :char ?🌢)
+   ⇒ #s(mtg-symbol blue-mana u nil 127778)"
+
+  (let* ((SYMBOL       symbol)
+         (ABBREVIATION abbreviation)
+         (IMAGE        image)
+         (CHAR         char)
+         )
+
+  (mtg-symbol-create :symbol       SYMBOL
+                     :abbreviation ABBREVIATION
+                     :image        IMAGE
+                     :char         CHAR)))
+
+==============================================
+
+
+==============================================

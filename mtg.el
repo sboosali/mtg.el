@@ -1,9 +1,9 @@
-;;; mtg-helm.el --- -*- coding: utf-8; lexical-binding: t -*-
+;;; mtg.el --- -*- coding: utf-8; lexical-binding: t -*-
 
 ;; Copyright © 2019 Spiros Boosalis
 
 ;; Version: 0.0.0
-;; Package-Requires: ((emacs "25") seq pcase)
+;; Package-Requires: ((emacs "25"))
 ;; Author:  Spiros Boosalis <samboosalis@gmail.com>
 ;; Homepage: https://github.com/sboosali/mtg.el
 ;; Keywords: local
@@ -27,11 +27,17 @@
 
 ;;; Commentary:
 
-;; Helm Integration for MTG.
 ;; 
-;; • `helm' source for `mtg-read-card'.
+;; 
+;; Features include:
+;; 
+;; • Completion for writing custom “Magic: The Gathering” cards.
 ;; • 
-;;
+;; • 
+;; • 
+;; • 
+;; • 
+;; • 
 ;; 
 
 ;;; Code:
@@ -40,52 +46,24 @@
 ;; Imports -------------------------------------;;
 ;;----------------------------------------------;;
 
-;; builtins:
-
-(eval-when-compile
-  (require 'rx)
-  (require 'pcase))
-
-;;----------------------------------------------;;
+;; builtin requirements:
 
 (progn
-  (require 'seq)
   (require 'cl-lib))
 
 ;;==============================================;;
 
-;; project:
+;; project requirements:
 
-(require 'mtg)
-
-;;----------------------------------------------;;
-;; Types ---------------------------------------;;
-;;----------------------------------------------;;
-
-;;----------------------------------------------;;
-;; Variables -----------------------------------;;
-;;----------------------------------------------;;
-
-;;----------------------------------------------;;
-;; Functions -----------------------------------;;
-;;----------------------------------------------;;
-
-;;----------------------------------------------;;
-;; Commands ------------------------------------;;
-;;----------------------------------------------;;
-
-;;----------------------------------------------;;
-;; Utilities -----------------------------------;;
-;;----------------------------------------------;;
+(progn
+  (require 'mtg-types)
+  (require 'mtg-images)
+  (require 'mtg-search)
+  (require 'mtg-mode))
 
 ;;----------------------------------------------;;
 ;; Notes ---------------------------------------;;
 ;;----------------------------------------------;;
-
-;; Feature `helm-buffers':
-;; 
-;; • URL `https://github.com/emacs-helm/helm/wiki/Developing#creating-a-source'
-;;
 
 ;; 
 ;;
@@ -95,6 +73,6 @@
 ;; EOF -----------------------------------------;;
 ;;----------------------------------------------;;
 
-(provide 'mtg-helm)
+(provide 'mtg)
 
-;;; mtg-helm.el ends here
+;;; mtg.el ends here
