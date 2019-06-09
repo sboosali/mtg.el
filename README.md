@@ -1,13 +1,15 @@
-# `mtg-mode.el`
+# `mtg.el`
 
-`mtg-mode` is a *Major Mode* for rendering and editing Magic the Gathering cards.
+## `mtg-mode.el`
 
-## Features
+`mtg-mode` is a *Major Mode* for rendering and editing *Magic: the Gathering* cards.
+
+### Features
 
 * Prettify symbols — e.g. `{2}{U}` as *②💧* (via `prettify-symbols-mode`).
 * Docs (via `eldoc-mode`).
 
-## Prettify Symbols
+### Prettify Symbols
 
 Render symbols either:
 
@@ -37,11 +39,55 @@ e.g. Register a custom symbol and its display image:
 (add-to-list 'mtg-prettify-symbols-images-alist '("U/H" . ""))
 ```
 
+## `mtg-company.el`
+
+`mtg-company` is a *Company Backend* for completing *Magic: the Gathering* card names.
+
+## Files
+
+### Release Files
+
+The tarball (`mtg.tar.gz`) includes these files:
+
+* `./lisp/mtg-*.el[.gz]` — the *Code*.
+
+* `./json/*.json[.gz]` — the *Data*.
+
+e.g. Re-Install `Vintage.json.gz`:
+
+``` elisp
+$ (cd ./json && wget https://mtgjson.com/json/Vintage.json.gz)
+```
+
+e.g. Check the size of `Vintage.json.gz`:
+
+``` elisp
+$ du -h ./json
+
+  45M ./json/Vintage.json.gz
+```
+
+*NOTE* `Vintage.json.gz` is version-controlled & distributed, `Vintage.json` isn't:
+
+``` elisp
+$ mkdir ./tmp && cd ./tmp && cp ../json/Vintage.json.gz . && uncompress ./tmp/*.json.gz)
+
+$ du -h ./tmp
+
+  261M ./tmp/Vintage.json.gz
+```
+
+### Development Files
+
+*Build Files* include:
+
+* `Makefile`
+* `Cask`
+
 ## Links
 
-* <>
-* <>
-* <>
+* <https://github.com/sboosali/mtg.el>
+* <https://mtgjson.com/downloads/compiled/>
 
 ## Notes
 
@@ -52,15 +98,21 @@ e.g. Register a custom symbol and its display image:
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
 # `mtg-mode.el`
 
 `mtg-mode` is a *Major Mode* for rendering and editing Magic the Gathering cards.
-
-## Links
-
-* <https://github.com/sboosali/mtg.el>
-* <>
-* <>
 
 ## Features
 

@@ -1,11 +1,16 @@
-# Compiled
+# sboosali:
+
+tmp/
+
+# Compiled:
+
 *.elc
 
-# Packaging
+# Packaging:
+
 .cask
 
-# Backup files
+# Backup files:
+
 *~
 
-# Undo-tree save-files
-*.~undo-tree
