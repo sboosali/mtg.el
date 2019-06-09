@@ -77,6 +77,12 @@ $ du -h ./tmp
   261M ./tmp/Vintage.json.gz
 ```
 
+`./json/Vintage-card-names.json.gz` is generated via `jq`: 
+
+``` elisp
+$ cat ./json/Vintage.json.gz | gzip -d | jq '[.[].cards[].name | strings] | unique' | gzip -c > ./json/Vintage-card-names.json.gz
+```
+
 ### Development Files
 
 *Build Files* include:

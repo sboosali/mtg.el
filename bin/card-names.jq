@@ -1,0 +1,1 @@
+[.[].cards[].name | strings] | unique
