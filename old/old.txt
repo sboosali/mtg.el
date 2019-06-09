@@ -137,7 +137,33 @@ Otherwise, if point is not inside a symbol, return an empty string."
 
 
 
+(unless (bound-and-true-p mtg-cards-names-vector)
+
+  (defvar mtg-cards-names-vector mtg-company-cards-names-vector
+
+    "MTG Card Names (see `mtg-company-cards-names-vector')."))
+
 
 ==============================================
 
+(defun mtg-company-initialize-card-names (force)
+
+  "Initialize the MTG Card Name store.
+
+Inputs:
+
+• FORCE — a `booleanp'.
+
+Effects:
+
+• Modifies `mtg-company-card-names-vector'."
+
+  (let* ((INITIALIZE? (or force
+                          (not (bound-and-true-p mtg-company-card-names-vector))))
+         )
+
+    (when INITIALIZE?
+      ())))
+
 ==============================================
+
