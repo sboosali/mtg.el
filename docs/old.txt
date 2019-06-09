@@ -72,5 +72,72 @@ Examples:
 
 ==============================================
 
+(defun mtg-company (command &optional arg &rest _)
+
+  "Company Backend for MTG Cards.
+
+Inputs:
+
+• COMMAND — a `symbolp'.
+  The Company-Command.
+• ARG — an `integerp'.
+  A Prefix-Argument."
+
+  (case command
+
+    (interactive
+     (company-begin-backend 'company-mtg))
+
+    (init    
+     (mtg-initialize-cards-by-name-table))
+
+    (prefix
+     (mtg-company-grab-card-name))
+
+    (candidates
+     ())
+
+    (ignore-case
+     'keep-prefix)))
+
+==============================================
+
+
+(defun mtg-company-grab-card-name ()
+
+  "Grab the ‘mtg-card-name’ before `point'.
+
+Idiomatic card names:
+
+• should (mostly) have capitalized words;
+• may include lowercase articles;
+• may have some punctuation characters (hyphen, apostrophe, colon).
+
+If point is at the end of a word, return it.
+Otherwise, if point is not inside a symbol, return an empty string."
+
+  (pcase-let* ((BEG-POINT . END-POINT)
+               (bounds-of-thing-at-point 'mtg-card-name))
+    (POINT (point))
+    (TEXT (buffer-substring BEG-POINT POINT))
+    )
+
+
+  (if (looking-at "\\>")
+
+      (buffer-substring (point) (save-excursion (skip-backward mtg-syntax-card-name-charset-regexp) (point)))
+
+    (unless (and (char-after) (eq (char-syntax (char-after)) ?w))
+
+      "")))
+
+  ()))
+
+==============================================
+
+
+
+
+==============================================
 
 ==============================================
