@@ -1,9 +1,9 @@
-;;; mtg.el --- -*- coding: utf-8; lexical-binding: t -*-
+;;; mtg-helm.el --- -*- coding: utf-8; lexical-binding: t -*-
 
 ;; Copyright © 2019 Spiros Boosalis
 
 ;; Version: 0.0.0
-;; Package-Requires: ((emacs "25"))
+;; Package-Requires: ((emacs "25") seq pcase)
 ;; Author:  Spiros Boosalis <samboosalis@gmail.com>
 ;; Homepage: https://github.com/sboosali/mtg.el
 ;; Keywords: local
@@ -27,17 +27,11 @@
 
 ;;; Commentary:
 
+;; Helm Integration for MTG.
 ;; 
-;; 
-;; Features include:
-;; 
-;; • Completion for writing custom “Magic: The Gathering” cards.
+;; • `helm' source for `mtg-read-card'.
 ;; • 
-;; • 
-;; • 
-;; • 
-;; • 
-;; • 
+;;
 ;; 
 
 ;;; Code:
@@ -46,85 +40,52 @@
 ;; Imports -------------------------------------;;
 ;;----------------------------------------------;;
 
-;; builtin requirements:
+;; builtins:
+
+(eval-when-compile
+  (require 'rx)
+  (require 'pcase))
+
+;;----------------------------------------------;;
 
 (progn
+  (require 'seq)
   (require 'cl-lib))
 
 ;;==============================================;;
 
-;; project requirements:
+;; project:
 
-(progn
-  (require 'mtg-types)
-  (require 'mtg-images)
-  (require 'mtg-search)
-  (require 'mtg-mode))
+(require 'mtg)
 
 ;;----------------------------------------------;;
-;; Loading / Unloading -------------------------;;
+;; Types ---------------------------------------;;
 ;;----------------------------------------------;;
 
-;;;###autoload
-(defun mtg-setup ()
-
-  "Setup `mtg'.
-
-”Setup“ includes:
-
-• Registering `mtg-mode' with `auto-mode-alist'.
-• Registering `mtg-mode' with `interpreter-mode-alist'.
-
-Related:
-
-• Gated by `mtg-setup-p'.
-• Inverted by `mtg-unload-function'."
-
-  (progn
-
-    (add-to-list 'auto-mode-alist (cons mtg-filepath-regexp #'mtg-mode))
-
-    (with-eval-after-load 'company
-      (with-demoted-errors "[MTG] Company] %s"
-        (when (require 'mtg-company)
-          (mtg-company-setup))))
-
-    ()))
-
+;;----------------------------------------------;;
+;; Variables -----------------------------------;;
 ;;----------------------------------------------;;
 
-(defun mtg-unload-function ()
-
-  "`unload-feature' for `mtg'.
-
-Inverts `mtg-setup' and `inferior-mtg-setup' 
-(which get executed by « (load \"mtg.el\") »).
-
-Effects:
-
-• Unregisters `mtg-mode' from `auto-mode-alist'.
-• Unregisters `mtg-mode' from `interpreter-mode-alist'."
-
-  (progn
-
-    (setq auto-mode-alist
-          (cl-remove #'mtg-mode auto-mode-alist        :test #'equal :key #'cdr))
-
-    (setq interpreter-mode-alist
-          (cl-remove #'mtg-mode interpreter-mode-alist :test #'equal :key #'cdr))
-
-    ()))
-
 ;;----------------------------------------------;;
-;; Effects -------------------------------------;;
+;; Functions -----------------------------------;;
 ;;----------------------------------------------;;
 
-(when (bound-and-true-p 'mtg-setup-p)
-  (mtg-setup))
+;;----------------------------------------------;;
+;; Commands ------------------------------------;;
+;;----------------------------------------------;;
+
+;;----------------------------------------------;;
+;; Utilities -----------------------------------;;
+;;----------------------------------------------;;
 
 ;;----------------------------------------------;;
 ;; Notes ---------------------------------------;;
 ;;----------------------------------------------;;
+
+;; Feature `helm-buffers':
+;; 
+;; • URL `https://github.com/emacs-helm/helm/wiki/Developing#creating-a-source'
+;;
 
 ;; 
 ;;
@@ -134,6 +95,6 @@ Effects:
 ;; EOF -----------------------------------------;;
 ;;----------------------------------------------;;
 
-(provide 'mtg)
+(provide 'mtg-helm)
 
-;;; mtg.el ends here
+;;; mtg-helm.el ends here
