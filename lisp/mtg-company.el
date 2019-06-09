@@ -46,6 +46,7 @@
 ;;----------------------------------------------;;
 
 (progn
+  (require 'radix-tree)
   (require 'seq)
   (require 'cl-lib))
 
@@ -53,8 +54,8 @@
 
 ;; project:
 
-(with-demoted-errors "[MTG] %s"
-  (require 'mtg))
+;; (with-demoted-errors "[MTG] %s"
+;;   (require 'mtg))
 
 ;;==============================================;;
 
@@ -19392,7 +19393,7 @@
    "Zurgo Helmsmasher"
    ]
 
-  "Known MTG Card Names, circa 2019.
+  "MTG Card Names, circa 2019.
 
 a `vectorp' of `stringp's.
 
@@ -19405,21 +19406,118 @@ and/or are Vintage-legal and/or are black-brodered.")
 ;; Variables -----------------------------------;;
 ;;----------------------------------------------;;
 
+(defvar mtg-company-card-names-trie nil
+
+  "Trie of MTG Card Names.
+
+a `radix-tree-p' (nil until you call `mtg-company-card-names-trie-initialize').
+
+See:
+
+• `mtg-company-card-names-vector'.")
+
 ;;----------------------------------------------;;
 ;; Functions -----------------------------------;;
 ;;----------------------------------------------;;
 
-(defun mtg-company-card-names ()
+(cl-defun mtg-company-card-names-vector (&key normalize)
 
-  "Return all (known/valid) MTG Cards Naes.
+  "Accessor for `mtg-company-card-names-vector'.
+
+Inputs:
+
+• NORMALIZE — a `booleanp'.
+  Whether to `downcase' each `stringp'.
 
 Output:
 
-• a `vectorp' of `stringp's."
+• a `sequencep'."
 
-  (if (bound-and-true-p mtg-card-names-vector)
-      mtg-card-names-vector
+  (if normalize
+      (seq-map #'downcase mtg-company-card-names-vector)
     mtg-company-card-names-vector))
+
+;;----------------------------------------------;;
+
+(cl-defun mtg-company-card-names-trie (&key force normalize)
+
+  "Accessor for `mtg-company-card-names-trie'.
+
+Inputs:
+
+• FORCE — a `booleanp'.
+  See `mtg-company-card-names-trie-initialize'.
+• NORMALIZE — a `booleanp'.
+  See `mtg-company-card-names-vector'.
+
+Output:
+
+• a `radix-tree-p'."
+
+  (progn
+    (mtg-company-card-names-trie-initialize :force force :normalize normalize)
+    mtg-company-card-names-trie))
+
+;;----------------------------------------------;;
+
+(cl-defun mtg-company-card-names-trie-initialize (&key force normalize)
+
+  "Initialize `mtg-company-card-names-trie'.
+
+Inputs:
+
+• FORCE — a `booleanp'.
+  Whether to re-initialize the trie.
+  t when called interactively.
+• NORMALIZE — a `booleanp'.
+  See `mtg-company-card-names-vector'.
+
+Effects:
+
+• Modifies `mtg-company-card-names-trie'."
+
+  (interactive (list :force t))
+
+  (let* ((INITIALIZE? (or force
+                          (not (bound-and-true-p mtg-company-card-names-trie))))
+         )
+
+    (when INITIALIZE?
+
+      (let* ((TRIE (mtg-company/radix-tree/from-seq (or (bound-and-true-p mtg-card-names)
+                                                        (mtg-company-card-names-vector :normalize normalize))))
+             )
+
+        (setq mtg-company-card-names-trie TRIE)))))
+
+;;----------------------------------------------;;
+
+(cl-defun mtg-company-complete-card-name (&key prefix)
+
+  "Complete PREFIX as an MTG Card Name.
+
+Inputs:
+
+• PREFIX — a `stringp'.
+
+Output:
+
+• a `listp' of `stringp's.
+
+See:
+
+• thing ‘mtg-card-name’."
+
+  (let* ((PREFIX      (or prefix ""))
+         (TRIE        (mtg-company-card-names-trie))
+         (IGNORE-CASE t)
+         (CANDIDATES  (mtg-company/radix-tree/suffixes TRIE PREFIX :ignore-case IGNORE-CASE))
+         )
+
+    CANDIDATES))
+
+;; ^ M-: (mtg-company-complete-card-name :prefix "ancestral ")
+;;     ⇒ '("Ancestral Knowledge" "Ancestral Mask" "Ancestral Memories" "Ancestral Recall" "Ancestral Statue" "Ancestral Tribute" "Ancestral Vengeance" "Ancestral Vision")
 
 ;;----------------------------------------------;;
 
@@ -19466,29 +19564,80 @@ Output:
     DOC))
 
 ;;----------------------------------------------;;
+;; Utilities -----------------------------------;;
+;;----------------------------------------------;;
 
-(defun mtg-company-complete-card-name (prefix)
+(defun mtg-company/radix-tree/insert-true (tree word)
 
-  "Complete PREFIX as an MTG Card Name.
+  "Specialized `radix-tree-insert'.
+
+Reducer for constructing a `radix-tree-p'."
+
+  (radix-tree-insert tree word t))
+
+;;----------------------------------------------;;
+
+(defun mtg-company/radix-tree/from-seq (words)
+
+  "Return a `radix-tree-p' from WORDS.
 
 Inputs:
 
-• PREFIX — a `stringp'.
+• WORDS — a `sequencep' of `stringp's.
 
-Output:
+Examples:
 
-• a `listp' of `stringp's.
+• M-: (mtg-company/radix-tree/from-seq '(\"application\" \"appetizer\" \"applicative\" \"apple\"))
+    → '((\"app\" (\"l\" (\"icati\" ... ...) (\"e\" . t)) (\"etizer\" . t)))
 
-See:
+Links:
 
-• thing ‘mtg-card-name’."
+• URL `http://justinhj.github.io/2018/10/24/radix-trees-dash-and-company-mode.html'"
 
-  (let* ((PREFIX        (or prefix ""))
-         (POSSIBILITIES (mtg-company-card-names))
-         (CANDIDATES    (complete PREFIX POSSIBILITIES))
-         )
+  (seq-reduce #'mtg-company/radix-tree/insert-true words radix-tree-empty))
 
-    CANDIDATES))
+;; ^ M-: (mtg-company/radix-tree/from-seq '("application" "appetizer" "applicative" "apple"))
+;;     ⇒ '(("app" ("l" ("icati" ("on" . t) ("ve" . t)) ("e" . t)) ("etizer" . t)))
+;;
+;;   M-: (radix-tree-subtree (mtg-company/radix-tree/from-seq '("application" "appetizer" "applicative" "apple")) "appli")
+;;     ⇒ '(("cati" ("on" . t) ("ve" . t)))
+;;
+
+;;----------------------------------------------;;
+
+(cl-defun mtg-company/radix-tree/suffixes (trie prefix &key ignore-case)
+
+  "Return all suffices of PREFIX (in TRIE).
+
+Inputs:
+
+• TRIE        — a `radix-tree-p'.
+• PREFIX      — a `stringp'.
+• IGNORE-CASE — a `booleanp'.
+
+Examples:
+
+• M-: (mtg-company/radix-tree/suffixes (mtg-company/radix-tree/from-seq (list \"application\" \"appetizer\" \"applicative\" \"apple\")) \"appli\" :ignore-case t)
+    → '(\"application\" \"applicative\")"
+
+  (let* ((SET (make-hash-table)))
+
+    (progn
+
+      (radix-tree-iter-mappings
+       trie
+       (lambda (k v)
+         (when (string-prefix-p prefix k ignore-case)
+           (puthash k t SET)))))
+
+    (hash-table-keys SET)))
+
+;; ^ M-: (mtg-company/radix-tree/suffixes (mtg-company/radix-tree/from-seq '("application" "appetizer" "applicative" "apple")) "appli" :ignore-case t)
+;;     ⇒ '("application" "applicative")
+;;
+;;   M-: (string-prefix-p "appli" "application" t)
+;;     ⇒ t
+;;
 
 ;;----------------------------------------------;;
 ;; `company' Backend ---------------------------;;
@@ -19512,14 +19661,14 @@ Inputs:
     ('interactive
      (company-begin-backend 'company-mtg))
 
-    ('init (progn))
+    ('init (mtg-company-card-names-trie-initialize))
 
     ('prefix
      (mtg-company-grab-card-name))
 
     ('candidates
      (let* ((PREFIX argument))
-       (mtg-company-complete-card-name PREFIX)))
+       (mtg-company-complete-card-name :prefix PREFIX)))
 
     ('annotation
      (let* ((CANDIDATE argument))

@@ -167,3 +167,98 @@ Effects:
 
 ==============================================
 
+
+(defun mtg-company-card-names-trie ()
+
+  "Return all (known/valid) MTG Cards Naes.
+
+Output:
+
+• a `vectorp' of `stringp's."
+
+  (if (bound-and-true-p mtg-card-names-vector)
+      mtg-card-names-vector
+    mtg-company-card-names-vector))
+
+;;----------------------------------------------;;
+
+(defun mtg-company-card-names-trie ()
+
+  "Return all (known/valid) MTG Cards Naes.
+
+Output:
+
+• a `vectorp' of `stringp's."
+
+  (if (bound-and-true-p mtg-card-names-vector)
+      mtg-card-names-vector
+    mtg-company-card-names-vector))
+
+
+;;----------------------------------------------;;
+
+(defun mtg-company-complete-card-name (prefix)
+
+  "Complete PREFIX as an MTG Card Name.
+
+Inputs:
+
+• PREFIX — a `stringp'.
+
+Output:
+
+• a `listp' of `stringp's.
+
+See:
+
+• thing ‘mtg-card-name’."
+
+  (let* ((PREFIX        (or prefix ""))
+         (POSSIBILITIES (mtg-company-card-names))
+         (CANDIDATES    (complete PREFIX POSSIBILITIES))
+         )
+
+    CANDIDATES))
+
+==============================================
+
+(cl-defun mtg-company/radix-tree/suffixes (trie prefix &key ignore-case)
+
+  "Return a `radix-tree-p' from WORDS.
+
+Inputs:
+
+• TRIE        — a `radix-tree-p'.
+• PREFIX      — a `stringp'.
+• IGNORE-CASE — a `booleanp'.
+
+Examples:
+
+• M-: (mtg-company/radix-tree/suffixes (mtg-company/radix-tree/from-seq (list \"application\" \"appetizer\" \"applicative\" \"apple\")) \"appli\" :ignore-case t)
+    → '(\"application\" \"applicative\")"
+
+  (let* ((SET (make-hash-table))
+         )
+
+    (radix-tree-iter-mappings
+     trie
+
+     (lambda (k v)
+       (message "%s ⇒ %s (%s)" k v prefix)
+       (when (string-prefix-p prefix k ignore-case)
+         (puthash k t SET)))
+
+    (hash-table-keys SET))))
+
+;; ^ M-: (mtg-company/radix-tree/suffixes (mtg-company/radix-tree/from-seq '("application" "appetizer" "applicative" "apple")) "appli" :ignore-case t)
+;;     ⇒ '("application" "applicative")
+;;
+;;   M-: (string-prefix-p "appli" "application" t)
+;;     ⇒ t
+;;
+
+==============================================
+
+
+
+==============================================
