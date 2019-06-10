@@ -1,4 +1,33 @@
-==============================================
+=================================================
+
+(defvar mtg-company-card-name-characters
+
+  (seq-sort #'< (seq-uniq (string-join (seq-into (mtg-company-card-names) 'list) ""))))
+
+M-: (apply #'string mtg-company-card-name-characters)
+;; " !\"',-.01:?ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyzàáâéíöúû"
+
+(defvar mtg-company-card-name-words
+
+  (seq-sort #'string<
+            (seq-uniq
+             (seq-mapcat #'split-string
+                         (mtg-company-card-names)
+                         'list))))
+
+(defvar mtg-company-card-name-articles
+
+  (seq-sort #'string>
+            (seq-uniq
+             (seq-filter (lambda (word) (not (s-capitalized-p word)))
+                         (seq-mapcat #'split-string
+                                     (mtg-company-card-names)
+                                     'list)))))
+
+M-: (describe-variable 'mtg-company-card-name-articles)
+;;  ("a" "an" "and" "as" "at" "but" "by" "en-Dal" "en-Kor" "en-Vec" "for" "from" "il-Dal" "il-Kor" "il-Vec" "in" "into" "le" "of" "on" "or" "the" "to" "upon" "with")
+
+=================================================
 
 (defcustom mtg-language-list
 
@@ -256,6 +285,28 @@ Examples:
 ;;   M-: (string-prefix-p "appli" "application" t)
 ;;     ⇒ t
 ;;
+
+==============================================
+
+;;----------------------------------------------;;
+;; Regexps -------------------------------------;;
+;;----------------------------------------------;;
+
+(defun mtg-card-name-character-regexp ()
+
+  "Return a `regexpp' matching an ‘mtg-card-name’ character."
+
+  (let* ((CHAR-REGEXP
+          (rx-to-string `(char alpha digit ,@mtg-card-name-punctuation-characters-list) t))
+
+         (WORD-REGEXP
+          (rx-to-string `(1+ (regexp ,CHAR-REGEXP)) t))
+
+         (PHRASE-REGEXP
+          (rx-to-string `(1+ (word-start (regexp ,WORD-REGEXP) word-end))))
+         )
+
+    PHRASE-REGEXP))
 
 ==============================================
 

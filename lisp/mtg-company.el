@@ -1,11 +1,11 @@
-;;; mtg-company.el --- -*- coding: utf-8; lexical-binding: t -*-
+;;; mtg-company.el --- `company-mode' backend for `mtg' -*- coding: utf-8; lexical-binding: t -*-
 
 ;; Copyright © 2019 Spiros Boosalis
 
 ;; Version: 0.0.0
 ;; Package-Requires: ((emacs "25"))
 ;; Author:  Spiros Boosalis <samboosalis@gmail.com>
-;; Homepage: https://github.com/sboosali/.emacs.d
+;; Homepage: https://github.com/sboosali/mtg.el
 ;; Keywords: local
 ;; Created: 09 Jun 2019
 ;; License: GPL-3.0-or-later
@@ -27,9 +27,12 @@
 
 ;;; Commentary:
 
-;; .
+;; Company Backend for `mtg'.
 ;; 
+;; See:
 ;; 
+;; • `mtg-company'
+;;
 
 ;;; Code:
 
@@ -19499,10 +19502,17 @@ Effects:
 Inputs:
 
 • PREFIX — a `stringp'.
+  The prefix to complete.
+  Match via `string-prefix-p'.
 
 Output:
 
 • a `listp' of `stringp's.
+
+Examples:
+
+• M-: (mtg-company-complete-card-name :prefix \"ancestral \")
+    ⇒ '(\"Ancestral Knowledge\" \"Ancestral Mask\" \"Ancestral Memories\" \"Ancestral Recall\" \"Ancestral Statue\" \"Ancestral Tribute\" \"Ancestral Vengeance\" \"Ancestral Vision\")
 
 See:
 
@@ -19525,11 +19535,13 @@ See:
 
   "Grab the ‘mtg-card-name’ before `point'.
 
-Idiomatic card names:
+Notes:
 
-• should (mostly) have capitalized words;
-• may include lowercase articles;
-• may have some punctuation characters (hyphen, apostrophe, colon).
+• Idiomatic card names:
+
+    • should (mostly) have capitalized words;
+    • may include lowercase articles;
+    • may have some punctuation characters (hyphen, apostrophe, colon).
 
 If point is at the end of a word, return it.
 Otherwise, if point is not inside a symbol, return an empty string."
@@ -19654,7 +19666,11 @@ Inputs:
 • ARGUMENT — a `stringp'. Either:
 
     • the Completion Prefix.
-    • a Completion Candidate."
+    • a Completion Candidate.
+
+Features:
+
+• Completion for MTG Card Names."
 
   (pcase command
 

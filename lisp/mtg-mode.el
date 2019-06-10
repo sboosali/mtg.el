@@ -59,6 +59,7 @@
 ;; project requirements:
 
 (progn
+  (require 'mtg)
   (require 'mtg-types)
   (require 'mtg-image))
 
@@ -968,58 +969,6 @@ a.k.a. “Keyword-based Syntax-Highlighting”).")
     (list 'mtg-font-lock-keywords mtg-font-lock-keywords-only mtg-font-lock-keywords-case-fold-search))
 
   "`font-lock-defaults' for `mtg-mode'.")
-
-;;----------------------------------------------;;
-;; Movement ------------------------------------;;
-;;----------------------------------------------;;
-
-(put 'mtg-card-name 'forward-op
-
-     (defun mtg-forward-card-name (&optional count)
-
-       "Move across MTG Card Names.
-
-Inputs:
-
- • COUNT — an optional `numberp'.
-  the Prefix-Argument. 
-  If:
-
-      ° positive — Move forwards to (the end of) the next card name.
-      ° negative — Move backwards to (the end of) the prior card name.
-
-Effects:
-
-• Moves `point'.
-
-Metadata:
-
-• Implements the property `forward-op'
-  for the “thing” symbol `mtg-card-name'.
-
-Examples:
-
-• M-: (thing-at-point 'mtg-card-name)
-
-Notes:
-
-• Card Names:
-
-    ° May have commas and/or `downcase'd words.
-    ° Must end with (and should start with) a `capitalize'd word."
-
-       (interactive "P")
-
-       (let* ((COUNT (or count +1))
-              )
-
-         ())))
-
-;; ^ Notes:
-;;
-;; • « (put '_ 'forward-op #'_) » registers a “Thing” for `thingatpt'.
-;;
-;; • 
 
 ;;----------------------------------------------;;
 ;; Completion ----------------------------------;;
