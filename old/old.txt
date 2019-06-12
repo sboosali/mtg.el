@@ -310,6 +310,51 @@ Examples:
 
 ==============================================
 
+(defun mtg-card-name-regexp ()
+
+  "Return a `regexpp' matching an ‘mtg-card-name’.
+
+For example, this command matches these ‘mtg-card-name’s:
+
+• “Empty the Warrens”
+• “Borrowing 100,000 Arrows”"
+
+  (let* ((CHAR-REGEXP
+          (rx-to-string `(char alpha digit ,@mtg-card-name-punctuation-characters-list) t))
+
+         (ARTICLE-REGEXP
+          (regexp-opt mtg-card-name-article-strings-list 'word))
+
+         (WORD-REGEXP
+          (rx-to-string `(or (regexp ,ARTICLE-REGEXP)
+                             (and word-start
+                                  (and (char upper digit)
+                                       (0+ (regexp ,CHAR-REGEXP)))
+                                  word-end))
+                        t))
+
+         (PHRASE-REGEXP
+          (rx-to-string `(1+ (regexp ,WORD-REGEXP))))
+         )
+
+    PHRASE-REGEXP))
+
+;; ^ M-: (mtg-card-name-regexp)
+;;     ⇒ "\\(?:\\(?:\\(a\\(?:nd\\|[nst]\\)?\\|b\\(?:ut\\|y\\)\\|en\\|f\\(?:or\\|rom\\)\\|i\\(?:nto\\|[ln]\\)\\|o[fnr]\\|t\\(?:he\\|o\\)\\|upon\\|with\\)\\|\\<[[:upper:]][!\"',-.:?[:digit:][:alpha:]]*\\>\\)+\\)"
+
+;; e.g. ‘mtg-card-name’s:
+;;
+;; • card Ancestral Recall card
+;; • card Looter il-Kor card
+;; • card Borrowing 100,000 Arrows card
+;; • card To Arms! card
+;; • card Empty the Warrens card
+;;
+;; (re-search-backward "\\(?:\\(?:\\(a\\(?:nd\\|[nst]\\)?\\|b\\(?:ut\\|y\\)\\|en\\|f\\(?:or\\|rom\\)\\|i\\(?:nto\\|[ln]\\)\\|o[fnr]\\|t\\(?:he\\|o\\)\\|upon\\|with\\)\\|\\<[[:upper:]][!\"',-.:?[:digit:][:alpha:]]*\\>\\)+\\)")
+;;
+
+==============================================
+
 
 
 ==============================================
