@@ -355,6 +355,81 @@ For example, this command matches these ‘mtg-card-name’s:
 
 ==============================================
 
+(defconst mtg-table-list-format
+
+  [("Name" mtg-longest-card-name-length t)
+   ("" nil t)
+   ("" nil t)
+   ("" nil t)
+   ("" nil t)
+   ("" nil t)
+   ("" nil t)
+  ]
+
+  "`tabulated-list-format' for `mtg-table-mode'.
+
+a `vectorp' of `listp's of « (NAME WIDTH SORTER) » triplets.")
+
+;;----------------------------------------------;;
+
+(defcustom mtg-table-list-format-list
+
+  nil
+
+  "Table Format for `mtg-table-mode'.
+
+a `listp' of columns (`symbolp's) and/or triplets (`listp's) with form:
+
+    (NAME &optional WIDTH SORTER)
+
+Ignored if nil, defaulting to `mtg-default-table-list-format'."
+
+  :type '(repeat (list (string :tag "Column Name"
+                               :options ())
+
+                       (choice (integer   :tag "Minimum Column Width")
+                               (const nil :tag "Don't Pad Column"))
+
+                       (choice (function  :tag "Sort Column by Comparator")
+                               (const t   :tag "Sort Column as String")
+                               (const nil :tag "Don't Sort Column"))))
+
+  :safe #'listp
+  :group 'mtg)
+
+
+;;----------------------------------------------;;
+
+(cl-defun mtg-table/clean-text (text &key width)
+
+  "Return TEXT as a valid Table Entry (for `tabulated-list-mode').
+
+Inputs:
+
+• TEXT — a `stringp'. 
+• WIDTH — an `integerp' or nil. 
+
+Transformations include:
+
+• Replace newlines with “|” (i.e. a vertical bar).
+• Truncate to a `string-width' of WIDTH, with “…” (i.e. ellipses)."
+
+  (let* ((TEXT-ONELINE
+          (string-join (split-string (string-trim text) "[\f\n\r\v]+" :omit-nulls) " | "))
+
+         (TEXT-TRUNCATED
+          (if (and width (natnump width))
+              (let ((PADDING  nil)
+                    (ELLIPSIS "…")
+                    (COLUMN-END width)
+                    (COLUMN-BEG 1)
+                    )
+                (truncate-string-to-width TEXT-ONELINE COLUMN-END COLUMN-BEG PADDING ELLIPSIS))
+            TEXT-ONELINE))
+         )
+
+    TEXT-TRUNCATED))
+
 
 
 ==============================================

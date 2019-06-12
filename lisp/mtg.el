@@ -19458,25 +19458,23 @@ Output:
 
 (defconst mtg-card-names-count (mtg-card-names-count)
 
-  "`mtg-card-names-count'")
+  "Default `mtg-card-names-count'.")
 
 ;;----------------------------------------------;;
 
 (defconst mtg-longest-card-name-length (mtg-longest-card-name-length)
 
-  "`mtg-longest-card-name-length'")
+  "Default `mtg-longest-card-name-length'.")
 
 ;;----------------------------------------------;;
 ;; Variables -----------------------------------;;
 ;;----------------------------------------------;;
 
-(defgroup mtg
-
-  nil
+(defgroup mtg nil
 
   "Customize “Magic: The Gathering”."
 
-  :link (url-link :tag "GitHub" "https://github.com/sboosali/mtg.el"))
+  :link '(url-link :tag "GitHub" "https://github.com/sboosali/mtg.el"))
 
 ;;==============================================;;
 
@@ -19520,10 +19518,6 @@ a `listp' of `stringp's."
   :group 'mtg)
 
 ;; ^ « " !\"',-.01:?ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyzàáâéíöúû" »
-
-;;----------------------------------------------;;
-;; Accessors -----------------------------------;;
-;;----------------------------------------------;;
 
 ;;----------------------------------------------;;
 ;; Regexps -------------------------------------;;
@@ -19647,26 +19641,177 @@ For example, this command skips across/until these ‘mtg-card-name’s:
 ;; Table ---------------------------------------;;
 ;;----------------------------------------------;;
 
+(defgroup mtg-table nil
+
+  "Customize `mtg-table-mode'."
+
+  :link '(url-link :tag "GitHub" "https://github.com/sboosali/mtg.el")
+  :group 'mtg)
+
+;;==============================================;;
+
 (defconst mtg-table-buffer-name "*MTG Cards*"
 
-  "Default `buffer-name' for `mtg-table-mode'.")
+  "Default `buffer-name' for `mtg-table-mode'.
+
+a `stringp'.")
 
 ;;----------------------------------------------;;
 
-(defconst mtg-table-list-format
+(defconst mtg-default-table-list-format
 
-  [("" 10 t)
-  ]
+  (vector `("Name" ,mtg-longest-card-name-length t)
+          `("" nil t)
+          `("" nil t)
+          `("" nil t)
+          `("" nil t)
+          `("" nil t)
+          `("" nil t)
+          )
 
-  "`tabulated-list-format' for `mtg-table-mode'.")
+  "Default `tabulated-list-format' for `mtg-table-mode'.
+
+a `vectorp' of `listp's of « (NAME WIDTH SORTER) » triplets.")
 
 ;;----------------------------------------------;;
 
+(defcustom mtg-table-list-format-list
+
+  nil
+
+  "Table Format for `mtg-table-mode'.
+
+a `listp' of columns (`symbolp's) and/or triplets (`listp's) with form:
+
+    (NAME &optional WIDTH SORTER)
+
+Ignored if nil, defaulting to `mtg-default-table-list-format'."
+
+  :type '(repeat (choice (symbol :tag "Known Column Format")
+
+                         (list (string :tag "Column Name")
+
+                               (choice (integer   :tag "Minimum Column Width")
+                                       (const nil :tag "Don't Pad Column"))
+
+                               (choice (function  :tag "Sort Column by Comparator")
+                                       (const t   :tag "Sort Column as String")
+                                       (const nil :tag "Don't Sort Column")))))
+
+  :safe #'listp
+  :group 'mtg-table)
+
+;;----------------------------------------------;;
+
+(defun mtg-table/convert-to-tabulated-list-format (table-format)
+
+  "Convert TABLE-FORMAT to conform to `tabulated-list-format'.
+
+Notes:
+
+• `mtg-table-list-format''s form, a `listp', is more customizeable.
+• `mtg-default-table-list-format''s form, a `vectorp', is more efficient."
+
+  (todo))
+
+;;----------------------------------------------;;
+
+(defun mtg-tabulated-list-entries ()
+
+  "Return `tabulated-list-entries' for `mtg-table-mode'.
+
+Table Entries:
+
+• conform to `mtg-tabulated-list-format'.
+• are distinguished by their “Multiverse ID”."
+
+  ())
+
+;;----------------------------------------------;;
+
+(cl-defun mtg-table/clean-text (text &key width separator)
+
+  "Return TEXT as a valid Table Entry (for `tabulated-list-mode').
+
+Inputs:
+
+• TEXT      — a `stringp'. 
+
+• WIDTH     — an `integerp' or nil. 
+  Defaults to nil (i.e. no maximum width).
+
+• SEPARATOR — a `stringp' or nil. 
+  Defaults to “ | ”.
+
+Transformations include:
+
+• Replace newlines with “|” (i.e. a vertical bar).
+• Truncate to a `string-width' of WIDTH, with “…” (i.e. ellipses)."
+
+  (let* ((SEPARATOR (or separator " | "))      ;TODO (propertize " | " 'face 'mtg-table-text-separator)
+
+         (TEXT-ONELINE
+          (string-join (split-string (string-trim text) "[\f\n\r\v]+" :omit-nulls) SEPARATOR))
+
+         (TEXT-TRUNCATED
+          (if (and width (natnump width))
+              (let ((PADDING  nil)
+                    (ELLIPSIS "…")
+                    (COLUMN-END width)
+                    (COLUMN-BEG 0)
+                    )
+                (truncate-string-to-width TEXT-ONELINE COLUMN-END COLUMN-BEG PADDING ELLIPSIS))
+            TEXT-ONELINE))
+         )
+
+    TEXT-TRUNCATED))
+
+;; ^ Examples:
+;;
+;; M-: (mtg-table/clean-text " \nEnchant creature\n{G}: Regenerate enchanted creature.\n " :width nil)
+;;   ⇒ "Enchant creature | {G}: Regenerate enchanted creature."
+;;
+;; M-: (mtg-table/clean-text " \nEnchant creature\n{G}: Regenerate enchanted creature.\n " :width 25)
+;;   ⇒ "Enchant creature | {G}: …"
+;;
+;; M-: (mtg-table/clean-text " \nEnchant creature\n{G}: Regenerate enchanted creature.\n " :separator " ")
+;;   ⇒ "Enchant creature {G}: Regenerate enchanted creature."
+;;
+
+;; ^ Notes:
+;;
+;; M-: (string-join (split-string (string-trim " \nEnchant creature\n{G}: Regenerate enchanted creature.\n ") "[\f\n\r\v]+" :omit-nulls) " | ")
+;;   ⇒ "Enchant creature | {G}: Regenerate enchanted creature."
+;;
+
+;;----------------------------------------------;;
+
+(defun mtg-table-list-format ()
+
+  "Accessor for `mtg-table-list-format'.
+
+Output:
+
+• a Table Format.
+  See `tabulated-list-format'.
+  Defaults to `mtg-default-table-list-format'."
+
+  (let* ((FORMAT-LIST   (bound-and-true-p mtg-table-list-format))
+         (FORMAT-VECTOR (if FORMAT-LIST
+                            (mtg-table/convert-to-tabulated-list-format FORMAT-LIST)
+                          mtg-default-table-list-format))
+         )
+
+    FORMAT-VECTOR))
+
+;;----------------------------------------------;;
+
+;;;###autoload
 (define-derived-mode mtg-table-mode tabulated-list-mode
 
   (progn
 
-    (setq tabulated-list-format mtg-table-list-format)
+    (setq tabulated-list-format (mtg-table-list-format))
 
     (tabulated-list-init-header)
 
@@ -19674,6 +19819,7 @@ For example, this command skips across/until these ‘mtg-card-name’s:
 
 ;;----------------------------------------------;;
 
+;;;###autoload
 (defun list-mtg-cards ()
 
   "List all MTG Cards.
