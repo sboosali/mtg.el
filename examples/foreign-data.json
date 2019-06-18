@@ -1,0 +1,65 @@
+{
+    "multiverseId": 130483,
+    "name": "Abundance",
+    "text": "If you would draw a card, you may instead choose land or nonland and reveal cards from the top of your library until you reveal a card of the chosen kind. Put that card into your hand and put all other cards revealed this way on the bottom of your library in any order.",
+    "type": "Enchantment",
+
+    "foreignData": [
+        {
+            "language": "German",
+            "multiverseId": 148402,
+            "name": "Überfluss",
+            "text": "Falls du eine Karte ziehen würdest, kannst du stattdessen Land oder Nichtland bestimmen und Karten oben von deiner Bibliothek aufdecken, bis du eine Karte der bestimmten Art aufdeckst. Nimm diese Karte auf deine Hand und lege alle anderen auf diese Weise aufgedeckten Karten in beliebiger Reihenfolge unter deine Bibliothek.",
+            "type": "Verzauberung"
+        },
+        {
+            "language": "Spanish",
+            "multiverseId": 150565,
+            "name": "Abundancia",
+            "text": "Si fueras a robar una carta, en vez de eso, puedes elegir tierra o no tierra y mostrar cartas de la parte superior de tu biblioteca hasta que muestres una carta del tipo elegido. Pon esa carta en tu mano y pon todas las otras cartas mostradas de esta manera en la parte inferior de tu biblioteca en cualquier orden.",
+            "type": "Encantamiento"
+        },
+        {
+            "language": "French",
+            "multiverseId": 150182,
+            "name": "Abondance",
+            "text": "Si vous deviez piocher une carte, vous pouvez, à la place, choisir terrain ou non-terrain et révéler des cartes du dessus de votre bibliothèque jusqu'à ce que vous révéliez une carte du type choisi. Mettez cette carte dans votre main, et mettez ensuite toutes les autres cartes révélées de cette manière au-dessous de votre bibliothèque, dans l'ordre de votre choix.",
+            "type": "Enchantement"
+        },
+        {
+            "language": "Italian",
+            "multiverseId": 148785,
+            "name": "Abbondanza",
+            "text": "Se stai per pescare una carta, puoi invece scegliere terra o non terra e rivelare carte dalla cima del tuo grimorio fino a che non riveli una carta del tipo scelto. Aggiungi quella carta alla tua mano e metti tutte le altre carte rivelate in questo modo in fondo al tuo grimorio in qualsiasi ordine.",
+            "type": "Incantesimo"
+        },
+        {
+            "language": "Japanese",
+            "multiverseId": 148019,
+            "name": "豊穣",
+            "text": "あなたがカードを１枚引く場合、代わりにあなたは土地か土地でないかを選んでもよい。そうしたなら、あなたのライブラリーの一番上のカードを、選んだ種類のカードが公開されるまで公開し続ける。 そのカードをあなたの手札に加え、これにより公開された他のすべてのカードを望む順番であなたのライブラリーの一番下に置く。",
+            "type": "エンチャント"
+        },
+        {
+            "language": "Portuguese (Brazil)",
+            "multiverseId": 149799,
+            "name": "Abundância",
+            "text": "Se for comprar um card, em vez disso, você pode escolher se deve ser ou não um terreno, e revelar cards do topo de seu grimório até revelar um card do tipo escolhido. Coloque aquele card em sua mão e coloque todos os outros cards revelados deste modo no fundo de seu grimório em qualquer ordem.",
+            "type": "Encantamento"
+        },
+        {
+            "language": "Russian",
+            "multiverseId": 149416,
+            "name": "Изобилие",
+            "text": "Если вы должны взять карту, вместо этого вы можете выбрать \"земля\" или \"неземля\" и показывать карты с верха вашей библиотеки до тех пор, пока вы не покажете карту выбранного вида. Положите ту карту в вашу руку и положите все остальные показанные таким образом карты в низ вашей библиотеки в любом порядке.",
+            "type": "Чары"
+        },
+        {
+            "language": "Chinese Simplified",
+            "multiverseId": 147636,
+            "name": "丰衣足食",
+            "text": "若你将抓一张牌，则你可以改为选择地牌或非地牌，并从你牌库顶开始展示牌，直到你展示出一张该种类的牌为止。 将该牌置于你手上，然后将以此法展示的其它牌以任意顺序置于你的牌库底。",
+            "type": "结界"
+        }
+    ]
+}

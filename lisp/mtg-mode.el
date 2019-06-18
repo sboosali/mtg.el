@@ -285,7 +285,7 @@ Links:
 ;; Accessors: `regexpp's -----------------------;;
 ;;----------------------------------------------;;
 
-(defvar mtg-quotation-regexp
+(defconst mtg-quotation-regexp
 
   (rx (or ?“ ?\") (not (or ?“ ?” ?\")) (or ?” ?\"))
 
@@ -300,7 +300,7 @@ Examples:
 
 ;;----------------------------------------------;;
 
-(defvar mtg-card-namesake-regexp
+(defconst mtg-card-namesake-regexp
 
   (rx (or (and word-start "~" word-end))
           (and word-start (or ?t ?T) "his creature" word-end))
@@ -311,7 +311,7 @@ a `regexpp'.")
 
 ;;----------------------------------------------;;
 
-(defvar mtg-card-name-reference-regexp
+(defconst mtg-card-name-reference-regexp
 
   (mtg-rx word-start "named" word-end
           mtg-card-name)
@@ -322,7 +322,7 @@ a `regexpp'.")
 
 ;;----------------------------------------------;;
 
-(defvar mtg-symbol-regexp
+(defconst mtg-symbol-regexp
 
   (rx "{" (group-n 1 (1+ (any "-" "@#$_&+/*:;!?" alnum))) "}")
 
@@ -334,7 +334,7 @@ See URL `https://mtg.gamepedia.com/Numbers_and_symbol'.")
 
 ;;----------------------------------------------;;
 
-(defvar mtg-color-white-regexp
+(defconst mtg-color-white-regexp
 
   (rx word-start
       (or (and (any "wW") "hite")
@@ -348,7 +348,7 @@ a `regexpp'.")
 
 ;;----------------------------------------------;;
 
-(defvar mtg-color-blue-regexp
+(defconst mtg-color-blue-regexp
 
   (rx word-start
       (or (and (any "Uu") "blue")
@@ -362,7 +362,7 @@ a `regexpp'.")
 
 ;;----------------------------------------------;;
 
-(defvar mtg-color-black-regexp
+(defconst mtg-color-black-regexp
 
   (rx word-start
       (or (and (any "Bb") "black")
@@ -376,7 +376,7 @@ a `regexpp'.")
 
 ;;----------------------------------------------;;
 
-(defvar mtg-color-red-regexp
+(defconst mtg-color-red-regexp
 
   (rx word-start
       (or (and (any "Rr") "red")
@@ -390,7 +390,7 @@ a `regexpp'.")
 
 ;;----------------------------------------------;;
 
-(defvar mtg-color-green-regexp
+(defconst mtg-color-green-regexp
 
   (rx word-start
       (or (and (any "Gg") "green")
@@ -654,7 +654,7 @@ Inputs:
 
 ;;----------------------------------------------;;
 
-(defcustom mtg-comment-column 40
+(defcustom mtg-comment-column 0
 
   "`comment-columnt' for `mtg-mode'."
 
@@ -946,7 +946,7 @@ Effects:
 
 ;;----------------------------------------------;;
 
-(defvar mtg-font-lock-keywords
+(defconst mtg-font-lock-keywords
 
   (list mtg-font-lock-keywords-keyword
         
@@ -961,7 +961,7 @@ a.k.a. “Keyword-based Syntax-Highlighting”).")
 
 ;;----------------------------------------------;;
 
-(defvar mtg-font-lock-defaults
+(defconst mtg-font-lock-defaults
 
   (let ((mtg-font-lock-keywords-only             t)   ; Search-Based Fontification
         (mtg-font-lock-keywords-case-fold-search nil) ; Case-Insensitive
@@ -1045,7 +1045,7 @@ Related:
 ;; ElDoc ---------------------------------------;;
 ;;----------------------------------------------;;
 
-(defun mtg-doc-current-info (&optional symbol)
+(defun mtg-eldoc (&optional symbol)
 
   "`eldoc-documentation-function' for `mtg-mode'.
 
@@ -1067,7 +1067,7 @@ of standard library functions (& types) and of builtins.
 
 Examples
 
-• M-:  (substring-no-properties (mtg-doc-current-info \"map\"))
+• M-:  (substring-no-properties (mtg-eldoc \"map\"))
   ⇒ \"map : forall a b. (a -> b) -> [a] -> [b]\"
 
 Related:
@@ -1094,7 +1094,7 @@ Links:
 
 ;; ^ e.g.
 ;;
-;;   M-: (mtg-doc-current-info "map")
+;;   M-: (mtg-eldoc "map")
 ;;     ⇒ "map : forall a b. (a -> b) -> [a] -> [b]"
 ;;
 
@@ -1158,6 +1158,21 @@ its current bindings are:
         :style toggle :selected (and (boundp 'mtg-doc-mode) mtg-doc-mode)])
     "---"
     ))
+
+;;----------------------------------------------;;
+;;; IMenu --------------------------------------;;
+;;----------------------------------------------;;
+
+(defun mtg-imenu-create-index ()
+
+  "`imenu-create-index-function' for `mtg-mode'.
+
+Output:
+
+• a “Simple Index AList”:
+  a `listp' of `consp's, with `stringp' ‘car’s and `number-or-marker-p' ‘cdr’s."
+
+  ())
 
 ;;----------------------------------------------;;
 ;; Mode ----------------------------------------;;
@@ -1245,23 +1260,21 @@ Call `mtg-program-version' to get the version of the currently-registered comman
     (setq-local comment-start      mtg-comment-start)
     (setq-local comment-padding    mtg-comment-padding)
     (setq-local comment-start-skip mtg-comment-start-skip)
-    (setq-local comment-end        mtg-comment-end)
-    (setq-local comment-end-skip   mtg-comment-end-skip)
+
+    (setq-local comment-end      mtg-comment-end)
+    (setq-local comment-end-skip mtg-comment-end-skip)
 
     (setq-local comment-column mtg-comment-column)
 
-    ;; Paragraphs:
-
-    (setq-local paragraph-start    mtg-paragraph-start)
-    (setq-local paragraph-separate mtg-paragraph-separate)
-
-    (setq-local fill-paragraph-function #'mtg-fill-paragraph)
-    (setq-local adaptive-fill-function  #'mtg-adaptive-fill)
+    (setq-local comment-use-syntax t)
 
     ;; Movement:
 
     (setq-local forward-sexp-function #'mtg-forward-sexp)
     (setq-local parse-sexp-ignore-comments nil)
+
+    (setq-local beginning-of-defun-function #'mtg-beginning-of-defun)
+    (setq-local end-of-defun-function       #'mtg-end-of-defun)
 
     ;; Indentation:
 
@@ -1274,13 +1287,32 @@ Call `mtg-program-version' to get the version of the currently-registered comman
     ;; (when (boundp 'electric-indent-inhibit)
     ;;   (setq electric-indent-inhibit t))
 
+    ;; Filling:
+
+    (setq-local paragraph-start    mtg-paragraph-start)
+    (setq-local paragraph-separate mtg-paragraph-separate)
+
+    (setq-local fill-paragraph-function #'mtg-fill-paragraph)
+    (setq-local adaptive-fill-function  #'mtg-adaptive-fill)
+
     ;; ElDoc:
 
-    (add-function :before-until (local 'eldoc-documentation-function) #'mtg-doc-current-info)
+    (if (eval-when-compile (fboundp #'add-function))
+        (add-function :before-until (local 'eldoc-documentation-function) #'mtg-eldoc)
+      (setq-local eldoc-documentation-function #'mtg-eldoc))
+
+    ;; Outline Mode:
+
+    (setq-local outline-regexp mtg-regex-header)
+    (setq-local outline-level #'mtg-outline-level)
 
     ;; IMenu:
 
-    (setq-local imenu-create-index-function #'mtg-ds-create-imenu-index)
+    (setq-local imenu-create-index-function #'mtg-imenu-create-index)
+
+    ;; Menu Bar (for XEmacs):
+
+    (easy-menu-add mtg-mode-menu mtg-mode-map)
 
     ;; Flyspell:
 
