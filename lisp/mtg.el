@@ -49,11 +49,15 @@
 ;; builtin requirements:
 
 (eval-when-compile
+  (require 'rx)
+  (require 'pcase)
   (require 'cl-lib))
 
 ;;----------------------------------------------;;
 
 (progn
+  (require 'json)
+  (require 'url)
   (require 'seq))
 
 ;;==============================================;;
@@ -19491,9 +19495,59 @@ Output:
 
   "Customize “Magic: The Gathering”."
 
-  :link '(url-link :tag "GitHub" "https://github.com/sboosali/mtg.el"))
+  :link '(url-link :tag "GitHub" "https://github.com/sboosali/mtg.el")
+
+  )
 
 ;;==============================================;;
+
+(defcustom mtg-json-file
+
+  "Vintage.json.gz"
+
+  "Raw Data for `mtg-cards'.
+
+A `stringp', a “File Location”, which can be:
+
+• an absolute filepath.
+• a relative filepath — must be under `mtg-search-path'.
+• a URI — scheme must be HTTP(S).
+
+File Contents are JSON or ELisp data.
+
+Supported file extensions for the “File Location” are:
+
+• ‹.gz›   — assumes the File Contents are compressed.
+• ‹.json› — assumes the File Contents can be `json-read' as JSON.
+• ‹.el›   — assumes the File Contents can be `read' as Elisp struct (i.e. no code)."
+
+  :type '(choice
+          (string :tag "File")
+          (string :tag "URI"))
+
+  :safe #'stringp
+  :group 'mtg)
+
+;;----------------------------------------------;;
+
+(defcustom mtg-search-path
+
+  '(default-directory
+    user-emacs-directory
+    mtg-xdg-data-dir
+    ".")
+
+  "Search Path for data files.
+
+`listp' of `stringp's and/or `symbolp's."
+
+  :type '(repeat (string :tag "Directory Literal")
+                 (symbol :tag "Directory Variable"))
+
+  :safe #'listp
+  :group 'mtg)
+
+;;----------------------------------------------;;
 
 (defcustom mtg-card-name-punctuation-characters-list
 
@@ -19543,6 +19597,122 @@ a `listp' of `stringp's."
   :group 'mtg)
 
 ;; ^ « " !\"',-.01:?ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyzàáâéíöúû" »
+
+;;----------------------------------------------;;
+;;; Accessors ----------------------------------;;
+;;----------------------------------------------;;
+
+(cl-defun mtg-cards (&key force)
+
+  "Accessor for variable `mtg-cards'.
+
+Inputs:
+
+• FORCE — a `booleanp'.
+  (Defaults to nil).
+
+Initialize `mtg-cards' from `mtg-json-file', 
+only if necessary (or if FORCE is non-nil)."
+
+  (unless (or mtg-cards (not force))
+    (setq mtg-cards (mtg-read-cards)))
+
+  mtg-cards)
+
+;;----------------------------------------------;;
+;;; JSON ---------------------------------------;;
+;;----------------------------------------------;;
+
+(cl-defun mtg-read-cards ()
+
+  "Return an `mtg-cards' struct."
+
+  TODO)
+
+;;----------------------------------------------;;
+
+(defun mtg-json-parse (&optional json)
+  "Parse JSON as `mtg-card's.
+
+Inputs:
+
+• JSON — a `stringp'.
+  Contents or location of an ‘mtg.json’ file.
+  Defaults to `mtg-json-file'."
+
+  (let ((json-object-type 'hash-table)
+        (json-array-type  'vector)
+        (json-key-type    'keyword)
+        )
+
+    (let* ((JSON  (or json mtg-json-file))
+           (TABLE (json-read-file JSON))
+           )
+
+      TABLE)))
+
+;; ^ e.g.:
+;;
+;; M-: (defconst mtg-vintage-cards (mtg-json-parse "../json/Vintage.json.gz"))
+;; M-: (with-temp-file "../gitignored/Vintage.el" (prin1 mtg-vintage-cards (current-buffer)))
+;;
+;; $ gzip -c9 ./gitignored/Vintage.el > ./data/Vintage.el.gz
+;;
+;; 
+
+;; ^ Notes:
+;;
+;; M-: (json-read-file "../json/Vintage.json.gz")
+;;
+;;
+
+;;----------------------------------------------;;
+
+(cl-defun sboo-mtg-read-scryfall-json (&optional (filename mtg-card-names-file-json))
+
+  "Read a JSON File of MTG cards (in the Scryfall card schema, circa 2019).
+
+Inputs:
+
+• FILENAME — a JSON File.
+
+Output:
+
+• a set of `mtg-card's.
+
+Example:
+
+• M-: (sboo-mtg-read-scryfall-json)
+    ⇒ 
+
+Links:
+
+• URL `https://scryfall.com/docs/api/cards'"
+
+  (let* (
+         )
+
+    (json-read-file filename)))
+
+;;----------------------------------------------;;
+
+(defun mtg--read-lines (filepath)
+
+  "Read/Parse FILEPATH, whose contents are one (quoted) string per line.
+
+Input:
+
+• FILEPATH — a `stringp'.
+
+Output:
+
+• a `listp' of `stringp's."
+
+  (with-temp-buffer
+    (insert-file-contents filepath)
+    (goto-char (point-min))
+    (mapcar #'read
+     (split-string (buffer-string) "\n" t))))
 
 ;;----------------------------------------------;;
 ;;; Regexps ------------------------------------;;

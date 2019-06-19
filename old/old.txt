@@ -433,3 +433,30 @@ Transformations include:
 
 
 ==============================================
+
+(cl-defun sboo-mtg-read-scryfall-json (&optional (filename mtg-card-names-file-json))
+
+  "Read a JSON File of MTG cards (in the Scryfall card schema, circa 2019).
+
+Inputs:
+
+• FILENAME — a JSON File.
+
+Output:
+
+• a set of `mtg-card's.
+
+Example:
+
+• M-: (sboo-mtg-read-scryfall-json)
+    ⇒ 
+
+Links:
+
+• URL `https://scryfall.com/docs/api/cards'"
+
+  (let* (
+         )
+
+    (json-read-file filename)))
+
