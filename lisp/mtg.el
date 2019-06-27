@@ -19632,13 +19632,28 @@ only if necessary (or if FORCE is non-nil)."
 ;;----------------------------------------------;;
 
 (defun mtg-json-parse (&optional json)
-  "Parse JSON as `mtg-card's.
+
+  "Read a json file of MTG Cards.
 
 Inputs:
 
 • JSON — a `stringp'.
-  Contents or location of an ‘mtg.json’ file.
-  Defaults to `mtg-json-file'."
+  Defaults to `mtg-json-file'.
+  The location of an ‘mtg.json’ file,
+  whose contents may be compressed.
+
+Output:
+
+• a set of `mtg-card's.
+
+Notes:
+
+• Schema — JSON's schema should be (at least) the Scryfall card schema 
+  (circa 2019).
+
+Links:
+
+• URL `https://scryfall.com/docs/api/cards'"
 
   (let ((json-object-type 'hash-table)
         (json-array-type  'vector)
@@ -19653,7 +19668,7 @@ Inputs:
 
 ;; ^ e.g.:
 ;;
-;; M-: (defconst mtg-vintage-cards (mtg-json-parse "../json/Vintage.json.gz"))
+;; M-: (defconst mtg-vintage-cards (mtg-json-parse "../data/Vintage.json.gz"))
 ;; M-: (with-temp-file "../gitignored/Vintage.el" (prin1 mtg-vintage-cards (current-buffer)))
 ;;
 ;; $ gzip -c9 ./gitignored/Vintage.el > ./data/Vintage.el.gz
@@ -19662,37 +19677,9 @@ Inputs:
 
 ;; ^ Notes:
 ;;
-;; M-: (json-read-file "../json/Vintage.json.gz")
+;; M-: (json-read-file "../data/Vintage.json.gz")
 ;;
 ;;
-
-;;----------------------------------------------;;
-
-(cl-defun sboo-mtg-read-scryfall-json (&optional (filename mtg-card-names-file-json))
-
-  "Read a JSON File of MTG cards (in the Scryfall card schema, circa 2019).
-
-Inputs:
-
-• FILENAME — a JSON File.
-
-Output:
-
-• a set of `mtg-card's.
-
-Example:
-
-• M-: (sboo-mtg-read-scryfall-json)
-    ⇒ 
-
-Links:
-
-• URL `https://scryfall.com/docs/api/cards'"
-
-  (let* (
-         )
-
-    (json-read-file filename)))
 
 ;;----------------------------------------------;;
 
