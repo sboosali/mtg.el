@@ -20068,7 +20068,152 @@ Inputs:
   (when-let* ((CARD (or (mtg-get-card-by-name name) (mtg-get-edition-by-name name)))
  
 
-    ()))
+    ())))
+
+;;----------------------------------------------;;
+;;; Indentation --------------------------------;;
+;;----------------------------------------------;;
+
+(defsubst mtg/within-comment-p ()
+  "Return non-nil if `point' is within a (oneline or multiline) comment"
+  (nth 4 (syntax-ppss)))
+
+;;----------------------------------------------;;
+;;; Skeletons ----------------------------------;;
+;;----------------------------------------------;;
+
+(define-skeleton mtg-card
+
+    "Prompt for a tag and insert it, optionally with attributes.
+Completion and configuration are done according to `sgml-tag-alist'.
+If you like tags and attributes in uppercase, customize
+`sgml-transformation-function' to `upcase'."
+  (funcall (or skeleton-transformation-function 'identity)
+           (setq sgml-tag-last
+		 (completing-read
+		  (if (> (length sgml-tag-last) 0)
+		      (format "Tag (default %s): " sgml-tag-last)
+		    "Tag: ")
+		  sgml-tag-alist nil nil nil 'sgml-tag-history sgml-tag-last)))
+  ?< str |
+  (("") -1 '(undo-boundary) (identity "&lt;")) |	; see comment above
+  `(("") '(setq v2 (sgml-attributes ,str t)) ?>
+    (cond
+      ((string= "![" ,str)
+       (backward-char)
+       '(("") " [ " _ " ]]"))
+      ((and (eq v2 t) sgml-xml-mode (member ,str sgml-empty-tags))
+       '(("") -1 " />"))
+      ((or (and (eq v2 t) (not sgml-xml-mode)) (string-match "^[/!?]" ,str))
+       nil)
+      ((symbolp v2)
+       ;; Make sure we don't fall into an infinite loop.
+       ;; For xhtml's `tr' tag, we should maybe use \n instead.
+       (if (eq v2 t) (setq v2 nil))
+       ;; We use `identity' to prevent skeleton from passing
+       ;; `str' through `skeleton-transformation-function' a second time.
+       '(("") v2 _ v2 "</" (identity ',str) ?> >))
+      ((eq (car v2) t)
+       (cons '("") (cdr v2)))
+      (t
+       (append '(("") (car v2))
+               (cdr v2)
+               '(resume: (car v2) _ "</" (identity ',str) ?> >))))))
+
+;;----------------------------------------------;;
+;;; Menu Bar -----------------------------------;;
+;;----------------------------------------------;;
+
+(defgroup mtg-menu nil
+
+  "MTG Menu (in the Menu Bar)."
+
+  :prefix 'mtg-menu
+  :group 'mtg)
+
+;;==============================================;;
+
+(defun mtg-menu/customization-changed (variable value)
+
+  "Function called when the MTG Menu customization has changed.
+Set VARIABLE with VALUE, and force a rebuild of the MTG Menu."
+
+  (if (and (featurep 'mtg) (mtg-enabled-p))
+
+      (progn
+        ;; Unavailable until mtg has been loaded.
+        (mtg-menu/hide)
+        (set-default variable value)
+        (mtg-menu/show))
+
+    (set-default variable value)))
+
+;;==============================================;;
+
+(defcustom mtg-menu/menu-title "Open Recent"
+
+  "Name of the MTG Menu."
+
+  :type 'string
+  :set #'mtg-menu/customization-changed
+
+  :group 'mtg-menu)
+
+;;----------------------------------------------;;
+
+(defcustom mtg-menu/menu-path '("File")
+
+  "Path where to add the MTG Menu.
+
+If nil add it at top level (see also `easy-menu-add-item')."
+
+  :type '(choice (const :tag "Top Level" nil)
+          (sexp :tag "Menu Path"))
+  :set 'mtg-menu/customization-changed
+
+  :group 'mtg-menu)
+
+;;----------------------------------------------;;
+
+(defcustom mtg-menu/next-menu-title "Help"
+
+  "Name of the menu before which the MTG Menu will be added.
+
+If nil, add it at end of menu (see also `easy-menu-add-item')."
+
+  :type '(choice (string :tag "Name")
+          (const :tag "Last" nil))
+  :set 'mtg-menu/customization-changed
+
+  :group 'mtg-menu)
+
+;;==============================================;;
+
+(defun mtg-menu/show ()
+  "Show the menu of recently opened files."
+  (easy-menu-add-item
+   (mtg-menu-bar) mtg-menu-path
+   (list mtg-menu-title :filter 'mtg-make-menu-items)
+   mtg-menu-before))
+
+;;----------------------------------------------;;
+
+(defun mtg-menu/hide ()
+  "Hide the menu of recently opened files."
+  (easy-menu-remove-item (mtg-menu--get-global-menubar) mtg-menu/menu-path
+                         mtg-menu/menu-title))
+
+;;==============================================;;
+
+(defsubst mtg-menu--get-global-menubar ()
+
+  "Return the `keymapp' of the global Menu Bar."
+
+  (lookup-key global-map [menu-bar]))
+
+;;----------------------------------------------;;
+;;; Tool Bar -----------------------------------;;
+;;----------------------------------------------;;
 
 ;;----------------------------------------------;;
 ;;; Table --------------------------------------;;
