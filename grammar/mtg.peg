@@ -1,0 +1,1230 @@
+Rule
+    = (AbilityWord " — ")? Ability EOR
+    ;
+
+Ability
+    = SpellEffect
+    / KeywordAbility
+    / ActivatedAbility
+    / TriggeredAbility
+    / AdditionalCost
+    ;
+
+SpellEffect
+    = Effect EOS (SPACE Effect EOS)*
+    ;
+
+Effect
+    = SingleEffect (SEP SingleEffect)*
+    ;
+
+SingleEffect
+    = (Duration SEP)? (Optional SPACE)? (SelectPlayer SPACE)? (Optional SPACE)? Action (SPACE Duration)? (SPACE IfCondition)?
+    ;
+
+Optional
+    = "you may have"
+    / "you may"
+    / "if you don't,"
+    / "if you can't,"
+    / "if you do,"
+    / "may"
+    ;
+
+AbilityWord
+    = "metalcraft"
+    / "landfall"
+    / "threshold"
+    / "hellbent"
+    / "morbid"
+    ;
+
+KeywordAbility
+    = Keyword
+    / Enchant
+    ;
+
+ActivatedAbility
+    = ActivationCosts EOC SpellEffect (SPACE AbilityRestriction EOS)?
+    ;
+
+ActivationCosts
+    = Action (SEP Action)*
+    ;
+
+TriggeredAbility
+    = Trigger (SEP IfCondition)? SEP SpellEffect
+    ;
+
+AdditionalCost
+    = "as an additional cost to cast @, " Effect EOS
+    ;
+
+Trigger
+    = EntersBattlefieldTrigger
+    / LeavesBattlefieldTrigger
+    / EntersGraveyardTrigger
+    / BeginningUpkeepTrigger
+    / BeginningEndStepTrigger
+    / DiesTrigger
+    / DealsDamageTrigger
+    / CastTrigger
+    / BecomesTargetTrigger
+    / BlocksTrigger
+    / AttacksTrigger
+    / BlockedTrigger
+    ;
+
+Action
+    = DestroyNoRegenAction
+    / DestroyAction 
+    / ExileAction
+    / CounterAction
+    / DamageAction
+    / DrawAction
+    / DiscardAction
+    / TapAction
+    / PreventAction
+    / RegenerateAction
+    / PumpAction
+    / GainAction
+    / BounceAction
+    / AddManaAction
+    / ReturnAction
+    / SacrificeAction
+    / ChangeLifeAction
+    / ChangeCounterAction
+    / PutTokenAction
+    / PutCardAction
+    / ControlAction
+    / ShuffleAction
+    / DoesntUntapAction
+    / EntersTapped
+    / EntersWithCounter
+    / PayManaAction
+    / MillAction
+    / PoisonAction
+    / SetPTAction
+    / ChangeStateAction
+    / AnimateAction
+    / AnimateActionReminder
+    / ChangeLoyaltyAction
+    / KickerAction
+    / ScryAction
+    ;
+
+Keyword
+    = "flash"
+    / "flying"
+    / "haste"
+    / "defender"
+    / "vigilance"
+    / "reach"
+    / "battle cry"
+    / "trample"
+    / "first strike"
+    / "double strike"
+    / "infect"
+    / "wither"
+    / "fear"
+    / "shadow"
+    / "storm"
+    / "swampwalk"
+    / "plainswalk"
+    / "forestwalk"
+    / "islandwalk"
+    / "mountainwalk"
+    / "changeling"
+    / "deathtouch"
+    / "lifelink"
+    / "exalted"
+    / "shroud"
+    / "persist"
+    / "protection from all colors"
+    / "protection from " Color
+    / "protection from " Tribal 
+    / "protection from artifacts"
+    / "protection from creatures"
+    / "protection from everything"
+    / "hexproof"
+    / "soulbond"
+    / "undying"
+    / "flanking"
+    / "intimidate"
+    / "living weapon"
+    / "totem armor"
+    / "affinity for artifacts"
+    / "bushido" SPACE Number
+    / "rampage" SPACE Number
+    / "soulshift" SPACE Number
+    / "fading" SPACE Number
+    / "devour" SPACE Number
+    / "modular" SPACE Number
+    / "vanishing" SPACE Number
+    / "bloodthirst" SPACE Number
+    / "annihilator" SPACE Number
+    / "buyback" SPACE ManaCost
+    / "echo" SPACE ManaCost
+    / "kicker" SPACE ManaCost
+    / "multikicker" SPACE ManaCost
+    / "equip" SPACE ManaCost
+    / "cumulative upkeep" SPACE ManaCost
+    / "replicate" SPACE ManaCost
+    / "miracle" SPACE ManaCost
+    / "level up" SPACE ManaCost
+    / "level" SPACE Number "-" Number
+    / "level" SPACE Number "+"
+    / "champion" SPACE "a" "n"? SPACE SelectCreature
+    / "cycling" SPACE ManaCost
+    / "reinforce" SPACE Number "—" ManaCost
+    / "extort"
+    / "evolve"
+    / "unleash"
+    / "evoke" SPACE ManaCost
+    / "indestructible"
+    / "cipher"
+    / "cascade"
+    ;
+
+ColorlessCost
+    = "{" Number "}"
+    / "{x}"
+    ;
+
+SingleColor
+    = "{b}"
+    / "{u}"
+    / "{g}"
+    / "{r}"
+    / "{w}"
+    ;
+
+HybridSingleCost
+    = "{g/u}"
+    / "{g/w}"
+    / "{r/g}"
+    / "{r/w}"
+    / "{u/r}"
+    / "{u/b}"
+    / "{b/g}"
+    / "{b/r}"
+    / "{w/b}"
+    ;
+
+ManaCost
+    = ColorlessCost+ HybridSingleCost* SingleColor*
+    / HybridSingleCost+ SingleColor*
+    / SingleColor+
+    ;
+
+BecomesTargetTrigger
+    = "when @ becomes the target of a spell or ability"
+    ;
+
+BlocksTrigger
+    = "whenever @ blocks"
+    ;
+
+BlockedTrigger
+    = "whenever @ becomes blocked"
+    ;
+
+CastTrigger
+    = "whenever " SelectPlayer SPACE Cast SPACE SelectSpell
+    / "when " SelectPlayer SPACE Cast SPACE SelectSpell
+    ;
+
+Cast
+    = "cast" "s"?
+    ;
+
+LeavesBattlefieldTrigger
+    = "when @ leaves the battlefield"
+    ;
+
+EntersGraveyardTrigger
+    = "when @ is put into a graveyard from the battlefield"
+    / "when @ is put into a graveyard from anywhere"
+    ;
+
+EntersBattlefieldTrigger
+    = EntersVerb SPACE SelectPermanent SPACE "enters the battlefield" (SPACE "under your control")?
+    ;
+
+EntersVerb
+    = "whenever"
+    / "when"
+    / "as"
+    ;
+
+BeginningEndStepTrigger
+    = "at the beginning of the end step"
+    / "at the beginning of each end step"
+    ;
+
+BeginningUpkeepTrigger
+    = "at the beginning of your upkeep"
+    / "at the beginning of each player's upkeep" 
+    ;
+
+DiesTrigger
+    = "when" SPACE SelectCreature SPACE "dies"
+    / "whenever" SPACE SelectCreature SPACE "dies"
+    ;
+
+DealsDamageTrigger
+    = "whenever @ deals" " combat"? " damage" (" to a " DamageReceiver)?
+    ;
+
+DamageReceiver
+    = "itself"
+    / SelectPlayer &(SEP SingleEffect)
+    / SelectPlayer (SEP SelectCreature)?
+    / SelectCreature &(SEP SingleEffect)
+    / SelectCreature (SEP SelectPlayer)?
+    ;
+
+AttacksTrigger
+    = "whenever @ attacks"
+    ;
+
+AbilityRestriction
+    = "activate this ability only any time you could cast a sorcery"
+    / "activate this ability only if seven or more cards are in your graveyard"
+    / "activate this ability only if you have no cards in hand"
+    ;
+
+IfCondition
+    = "if a creature died this turn"
+    / "if it was kicked"
+    ;
+
+KickerAction
+    = "if it was kicked, " Effect (" instead")?
+    ;
+
+ScryAction
+    = "scry " Number
+    ;
+
+AnimateAction
+    = SelectPermanent SPACE AnimateVerb SPACE CreatureSpec (SPACE AnimateActionReminder)?
+    ;
+
+AnimateVerb
+    = "becomes a"
+    / "is a"
+    ;
+
+AnimateActionReminder
+    = "it's still " SelectPermanent
+    / "that's still " SelectPermanent
+    ;
+
+ChangeLoyaltyAction
+    = SignedNumber
+    / "0"
+    ;
+
+ChangeStateAction
+    = (SelectPermanent SPACE)? PermanentState
+    ;
+
+PermanentState
+    = "can't attack or block" 
+    / "can't attack" 
+    / "can't block" 
+    / "can't be blocked" 
+    / "attacks each turn if able"
+    / "can't be countered"
+    / "are " ColorSpec
+    / "are " Tribal " in addition to their other creature types"
+    ;
+
+SetPTAction
+    = "@'s power and toughness are each equal to the number of " SelectObject (" plus the number of " SelectObject)?
+    / SelectPermanent " are " Number "/" Number 
+    ;
+
+SacrificeAction
+    = "sacrifice" "s"? SPACE SelectPermanent (SPACE "unless you" SPACE Action)?
+    ;
+
+PoisonAction
+    = "gets" SPACE Count SPACE "poison counter" "s"?
+    ;
+
+MillAction
+    = "put" "s"? " the top " (Count SPACE)? Card " of his or her library into his or her graveyard"
+    ;
+
+DoesntUntapAction
+    = SelectPermanent " doesn't untap during its controller's untap step"
+    / SelectPermanent " doesn't untap during its controller's next untap step"
+    / SelectPermanent " doesn't untap during your untap step"
+    ;
+
+ShuffleAction
+    = "shuffle it into its owner's library"
+    / "shuffle your library"
+    ;
+
+PutTokenAction
+    = "put " Count SPACE CreatureTokenSpec " onto the battlefield"
+    / "put a token that's a copy of " SelectPermanent " onto the battlefield"
+    ;
+
+CreatureTokenSpec
+    = PowerToughness SPACE ColorSpec (SPACE CreatureType)* " artifact"? " creature token" "s"? (SPACE WithAbilitySpec)?
+    ;
+
+WithAbilitySpec
+    = "with " Keyword SEP Keyword
+    / "with " Keyword
+    ;
+
+CreatureSpec
+    = ("legendary" SPACE)? PowerToughness (SPACE ColorSpec)? (SPACE CreatureType)* " artifact"? " creature" (SPACE WithAbilitySpec)? 
+    ;
+
+ControlAction
+    = "control" "s"? SPACE SelectPermanent
+    / "gain control of " SelectPermanent 
+    ;
+
+ChangeCounterAction
+    = CounterVerb SPACE Count SPACE CounterType SPACE Counter " from " SelectPermanent
+    / CounterVerb SPACE Count SPACE CounterType SPACE Counter " on " SelectPermanent
+    ;
+
+CounterVerb
+    = "remove"
+    / "put"
+    ;
+
+Counter
+    = "counter" "s"?
+    ;
+
+PayManaAction
+    = "pay" "s"? SPACE ManaCost
+    / ManaCost
+    ;
+
+ChangeLifeAction
+    = ChangeLifeVerb SPACE Number SPACE "life"
+    ;
+
+ChangeLifeVerb
+    = "lose" "s"?
+    / "gain" "s"?
+    / "pay" "s"?
+    ;
+
+SelectPlayer
+    = Player &(SEP SingleEffect)
+    / Player (SEP Player)*
+    ;
+
+Player
+    = "target player"
+    / "target opponent"
+    / "that player"
+    / "each player"
+    / "each opponent"
+    / "your opponents"
+    / "an opponent"
+    / "you"
+    / "he or she"
+    / "its controller"
+    / "that "  SelectPermanent "'s controller"
+    / "its owner"
+    / "player"
+    / "a player"
+    ;
+
+PutCardAction
+    = "put " SelectCard " onto the battlefield under your control"
+    / "put " SelectCard " onto the battlefield"
+    ;
+
+ReturnAction
+    = BounceVerb SPACE SelectCard SPACE BounceLocation
+    ;
+
+BounceAction
+    = BounceVerb SPACE SelectPermanent SPACE BounceLocation
+    ;
+
+BounceLocation
+    = "to its owner's hand"
+    / "to their owners' hands"
+    / "to your hand" 
+    / "to the battlefield under its owner's control" 
+    / "to the battlefield" 
+    / "on top of its owner's library"
+    / "on top of your library"
+    / "on the bottom of its owner's library"
+    ;
+
+BounceVerb
+    = "return" "s"? 
+    / "put" "s"?
+    ;
+
+PreventAction
+    = "prevent the next " Number SPACE Damage SPACE "that would be dealt" (SPACE DamageRestriction)?
+    / "prevent all " Damage SPACE "that would be dealt" (SPACE DamageRestriction)?
+    / "if damage would be dealt to " DamageReceiver ", prevent that damage"
+    ;
+
+DamageRestriction
+    = DamageVerb SPACE DamageReceiver (SPACE "this turn by" SPACE DamageReceiver)?
+    ;
+
+DamageVerb
+    = "to and dealt by"
+    / "to"
+    / "by"
+    ;
+
+Damage
+    = "damage"
+    / "combat damage"
+    ;
+
+TapAction
+    = TapVerb SPACE SelectPermanent
+    / "{t}"
+    / "{q}"
+    ;
+
+TapVerb
+    = "tap or untap"
+    / "tap"
+    / "untap"
+    ;
+
+RegenerateAction
+    = "regenerate" SPACE SelectPermanent
+    ;
+
+DamageAction
+    = (SelectPermanent SPACE)? (Deal SPACE)? Number " damage to " DamageReceiver
+    / SelectPermanent SPACE Deal " damage equal to its power to " DamageReceiver
+    / SelectPermanent SPACE Deal " damage equal to the number of " CounterType " counters on it to " DamageReceiver
+    / SelectPermanent SPACE Deal " damage to " DamageReceiver " equal to the number of " SelectPermanent
+    ;
+
+Deal
+    = "deal" "s"?
+    ;
+
+EntersTapped
+    = "@ enters the battlefield tapped"
+    ;
+
+EntersWithCounter
+    = "@ enters the battlefield with" SPACE Count SPACE CounterType SPACE Counter " on it"
+    ;
+
+CounterType
+    = "-0/-1"
+    / "+0/+1"
+    / "-0/-2"
+    / "+0/+2"
+    / "-1/-0"
+    / "+1/+0"
+    / "-1/-1"
+    / "+1/+1"
+    / "+1/+2"
+    / "-2/-2"
+    / "+2/+2"
+    / "age"
+    / "aim"
+    / "arrow"
+    / "arrowhead"
+    / "awakening"
+    / "blaze"
+    / "blood"
+    / "bounty"
+    / "bribery"
+    / "carrion"
+    / "charge"
+    / "corpse"
+    / "credit"
+    / "cube"
+    / "currency"
+    / "death"
+    / "delay"
+    / "depletion"
+    / "despair"
+    / "devotion"
+    / "divinity"
+    / "doom"
+    / "dream"
+    / "echo"
+    / "elixir"
+    / "energy"
+    / "eon"
+    / "fade"
+    / "fate"
+    / "feather"
+    / "filibuster"
+    / "flame"
+    / "flood"
+    / "fungus"
+    / "fuse"
+    / "glyph"
+    / "gold"
+    / "growth"
+    / "hatchling"
+    / "healing"
+    / "hoofprint"
+    / "hourglass"
+    / "hunger"
+    / "husk"
+    / "ice"
+    / "infection"
+    / "intervention"
+    / "javelin"
+    / "ki"
+    / "level"
+    / "lore"
+    / "luck"
+    / "magnet"
+    / "mannequin"
+    / "matrix"
+    / "mine"
+    / "mining"
+    / "mire"
+    / "music"
+    / "net"
+    / "omen"
+    / "ore"
+    / "page"
+    / "pain"
+    / "paralyzation"
+    / "petal"
+    / "petrification"
+    / "phylactery"
+    / "pin"
+    / "plague"
+    / "poison"
+    / "polyp"
+    / "pressure"
+    / "pupa"
+    / "quest"
+    / "rust"
+    / "scream"
+    / "scroll"
+    / "shell"
+    / "shield"
+    / "shred"
+    / "sleep"
+    / "sleight"
+    / "slime"
+    / "soot"
+    / "spore"
+    / "storage"
+    / "strife"
+    / "study"
+    / "tide"
+    / "time"
+    / "training"
+    / "trap"
+    / "treasure"
+    / "velocity"
+    / "verse"
+    / "vitality"
+    / "wage"
+    / "winch"
+    / "wind"
+    / "wish"
+    ;
+
+Count
+    = "an"
+    / "a"
+    / "one"
+    / "two"
+    / "three"
+    / "four"
+    / "five"
+    / "six"
+    / "seven"
+    / "eight"
+    / "nine"
+    / "ten"
+    / "x"
+    ;
+
+Enchant
+    = "enchant" SPACE RestrictedPermanent
+    / "enchant player"
+    ;
+
+Duration
+    = "until end of turn"
+    / "for as long as " SelectPlayer " control @"
+    / "as long as you control three or more artifacts"
+    / "as long as seven or more cards are in your graveyard"
+    / "as long as you have no cards in hand"
+    / "this turn"
+    / "at the beginning of the next turn's upkeep"
+    / "at the beginning of the next end step"
+    / "at the beginning of your next end step"
+    ;
+
+GainAction
+    = (SelectPermanent SPACE)? GainVerb SPACE Keyword (SEP Keyword)*
+    ;
+
+GainVerb
+    = "has"
+    / "have"
+    / "gain" "s"?
+    / "lose" "s"?
+    ;
+
+PumpAction
+    = SelectCreature SPACE "get" "s"? SPACE PowerToughnessMod
+    ;
+
+AddManaAction
+    = "add " ManaSource
+    ;
+
+ManaSource
+    = "{1}"
+    / SingleColor (SEP SingleColor)*
+    / "one mana of any color"
+    ;
+
+DrawAction
+    = Draw SPACE Count SPACE Card
+    ;
+
+Draw
+    = "draw" "s"?
+    ;
+
+DiscardAction
+    = Discard SPACE SelectCard " at random"?
+    / Discard SPACE Count SPACE RestrictedCard " at random"
+    ;
+
+Discard
+    = "discard" "s"?
+    ;
+
+DestroyNoRegenAction
+    = "destroy" SPACE SelectPermanent EOS SPACE NoRegen
+    ;
+
+DestroyAction 
+    = "destroy" SPACE SelectPermanent
+    ;
+
+ExileAction
+    = "exile " SelectPermanent
+    / "exile " SelectCard
+    ;
+
+CounterAction
+    = "counter " SelectSpell (" unless " SingleEffect)?
+    ;
+
+SelectOp
+    = "target"
+    / "another target"
+    / "all"
+    / "an"
+    / "a"
+    / "each"
+    / "the"
+    / "that"
+    / "those"
+    ;
+
+SelectObject
+    = SelectCard
+    / SelectPermanent
+    ;
+
+SelectCard
+    = "@" (SPACE CardRestriction)? (SEP RestrictedCard)*
+    / "it"(SEP RestrictedCard)*
+    / (SelectOp SPACE)? RestrictedCard (SEP RestrictedCard)*
+    ;
+
+SelectCreature
+    = "@" (SEP RestrictedCreature)*
+    / "it" (SEP RestrictedCreature)*
+    / (SelectOp SPACE)? RestrictedCreature (SEP RestrictedCreature)*
+    ;
+
+SelectPermanent
+    = "@" (SEP RestrictedPermanent)*
+    / "it" (SEP RestrictedPermanent)*
+    / (SelectOp SPACE)? RestrictedPermanent (SEP RestrictedPermanent)*
+    ;
+
+SelectSpell
+    = "@" (SEP RestrictedSpell)*
+    / "it" (SEP RestrictedSpell)*
+    / (SelectOp SPACE)? RestrictedSpell (SEP RestrictedSpell)*
+    ;
+
+RestrictedPermanent
+    = (PermanentRestriction SPACE)* Permanent (SPACE PermanentRestriction)*
+    / RestrictedCreature
+    / RestrictedLand
+    / RestrictedArtifact
+    / RestrictedEnchantment
+    / RestrictedTribal
+    ;
+
+RestrictedArtifact
+    = (PermanentRestriction SPACE)*+ Artifact (SPACE PermanentRestriction)*
+    ;
+
+RestrictedEnchantment
+    = (PermanentRestriction SPACE)? Enchantment (SPACE PermanentRestriction)?
+    ;
+
+RestrictedLand
+    = (LandRestriction SPACE)? Land (SPACE LandRestriction)?
+    ;
+
+RestrictedTribal
+    = (PermanentRestriction SPACE)? Tribal (SPACE PermanentRestriction)?
+    ;
+
+RestrictedSpell
+    = (SpellRestriction SPACE)* Spell (SPACE SpellRestriction)*
+    ;
+
+ColorSpec
+    = Color (SEP Color)*
+    / "non" Color
+    / "colorless"
+    ;
+
+SpellRestriction
+    = ColorSpec
+    / "multicolored"
+    / "noncreature"
+    / "during an opponent's turn"
+    / "with infect"
+    / "with converted mana cost " Number " or less"
+    / "with converted mana cost " Number " or greater"
+    / "with converted mana cost " Number
+    / SpellType (SEP SpellType)*
+    / RestrictedPermanent (SEP RestrictedPermanent)* 
+    ;
+
+RestrictedCard
+    = (CardRestriction SPACE)* Card (SPACE CardRestriction)*
+    ;
+
+CardRestriction
+    = "exiled"
+    / "from a graveyard"
+    / "from your graveyard"
+    / "in all graveyards"
+    / "from your hand"
+    / "in your hand"
+    / "basic land"
+    / "land"
+    / SpellRestriction
+    / RestrictedCreature
+    ;
+
+RestrictedCreature
+    = (CreatureRestriction SPACE)* Creature (SPACE CreatureRestriction)*
+    / (CreatureRestriction SPACE)*+ Tribal (SPACE CreatureRestriction)*
+    ;
+
+PermanentRestriction
+    = ColorSpec
+    / SelectPlayer " control" "s"?
+    / SelectPlayer " don't control"
+    / "tapped"
+    / "untapped"
+    / "noncreature"
+    / "nonartifact, nonblack"
+    / "nonartifact"
+    / "nonland"
+    / "nontoken"
+    / "token" "s"?
+    / "artifact"
+    / "other than @"
+    / "another"
+    / "other"
+    / "legendary"
+    / "enchanted"
+    / "on the battlefield"
+    / "with converted mana cost " Number " or less"
+    / "with converted mana cost " Number " or greater"
+    / "with converted mana cost " Number
+    ;
+
+CreatureRestriction
+    = "with power " Number " or less"
+    / "with power " Number " or greater"
+    / "with " Keyword
+    / "without " Keyword
+    / "with a "  (CounterType SPACE)? "counter on it"
+    / "tapped or blocking"
+    / "attacking or blocking"
+    / "attacking"
+    / "blocking"
+    / "blocked"
+    / "equipped"
+    / "dealt damage by " SelectPermanent " this turn" 
+    / Tribal
+    / PermanentRestriction
+    / PowerToughness
+    ;
+
+LandRestriction
+    = "nonbasic"
+    / "basic"
+    / PermanentRestriction
+    ;
+
+Color
+    = "black"
+    / "blue"
+    / "green"
+    / "red"
+    / "white"
+    ;
+
+Tribal
+    = CreatureType "s"?
+    / "non-" CreatureType
+    ;
+
+SpellType
+    = "instant"
+    / "sorcery"
+    / "arcane"
+    / "spirit"
+    / "trap"
+    ;
+
+CreatureType
+    = "advisor"
+    / "ally"
+    / "angel"
+    / "anteater"
+    / "antelope"
+    / "ape"
+    / "archer"
+    / "archon"
+    / "artificer"
+    / "assassin"
+    / "assembly-worker"
+    / "atog"
+    / "aurochs"
+    / "avatar"
+    / "badger"
+    / "barbarian"
+    / "basilisk"
+    / "bat"
+    / "bear"
+    / "beast"
+    / "beeble"
+    / "berserker"
+    / "bird"
+    / "blinkmoth"
+    / "boar"
+    / "bringer"
+    / "brushwagg"
+    / "camarid"
+    / "camel"
+    / "caribou"
+    / "carrier"
+    / "cat"
+    / "centaur"
+    / "cephalid"
+    / "chimera"
+    / "citizen"
+    / "cleric"
+    / "cockatrice"
+    / "construct"
+    / "coward"
+    / "crab"
+    / "crocodile"
+    / "cyclops"
+    / "dauthi"
+    / "demon"
+    / "deserter"
+    / "devil"
+    / "djinn"
+    / "dragon"
+    / "drake"
+    / "dreadnought"
+    / "drone"
+    / "druid"
+    / "dryad"
+    / "dwarf"
+    / "efreet"
+    / "elder"
+    / "eldrazi"
+    / "elemental"
+    / "elephant"
+    / "elf"
+    / "elk"
+    / "eye"
+    / "faerie"
+    / "ferret"
+    / "fish"
+    / "flagbearer"
+    / "fox"
+    / "frog"
+    / "fungus"
+    / "gargoyle"
+    / "germ"
+    / "giant"
+    / "gnome"
+    / "goat"
+    / "goblin"
+    / "golem"
+    / "gorgon"
+    / "graveborn"
+    / "gremlin"
+    / "griffin"
+    / "hag"
+    / "harpy"
+    / "hellion"
+    / "hippo"
+    / "hippogriff"
+    / "homarid"
+    / "homunculus"
+    / "horror"
+    / "horse"
+    / "hound"
+    / "human"
+    / "hydra"
+    / "hyena"
+    / "illusion"
+    / "imp"
+    / "incarnation"
+    / "insect"
+    / "jellyfish"
+    / "juggernaut"
+    / "kavu"
+    / "kirin"
+    / "kithkin"
+    / "knight"
+    / "kobold"
+    / "kor"
+    / "kraken"
+    / "lammasu"
+    / "leech"
+    / "leviathan"
+    / "lhurgoyf"
+    / "licid"
+    / "lizard"
+    / "manticore"
+    / "masticore"
+    / "mercenary"
+    / "merfolk"
+    / "metathran"
+    / "minion"
+    / "minotaur"
+    / "monger"
+    / "mongoose"
+    / "monk"
+    / "moonfolk"
+    / "mutant"
+    / "myr"
+    / "mystic"
+    / "nautilus"
+    / "nephilim"
+    / "nightmare"
+    / "nightstalker"
+    / "ninja"
+    / "noggle"
+    / "nomad"
+    / "octopus"
+    / "ogre"
+    / "ooze"
+    / "orb"
+    / "orc"
+    / "orgg"
+    / "ouphe"
+    / "ox"
+    / "oyster"
+    / "pegasus"
+    / "pentavite"
+    / "pest"
+    / "phelddagrif"
+    / "phoenix"
+    / "pincher"
+    / "pirate"
+    / "plant"
+    / "praetor"
+    / "prism"
+    / "rabbit"
+    / "rat"
+    / "rebel"
+    / "reflection"
+    / "rhino"
+    / "rigger"
+    / "rogue"
+    / "salamander"
+    / "samurai"
+    / "sand"
+    / "saproling"
+    / "satyr"
+    / "scarecrow"
+    / "scorpion"
+    / "scout"
+    / "serf"
+    / "serpent"
+    / "shade"
+    / "shaman"
+    / "shapeshifter"
+    / "sheep"
+    / "siren"
+    / "skeleton"
+    / "slith"
+    / "sliver"
+    / "slug"
+    / "snake"
+    / "soldier"
+    / "soltari"
+    / "spawn"
+    / "specter"
+    / "spellshaper"
+    / "sphinx"
+    / "spider"
+    / "spike"
+    / "spirit"
+    / "splinter"
+    / "sponge"
+    / "squid"
+    / "squirrel"
+    / "starfish"
+    / "surrakar"
+    / "survivor"
+    / "tetravite"
+    / "thalakos"
+    / "thopter"
+    / "thrull"
+    / "treefolk"
+    / "triskelavite"
+    / "troll"
+    / "turtle"
+    / "unicorn"
+    / "vampire"
+    / "vedalken"
+    / "viashino"
+    / "volver"
+    / "wall"
+    / "warrior"
+    / "weird"
+    / "werewolf"
+    / "whale"
+    / "wizard"
+    / "wolf"
+    / "wolverine"
+    / "wombat"
+    / "worm"
+    / "wraith"
+    / "wurm"
+    / "yeti"
+    / "zombie"
+    / "zubera"
+    ;
+
+Creature
+    = "creature" "s"?
+    ;
+
+Artifact
+    = "artifact" "s"?
+    / "equipment" "s"?
+    ;
+
+Land
+    = "land" "s"?
+    / "swamp" "s"?
+    / "island" "s"?
+    / "forest" "s"?
+    / "mountain" "s"?
+    / "plains"
+    ;
+
+Enchantment
+    = "enchantment" "s"?
+    ;
+
+Permanent
+    = "permanent" "s"?
+    ;
+
+Card
+    = "card" "s"?
+    ;
+
+Spell
+    = "spell" "s"?
+    ;
+
+NoRegen 
+    = "it can't be regenerated"
+    / "they can't be regenerated"
+    ;
+
+PowerToughness
+    = Number "/" Number
+    ;
+
+PowerToughnessMod
+    = SignedNumber "/" SignedNumber
+    ;
+
+SignedNumber
+    = Sign Number
+    ;
+
+Number 
+    = [0-9]+
+    / "that much"
+    / "x"
+    ;
+
+Sign
+    = "+"
+    / "-"
+    ;
+
+SEP
+    = ", or "
+    / ", and "
+    / ", then "
+    / ", "
+    / " or "
+    / " and "
+    ;
+
+EOC
+    = ": "
+    ;
+
+SPACE 
+    = " "
+    ;
+    
+EOS 
+    = "."
+    ;
+
+EOR
+    = !_
+    ;

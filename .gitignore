@@ -1,6 +1,12 @@
 # sboosali:
 
 gitignored
+magarena
+
+# Makefile:
+
+out/
+tmp/
 
 # Compiled:
 
@@ -13,4 +19,3 @@ gitignored
 # Backup files:
 
 *~
-
