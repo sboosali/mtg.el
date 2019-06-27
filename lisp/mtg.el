@@ -20025,6 +20025,52 @@ Output:
   ())
 
 ;;----------------------------------------------;;
+;;; ElDoc --------------------------------------;;
+;;----------------------------------------------;;
+
+(defun mtg-eldoc (&optional point)
+
+  "`eldoc-function' for `mtg-mode'."
+
+  (let* ((POINT (or point (point)))
+         (NAME (mtg-card-name-at-point POINT))
+         )
+
+    ()))
+
+;;----------------------------------------------;;
+
+(defun mtg-eldoc/argument-case (string)
+
+  "`eldoc-argument-case' for `mtg-mode'.
+
+Inflect and fontify STRING for `eldoc-mode'.
+
+=== Usage ===
+
+    (setq-local eldoc-argument-case #'mtg-eldoc-argument-case)"
+
+  (let* ((STRING (upcase string))
+         )
+    (propertize STRING 'face 'font-lock-variable-name-face)))
+
+;;----------------------------------------------;;
+
+(defun mtg-summarize (name)
+
+  "Return a oneline summary of NAME.
+
+Inputs:
+
+• NAME — a `stringp'.
+  A card name and/or edition name."
+
+  (when-let* ((CARD (or (mtg-get-card-by-name name) (mtg-get-edition-by-name name)))
+ 
+
+    ()))
+
+;;----------------------------------------------;;
 ;;; Table --------------------------------------;;
 ;;----------------------------------------------;;
 

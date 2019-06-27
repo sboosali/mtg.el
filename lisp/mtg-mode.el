@@ -1295,11 +1295,13 @@ Call `mtg-program-version' to get the version of the currently-registered comman
     (setq-local fill-paragraph-function #'mtg-fill-paragraph)
     (setq-local adaptive-fill-function  #'mtg-adaptive-fill)
 
-    ;; ElDoc:
+    ;; ElDoc
 
     (if (eval-when-compile (fboundp #'add-function))
         (add-function :before-until (local 'eldoc-documentation-function) #'mtg-eldoc)
       (setq-local eldoc-documentation-function #'mtg-eldoc))
+
+    (setq-local eldoc-argument-case #'mtg-eldoc/argument-case)
 
     ;; Outline Mode:
 
