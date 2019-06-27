@@ -19749,6 +19749,150 @@ For example, this command matches these ‘mtg-card-name’s:
 ;;
 
 ;;----------------------------------------------;;
+;;; Search -------------------------------------;;
+;;----------------------------------------------;;
+
+;;
+
+(defvar mtg-query-mode-syntax-table
+
+
+
+  "Syntax Table for `mtg-query-mode'.
+
+")
+
+;;
+
+(define-derived-mode mtg-query-mode fundamental-mode
+
+  "Major Mode for writing “MTQ Queries”.
+
+`mtg-query' parses its minibuffer via `mtg-query-mode-syntax-table'.
+Because it doesn't initialize `mtg-query-mode' itself
+(i.e. enable `font-lock-mode' / run `
+`mtg-query-mode-hook' / etc),
+you can customize this mode without slowing down the command.")
+
+;;
+
+(defun mtg-search-parse-filter (filter)
+
+  "Parse the search-FILTER into a plist of search-constraints.
+
+Inputs:
+
+• FILTER — a `stringp'.
+
+Output:
+
+• a `listp' of `keywordp's and `atomp's (a plist)."
+
+  (let ((must-have ())
+        (must-not-have ())
+        (after nil)
+        (matches ())
+        (not-matches ())
+        (limit nil)
+        (feeds ()))
+
+  ;TODO; split the string on whitespace, while preserving (horizontal) whitespace within quotation marks. see `csv-split-string' (`csv-mode''s parser)?
+
+    (let* ((FILTER (or filter)))
+
+      (cl-loop for CHAR in FILTER
+
+         for CHAR-KIND = (cl-case CHAR
+                           (?\" 'quote)
+                           (?\( 'open-paren)
+                           (?\) 'close-paren)
+                           (_ nil))
+
+         do ))
+
+
+
+    (cl-loop for TOKEN in FILTER-TOKENS
+
+             for type = (aref TOKEN 0)
+
+             do (cl-case type
+
+                  (?+
+                   (let ((symbol (intern (substring element 1))))
+                     (unless (eq '## symbol)
+                       (push symbol must-have))))
+
+                  (?-
+                   (let ((symbol (intern (substring element 1))))
+                     (unless (eq '## symbol)
+                       (push symbol must-not-have))))
+
+                  (?@ (setf after (elfeed-time-duration (substring element 1))))
+
+                  (?! (let ((re (substring element 1)))
+                        (when (elfeed-valid-regexp-p re)
+                          (push re not-matches))))
+                  (?# (setf limit (string-to-number (substring element 1))))
+                  (?= (let ((url (substring element 1)))
+                        (push url feeds)))
+                  (otherwise (when (elfeed-valid-regexp-p element)
+                               (push element matches)))))
+
+    `(,@(when after
+          (list :after after))
+      ,@(when must-have
+          (list :must-have must-have))
+      ,@(when must-not-have
+          (list :must-not-have must-not-have))
+      ,@(when matches
+          (list :matches matches))
+      ,@(when not-matches
+          (list :not-matches not-matches))
+      ,@(when limit
+          (list :limit limit))
+      ,@(when feeds
+          (list :feeds feeds)))))
+
+;; Examples:
+;;
+;; * the `^ancestral *instant @draw` pattern — narrows to Card-Draw Instants. i.e. cards:
+;;
+;;     - whose Card Name starts with *Ancestral*.
+;;     - whose Card Type includes *Instant*.
+;;     - whose Rules Text includes *draw* case-insensitive and between word-boundaries. (e.g. *Draw ...* and *“... draw.”* both match, but *drawn* doesn't match).
+;;
+;; * the `elf *elf,warrior 1/` pattern — narrows to Card-Draw Instants. i.e. cards:
+;;
+;;    - whose Card Name includes the word *Elf*.
+;;    - whose Card Type includes both *Elf* and *Warrior*.
+;;    - whose Power is exactly `1` (and whose Toughness can be anything.)
+;;
+
+;; Related:
+;;
+;; • `elfeed-search-parse-filter'
+;; • `helm'
+;;
+
+;; Links:
+;;
+;; • URL `https://github.com/skeeto/elfeed'
+;; • URL `https://nullprogram.com/blog/2016/12/27/'
+;; • URL `https://nullprogram.com/blog/2016/12/11/'
+;;
+
+;; Elfeed:
+;;
+;; e.g. Elfeed Filter:
+;; 
+;; Here’s a filter that finds all entries from within the past year tagged “youtube” (+youtube) that mention Linux or Linus (linu[sx]), but aren’t tagged “bsd” (-bsd), limited to the most recent 15 entries (#15):
+;;
+;;     @1-year-old +youtube linu[xs] -bsd #15
+;;
+;;
+
+;;----------------------------------------------;;
 ;;; Motion -------------------------------------;;
 ;;----------------------------------------------;;
 
