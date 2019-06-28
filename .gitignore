@@ -1,7 +1,11 @@
 # sboosali:
 
 gitignored
+
+# (vendor)
+
 magarena
+mtg-font
 
 # Makefile:
 

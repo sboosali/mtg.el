@@ -19501,35 +19501,6 @@ Output:
 
 ;;==============================================;;
 
-(defcustom mtg-json-file
-
-  "Vintage.json.gz"
-
-  "Raw Data for `mtg-cards'.
-
-A `stringp', a “File Location”, which can be:
-
-• an absolute filepath.
-• a relative filepath — must be under `mtg-search-path'.
-• a URI — scheme must be HTTP(S).
-
-File Contents are JSON or ELisp data.
-
-Supported file extensions for the “File Location” are:
-
-• ‹.gz›   — assumes the File Contents are compressed.
-• ‹.json› — assumes the File Contents can be `json-read' as JSON.
-• ‹.el›   — assumes the File Contents can be `read' as Elisp struct (i.e. no code)."
-
-  :type '(choice
-          (string :tag "File")
-          (string :tag "URI"))
-
-  :safe #'stringp
-  :group 'mtg)
-
-;;----------------------------------------------;;
-
 (defcustom mtg-search-path
 
   '(default-directory
@@ -19623,6 +19594,45 @@ only if necessary (or if FORCE is non-nil)."
 ;;; JSON ---------------------------------------;;
 ;;----------------------------------------------;;
 
+(defgroup mtg-json nil
+
+  "Read JSON with schema MTGJSON or schema Scryfall."
+
+  :group 'mtg)
+
+;;==============================================;;
+;;; JSON Variables:
+
+(defcustom mtg-json-file
+
+  "Vintage.json.gz"
+
+  "Raw Data for `mtg-cards'.
+
+A `stringp', a “File Location”, which can be:
+
+• an absolute filepath.
+• a relative filepath — must be under `mtg-search-path'.
+• a URI — scheme must be HTTP(S).
+
+File Contents are JSON or ELisp data.
+
+Supported file extensions for the “File Location” are:
+
+• ‹.gz›   — assumes the File Contents are compressed.
+• ‹.json› — assumes the File Contents can be `json-read' as JSON.
+• ‹.el›   — assumes the File Contents can be `read' as Elisp struct (i.e. no code)."
+
+  :type '(choice
+          (string :tag "File")
+          (string :tag "URI"))
+
+  :safe #'stringp
+  :group 'mtg)
+
+;;==============================================;;
+;;; JSON Functions:
+
 (cl-defun mtg-read-cards ()
 
   "Return an `mtg-cards' struct."
@@ -19633,7 +19643,7 @@ only if necessary (or if FORCE is non-nil)."
 
 (defun mtg-json-parse (&optional json)
 
-  "Read a json file of MTG Cards.
+  "Read a « .json » file of MTG Cards.
 
 Inputs:
 
@@ -19648,11 +19658,14 @@ Output:
 
 Notes:
 
-• Schema — JSON's schema should be (at least) the Scryfall card schema 
-  (circa 2019).
+• Schema — JSON's schema should be (as of circa 2019), at least: 
+
+    • the Scryfall card schema.
+    • the MTGJSON card schema.
 
 Links:
 
+• URL `https://mtgjson.com/downloads/compiled/'
 • URL `https://scryfall.com/docs/api/cards'"
 
   (let ((json-object-type 'hash-table)
@@ -19681,7 +19694,8 @@ Links:
 ;;
 ;;
 
-;;----------------------------------------------;;
+;;==============================================;;
+;;; JSON Utilities:
 
 (defun mtg--read-lines (filepath)
 
