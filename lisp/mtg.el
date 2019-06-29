@@ -80,13 +80,1080 @@
 
 ;;----------------------------------------------;;
 
-(defconst mtg-json-version "0.0"
+(defconst mtg-json-version "4.4.2"
 
-  "Scheme/Data Version of ‘mtg.json’ (from which the builtin data is loaded).")
+  "Scheme/Data Version of ‘mtg.json’ (from which the builtin data is loaded).
+
+The ‘version.json’ which corresponds to ‘mtg.json’ data
+embedded in ‘mtg.el’ (i.e. this file) is:
+
+    {
+      \"date\": \"2019-06-26\",
+      \"version\": \"4.4.2\"
+    }
+
+URL `https://mtgjson.com/json/version.json'")
+
+;;----------------------------------------------;;
+;;; Variables ----------------------------------;;
+;;----------------------------------------------;;
+
+(defgroup mtg nil
+
+  "Customize “Magic: The Gathering”."
+
+  :link '(url-link :tag "GitHub" "https://github.com/sboosali/mtg.el")
+
+  )
+
+;;==============================================;;
+
+(defcustom mtg-search-path
+
+  '(default-directory
+    user-emacs-directory
+    mtg-xdg-data-dir
+    ".")
+
+  "Search Path for data files.
+
+`listp' of `stringp's and/or `symbolp's."
+
+  :type '(repeat (string :tag "Directory Literal")
+                 (symbol :tag "Directory Variable"))
+
+  :safe #'listp
+  :group 'mtg)
 
 ;;----------------------------------------------;;
 
-(defconst mtg-card-names-vector
+(defcustom mtg-card-name-punctuation-characters-list
+
+  (list ?\-
+        ?\,
+        ?\.
+        ?\:
+        ?\"
+        ?\'
+        ?\&
+        ?\!
+        ?\?
+        )
+
+  "Punctuation in Card Names
+
+a `listp' of `characterp's.
+
+For example, these black-bordered cards 
+have such punctuation characters:
+
+• “Borrowing 100,000 Arrows”
+• “To Arms!”
+• “Looter il-Kor”
+• “Yawgmoth's Will”"
+
+  :type '(repeat (character))
+
+  :safe #'listp
+  :group 'mtg)
+
+;; ^ « " !\"',-.01:?ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyzàáâéíöúû" »
+
+;;----------------------------------------------;;
+
+(defcustom mtg-card-name-article-strings-list
+
+  '("a" "an" "and" "as" "at" "but" "by" "en" "for" "from" "il" "in" "into" "of" "on" "or" "the" "to" "upon" "with")
+
+  "Articles in Card Names.
+
+a `listp' of `stringp's."
+
+  :type '(repeat (character))
+
+  :safe #'listp
+  :group 'mtg)
+
+;; ^ « " !\"',-.01:?ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyzàáâéíöúû" »
+
+;;----------------------------------------------;;
+;;; Accessors ----------------------------------;;
+;;----------------------------------------------;;
+
+(cl-defun mtg-cards (&key force)
+
+  "Accessor for variable `mtg-cards'.
+
+Inputs:
+
+• FORCE — a `booleanp'.
+  (Defaults to nil).
+
+Initialize `mtg-cards' from `mtg-json-file', 
+only if necessary (or if FORCE is non-nil)."
+
+  (unless (or mtg-cards (not force))
+    (setq mtg-cards (mtg-read-cards)))
+
+  mtg-cards)
+
+;;----------------------------------------------;;
+;;; JSON ---------------------------------------;;
+;;----------------------------------------------;;
+
+(defgroup mtg-json nil
+
+  "Read JSON with schema MTGJSON or schema Scryfall."
+
+  :group 'mtg)
+
+;;==============================================;;
+;; JSON Variables:
+
+(defcustom mtg-json-file
+
+  "Vintage.json.gz"
+
+  "Raw Data for `mtg-cards'.
+
+A `stringp', a “File Location”, which can be:
+
+• an absolute filepath.
+• a relative filepath — must be under `mtg-search-path'.
+• a URI — scheme must be HTTP(S).
+
+File Contents are JSON or ELisp data.
+
+Supported file extensions for the “File Location” are:
+
+• ‹.gz›   — assumes the File Contents are compressed.
+• ‹.json› — assumes the File Contents can be `json-read' as JSON.
+• ‹.el›   — assumes the File Contents can be `read' as Elisp struct (i.e. no code)."
+
+  :type '(choice
+          (string :tag "File")
+          (string :tag "URI"))
+
+  :safe #'stringp
+  :group 'mtg)
+
+;;==============================================;;
+;; JSON Functions:
+
+(cl-defun mtg-read-cards ()
+
+  "Return an `mtg-cards' struct."
+
+  TODO)
+
+;;----------------------------------------------;;
+
+(defun mtg-json-read (&optional json)
+
+  "Read a « .json » file of MTG Cards.
+
+Inputs:
+
+• JSON — a `stringp'.
+  Defaults to `mtg-json-file'.
+  The location of an ‘mtg.json’ file,
+  whose contents may be compressed.
+
+Output:
+
+• a `hash-table-p' of property-`listp's and/or `vectorp's.
+  an Elisp Json Object."
+
+  (let ((json-object-type 'hash-table)
+        (json-array-type  'vector)
+        (json-key-type    'keyword)
+        )
+
+    (let* ((JSON  (or json mtg-json-file))
+           (TABLE (json-read-file JSON))
+           )
+
+      TABLE)))
+
+;; ^ e.g.:
+;;
+;; M-: (defconst mtg-vintage-cards-plists (mtg-json-read "../data/Vintage.json.gz"))
+;;
+;; M-: (with-temp-file "../gitignored/Vintage.el" (prin1 mtg-vintage-cards (current-buffer)))
+;;
+;; ~$ gzip -c9 ./gitignored/Vintage.el > ./data/Vintage.el.gz
+;;
+;; 
+
+;;----------------------------------------------;;
+
+(defun mtg-json-parse (&optional json)
+
+  "Parse a « .json » file of MTG Cards.
+
+Inputs:
+
+• JSON — a `stringp'.
+  Defaults to `mtg-json-file'.
+  The location of an ‘mtg.json’ file, or of an ‘mtg.json.gz’ file
+  (whose contents may be compressed by the program ‘gzip’).
+
+Output:
+
+• a set of `mtg-card's.
+
+Notes:
+
+• Schema — JSON's schema should conform to, at least, either:
+
+    • the MTGJSON card schema.  [✓]
+    • the Scryfall card schema. [❌] (TODO)
+
+  ... as of circa 2019. 
+  i.e. the Json MUST HAVE all Required Fields of the two schemata (above);
+  it MAY HAVE extra fields (which are gracefully ignored.)
+
+Links:
+
+• URL `https://mtgjson.com/downloads/compiled/'
+• URL `https://scryfall.com/docs/api/cards'"
+
+  (let* ((TABLE (mtg-read-cards json))
+         
+         )
+
+    ()))
+
+;; ^ e.g.:
+;;
+;; M-: (defconst mtg-vintage-cards-structs (mtg-json-parse "../data/Vintage.json.gz"))
+;;
+
+;;==============================================;;
+;; JSON Utilities:
+
+(defun mtg--read-lines (filepath)
+
+  "Read/Parse FILEPATH, whose contents are one (quoted) string per line.
+
+Input:
+
+• FILEPATH — a `stringp'.
+
+Output:
+
+• a `listp' of `stringp's."
+
+  (with-temp-buffer
+    (insert-file-contents filepath)
+    (goto-char (point-min))
+    (mapcar #'read
+     (split-string (buffer-string) "\n" t))))
+
+;;----------------------------------------------;;
+;;; Regexps ------------------------------------;;
+;;----------------------------------------------;;
+
+(defun mtg-card-name-regexp ()
+
+  "Return a `regexpp' matching an ‘mtg-card-name’.
+
+For example, this command matches these ‘mtg-card-name’s:
+
+• “Empty the Warrens”
+• “Borrowing 100,000 Arrows”"
+
+  (let* ((CHAR-REGEXP
+          (rx-to-string `(char alpha digit ,@mtg-card-name-punctuation-characters-list) t))
+
+         (ARTICLE-REGEXP
+          (regexp-opt mtg-card-name-article-strings-list 'symbols))
+
+         (WORD-REGEXP
+          (rx-to-string `(or (regexp ,ARTICLE-REGEXP)
+                             (and word-start
+                                  (and (char upper digit)
+                                       (0+ (regexp ,CHAR-REGEXP)))
+                                  word-end))
+                        t))
+
+         (PHRASE-REGEXP
+          (rx-to-string `(1+ (and blank (regexp ,WORD-REGEXP)))))
+         )
+
+    PHRASE-REGEXP))
+
+;; ^ M-: (mtg-card-name-regexp)
+;;     ⇒ "\\(?:\\(?:\\(a\\(?:nd\\|[nst]\\)?\\|b\\(?:ut\\|y\\)\\|en\\|f\\(?:or\\|rom\\)\\|i\\(?:nto\\|[ln]\\)\\|o[fnr]\\|t\\(?:he\\|o\\)\\|upon\\|with\\)\\|\\<[[:upper:]][!\"',-.:?[:digit:][:alpha:]]*\\>\\)+\\)"
+
+;; e.g. ‘mtg-card-name’s:
+;;
+;; • card Ancestral Recall card
+;; • card Looter il-Kor card
+;; • card Borrowing 100,000 Arrows card
+;; • card To Arms! card
+;; • card Empty the Warrens card
+;;
+;; (re-search-backward "\\(?:\\(?:\\(a\\(?:nd\\|[nst]\\)?\\|b\\(?:ut\\|y\\)\\|en\\|f\\(?:or\\|rom\\)\\|i\\(?:nto\\|[ln]\\)\\|o[fnr]\\|t\\(?:he\\|o\\)\\|upon\\|with\\)\\|\\<[[:upper:]][!\"',-.:?[:digit:][:alpha:]]*\\>\\)+\\)")
+;;
+
+;;----------------------------------------------;;
+;;; Search -------------------------------------;;
+;;----------------------------------------------;;
+
+;;
+
+(defvar mtg-query-mode-syntax-table
+
+  ()
+
+  "Syntax Table for `mtg-query-mode'.")
+
+;;
+
+(define-derived-mode mtg-query-mode fundamental-mode
+
+  ()
+
+  "Major Mode for writing “MTQ Queries”.
+
+`mtg-query' parses its minibuffer via `mtg-query-mode-syntax-table'.
+Because it doesn't initialize `mtg-query-mode' itself
+(i.e. enable `font-lock-mode' / run `
+`mtg-query-mode-hook' / etc),
+you can customize this mode without slowing down the command.")
+
+;;
+
+;; (defun mtg-search-parse-filter (filter)
+
+;;   "Parse the search-FILTER into a plist of search-constraints.
+
+;; Inputs:
+
+;; • FILTER — a `stringp'.
+
+;; Output:
+
+;; • a `listp' of `keywordp's and `atomp's (a plist)."
+
+;;   (let ((must-have ())
+;;         (must-not-have ())
+;;         (after nil)
+;;         (matches ())
+;;         (not-matches ())
+;;         (limit nil)
+;;         (feeds ()))
+
+;;   ;TODO; split the string on whitespace, while preserving (horizontal) whitespace within quotation marks. see `csv-split-string' (`csv-mode''s parser)?
+
+;;     (let* ((FILTER (or filter)))
+
+;;       (cl-loop for CHAR in FILTER
+
+;;          for CHAR-KIND = (cl-case CHAR
+;;                            (?\" 'quote)
+;;                            (?\( 'open-paren)
+;;                            (?\) 'close-paren)
+;;                            (_ nil))
+
+;;          do ))
+
+
+
+;;     (cl-loop for TOKEN in FILTER-TOKENS
+
+;;              for type = (aref TOKEN 0)
+
+;;              do (cl-case type
+
+;;                   (?+
+;;                    (let ((symbol (intern (substring element 1))))
+;;                      (unless (eq '## symbol)
+;;                        (push symbol must-have))))
+
+;;                   (?-
+;;                    (let ((symbol (intern (substring element 1))))
+;;                      (unless (eq '## symbol)
+;;                        (push symbol must-not-have))))
+
+;;                   (?@ (setf after (elfeed-time-duration (substring element 1))))
+
+;;                   (?! (let ((re (substring element 1)))
+;;                         (when (elfeed-valid-regexp-p re)
+;;                           (push re not-matches))))
+;;                   (?# (setf limit (string-to-number (substring element 1))))
+;;                   (?= (let ((url (substring element 1)))
+;;                         (push url feeds)))
+;;                   (otherwise (when (elfeed-valid-regexp-p element)
+;;                                (push element matches)))))
+
+;;     `(,@(when after
+;;           (list :after after))
+;;       ,@(when must-have
+;;           (list :must-have must-have))
+;;       ,@(when must-not-have
+;;           (list :must-not-have must-not-have))
+;;       ,@(when matches
+;;           (list :matches matches))
+;;       ,@(when not-matches
+;;           (list :not-matches not-matches))
+;;       ,@(when limit
+;;           (list :limit limit))
+;;       ,@(when feeds
+;;           (list :feeds feeds)))))
+
+;; Examples:
+;;
+;; * the `^ancestral *instant @draw` pattern — narrows to Card-Draw Instants. i.e. cards:
+;;
+;;     - whose Card Name starts with *Ancestral*.
+;;     - whose Card Type includes *Instant*.
+;;     - whose Rules Text includes *draw* case-insensitive and between word-boundaries. (e.g. *Draw ...* and *“... draw.”* both match, but *drawn* doesn't match).
+;;
+;; * the `elf *elf,warrior 1/` pattern — narrows to Card-Draw Instants. i.e. cards:
+;;
+;;    - whose Card Name includes the word *Elf*.
+;;    - whose Card Type includes both *Elf* and *Warrior*.
+;;    - whose Power is exactly `1` (and whose Toughness can be anything.)
+;;
+
+;; Related:
+;;
+;; • `elfeed-search-parse-filter'
+;; • `helm'
+;;
+
+;; Links:
+;;
+;; • URL `https://github.com/skeeto/elfeed'
+;; • URL `https://nullprogram.com/blog/2016/12/27/'
+;; • URL `https://nullprogram.com/blog/2016/12/11/'
+;;
+
+;; Elfeed:
+;;
+;; e.g. Elfeed Filter:
+;; 
+;; Here’s a filter that finds all entries from within the past year tagged “youtube” (+youtube) that mention Linux or Linus (linu[sx]), but aren’t tagged “bsd” (-bsd), limited to the most recent 15 entries (#15):
+;;
+;;     @1-year-old +youtube linu[xs] -bsd #15
+;;
+;;
+
+;;----------------------------------------------;;
+;;; Motion -------------------------------------;;
+;;----------------------------------------------;;
+
+(progn
+  
+  (defun mtg-forward-card-name (&optional count)
+
+    "Move across MTG Card Names.
+
+Inputs:
+
+ • COUNT — an optional `integerp'.
+   When `called-interactively-p', the “Prefix Argument”. 
+   If COUNT is:
+       ° positive — Move forwards to (the end of) the next card name.
+       ° negative — Move backwards to (the end of) the prior card name.
+
+Effects:
+
+• Moves `point'.
+
+Metadata:
+
+• Registered with ‘thingatpt.el’ as `mtg-card-name’ —
+  Implements the property `forward-op' 
+  for the “thing” symbol `mtg-card-name'.
+
+Usage
+
+• M-: (thing-at-point 'mtg-card-name)
+
+Notes:
+
+• Card Names, idiomatically:
+
+    • must end with, and should start with, a `capitalize'd word.
+      (should mostly contain capitalized words, anyways).
+    • may have some punctuation characters (comma, hyphen, apostrophe, colon).
+    • may include `downcase'd articles.
+
+For example, this command skips across/until these ‘mtg-card-name’s:
+
+• “Empty the Warrens”
+• “Borrowing 100,000 Arrows”"
+
+    (interactive "P")
+
+    (let* ((COUNT (or count +1))
+           )
+
+      (if (natnump COUNT)
+
+          (re-search-forward (mtg-card-name-regexp) nil t COUNT)
+
+        (while (< COUNT 0)
+
+          (if (re-search-backward (mtg-card-name-regexp) nil t)
+              (skip-syntax-backward "w_"))
+
+          (setq COUNT (1+ COUNT))))))
+
+  (put 'mtg-card-name 'forward-op 'mtg-forward-card-name))
+
+;; ^ Notes:
+;;
+;; • « (put '_ 'forward-op #'_) » registers a “Thing” for `thingatpt.el'.
+;; • `forward-symbol' calls `re-search-forward': « (re-search-forward "\\(\\sw\\|\\s_\\)+" nil 'move arg) »
+;; • « "\\(\\sw\\|\\s_\\)+" » matches one-or-more Symbol Characters (w.r.t. Syntax Class)
+;;   and/or Word Characters (w.r.t. Syntax Class).
+;; • 
+;;
+
+;;----------------------------------------------;;
+;;; Styling ------------------------------------;;
+;;----------------------------------------------;;
+
+(cl-defun mtg-propertize-card-name (text)
+
+  "`propertize' TEXT as a Card Name.
+
+Inputs:
+
+• TEXT — a `stringp'.
+
+Output:
+
+• a `stringp'.
+  TEXT, with different Text Properties.
+
+Properties:
+
+• Italics — Italicize some prefixes,
+  like the “il” in  “il-Kor”.
+"
+
+  ())
+
+;;----------------------------------------------;;
+
+(cl-defun mtg-propertize-rules-text (text)
+
+  "`propertize' TEXT as Rules Text.
+
+Inputs:
+
+• TEXT — a `stringp'.
+
+Output:
+
+• a `stringp'.
+  TEXT, with different Text Properties."
+
+  ())
+
+;;----------------------------------------------;;
+
+(cl-defun mtg-propertize-flavor-text (text)
+
+  "`propertize' TEXT as Flavor Text.
+
+Inputs:
+
+• TEXT — a `stringp'.
+
+Output:
+
+• a `stringp'.
+  TEXT, with different Text Properties."
+
+  ())
+
+;;----------------------------------------------;;
+;;; ElDoc --------------------------------------;;
+;;----------------------------------------------;;
+
+(defun mtg-eldoc (&optional point)
+
+  "`eldoc-function' for `mtg-mode'."
+
+  (let* ((POINT (or point (point)))
+         (NAME (mtg-card-name-at-point POINT))
+         )
+
+    ()))
+
+;;----------------------------------------------;;
+
+(defun mtg-eldoc/argument-case (string)
+
+  "`eldoc-argument-case' for `mtg-mode'.
+
+Inflect and fontify STRING for `eldoc-mode'.
+
+=== Usage ===
+
+    (setq-local eldoc-argument-case #'mtg-eldoc-argument-case)"
+
+  (let* ((STRING (upcase string))
+         )
+    (propertize STRING 'face 'font-lock-variable-name-face)))
+
+;;----------------------------------------------;;
+
+(defun mtg-summarize (name)
+
+  "Return a oneline summary of NAME.
+
+Inputs:
+
+• NAME — a `stringp'.
+  A card name and/or edition name."
+
+  (when-let* ((CARD (or (mtg-get-card-by-name name) (mtg-get-edition-by-name name)))
+ 
+
+    ())))
+
+;;----------------------------------------------;;
+;;; Indentation --------------------------------;;
+;;----------------------------------------------;;
+
+(defsubst mtg/within-comment-p ()
+  "Return non-nil if `point' is within a (oneline or multiline) comment"
+  (nth 4 (syntax-ppss)))
+
+;;----------------------------------------------;;
+;;; Skeletons ----------------------------------;;
+;;----------------------------------------------;;
+
+(define-skeleton mtg-card
+
+    "Prompt for a tag and insert it, optionally with attributes.
+Completion and configuration are done according to `sgml-tag-alist'.
+If you like tags and attributes in uppercase, customize
+`sgml-transformation-function' to `upcase'."
+  (funcall (or skeleton-transformation-function 'identity)
+           (setq sgml-tag-last
+		 (completing-read
+		  (if (> (length sgml-tag-last) 0)
+		      (format "Tag (default %s): " sgml-tag-last)
+		    "Tag: ")
+		  sgml-tag-alist nil nil nil 'sgml-tag-history sgml-tag-last)))
+  ?< str |
+  (("") -1 '(undo-boundary) (identity "&lt;")) |	; see comment above
+  `(("") '(setq v2 (sgml-attributes ,str t)) ?>
+    (cond
+      ((string= "![" ,str)
+       (backward-char)
+       '(("") " [ " _ " ]]"))
+      ((and (eq v2 t) sgml-xml-mode (member ,str sgml-empty-tags))
+       '(("") -1 " />"))
+      ((or (and (eq v2 t) (not sgml-xml-mode)) (string-match "^[/!?]" ,str))
+       nil)
+      ((symbolp v2)
+       ;; Make sure we don't fall into an infinite loop.
+       ;; For xhtml's `tr' tag, we should maybe use \n instead.
+       (if (eq v2 t) (setq v2 nil))
+       ;; We use `identity' to prevent skeleton from passing
+       ;; `str' through `skeleton-transformation-function' a second time.
+       '(("") v2 _ v2 "</" (identity ',str) ?> >))
+      ((eq (car v2) t)
+       (cons '("") (cdr v2)))
+      (t
+       (append '(("") (car v2))
+               (cdr v2)
+               '(resume: (car v2) _ "</" (identity ',str) ?> >))))))
+
+;;----------------------------------------------;;
+;;; Menu Bar -----------------------------------;;
+;;----------------------------------------------;;
+
+(defgroup mtg-menu nil
+
+  "MTG Menu (in the Menu Bar)."
+
+  :prefix 'mtg-menu
+  :group 'mtg)
+
+;;==============================================;;
+
+(defun mtg-menu/customization-changed (variable value)
+
+  "Function called when the MTG Menu customization has changed.
+Set VARIABLE with VALUE, and force a rebuild of the MTG Menu."
+
+  (if (and (featurep 'mtg) (mtg-menu/enabled-p))
+
+      (progn ;; Unavailable until mtg has been loaded.
+
+        (mtg-menu/hide)
+        (set-default variable value)
+        (mtg-menu/show))
+
+    (set-default variable value)))
+
+;;----------------------------------------------;;
+
+(defun mtg-menu/enabled-p ()
+
+  "Whether the MTG Menu is enabled.
+
+Output:
+
+• a `booleanp'."
+
+  (or (bound-and-true-p mtg-mode)
+      nil))
+
+;;==============================================;;
+
+(defcustom mtg-menu/menu-title "Open Recent"
+
+  "Name of the MTG Menu."
+
+  :type 'string
+  :set #'mtg-menu/customization-changed
+
+  :group 'mtg-menu)
+
+;;----------------------------------------------;;
+
+(defcustom mtg-menu/menu-path '("File")
+
+  "Path where to add the MTG Menu.
+
+If nil add it at top level (see also `easy-menu-add-item')."
+
+  :type '(choice (const :tag "Top Level" nil)
+          (sexp :tag "Menu Path"))
+  :set 'mtg-menu/customization-changed
+
+  :group 'mtg-menu)
+
+;;----------------------------------------------;;
+
+(defcustom mtg-menu/next-menu-title "Help"
+
+  "Name of the menu before which the MTG Menu will be added.
+
+If nil, add it at end of menu (see also `easy-menu-add-item')."
+
+  :type '(choice (string :tag "Name")
+          (const :tag "Last" nil))
+  :set 'mtg-menu/customization-changed
+
+  :group 'mtg-menu)
+
+;;==============================================;;
+
+(defun mtg-menu/show ()
+  "Show the menu of recently opened files."
+  (easy-menu-add-item
+   (mtg-menu-bar) mtg-menu-path
+   (list mtg-menu-title :filter 'mtg-make-menu-items)
+   mtg-menu-before))
+
+;;----------------------------------------------;;
+
+(defun mtg-menu/hide ()
+  "Hide the menu of recently opened files."
+  (easy-menu-remove-item (mtg-menu--get-global-menubar) mtg-menu/menu-path
+                         mtg-menu/menu-title))
+
+;;==============================================;;
+
+(defsubst mtg-menu--get-global-menubar ()
+
+  "Return the `keymapp' of the global Menu Bar."
+
+  (lookup-key global-map [menu-bar]))
+
+;;----------------------------------------------;;
+;;; Tool Bar -----------------------------------;;
+;;----------------------------------------------;;
+
+;;----------------------------------------------;;
+;;; Table --------------------------------------;;
+;;----------------------------------------------;;
+
+(defgroup mtg-table nil
+
+  "Customize `mtg-table-mode'."
+
+  :link '(url-link :tag "GitHub" "https://github.com/sboosali/mtg.el")
+  :group 'mtg)
+
+;;==============================================;;
+
+(defconst mtg-table-buffer-name "*MTG Cards*"
+
+  "Default `buffer-name' for `mtg-table-mode'.
+
+a `stringp'.")
+
+;;----------------------------------------------;;
+
+(defconst mtg-default-table-list-format
+
+  (vector `("Name"      ,mtg-longest-card-name-length t)
+          `("Cost"      nil t)
+          `("Colors"    nil t)
+          `("Type"      nil t)
+          `("Body"      nil t)               ; both Power/Toughness and Loyalty.
+          `("Rules"     nil t)
+
+          `("Rarity"    nil t)
+          `("Set"       nil t)
+          `("Flavor"    nil t)
+          `("Artist"    nil t)
+          `("Frame"     nil t)
+          `("Watermark" nil t)
+          )
+
+  "Default `tabulated-list-format' for `mtg-table-mode'.
+
+a `vectorp' of `listp's of « (NAME WIDTH SORTER) » triplets.")
+
+;;----------------------------------------------;;
+
+(defcustom mtg-table-list-format-list
+
+  nil
+
+  "Table Format for `mtg-table-mode'.
+
+a `listp' of columns (`symbolp's) and/or triplets (`listp's) with form:
+
+    (NAME &optional WIDTH SORTER)
+
+Ignored if nil, defaulting to `mtg-default-table-list-format'."
+
+  :type '(repeat (choice (symbol :tag "Known Column Format")
+
+                         (list (string :tag "Column Name")
+
+                               (choice (integer   :tag "Minimum Column Width")
+                                       (const nil :tag "Don't Pad Column"))
+
+                               (choice (function  :tag "Sort Column by Comparator")
+                                       (const t   :tag "Sort Column as String")
+                                       (const nil :tag "Don't Sort Column")))))
+
+  :safe #'listp
+  :group 'mtg-table)
+
+;;----------------------------------------------;;
+
+(defun mtg-table/convert-to-tabulated-list-format (table-format)
+
+  "Convert TABLE-FORMAT to conform to `tabulated-list-format'.
+
+Notes:
+
+• `mtg-table-list-format''s form, a `listp', is more customizeable.
+• `mtg-default-table-list-format''s form, a `vectorp', is more efficient."
+
+  (todo))
+
+;;----------------------------------------------;;
+
+(defun mtg-tabulated-list-entries ()
+
+  "Return `tabulated-list-entries' for `mtg-table-mode'.
+
+Table Entries:
+
+• conform to `mtg-tabulated-list-format'.
+• are distinguished by their “Multiverse ID”."
+
+  ())
+
+;;----------------------------------------------;;
+
+(cl-defun mtg-table/clean-text (text &key width separator)
+
+  "Return TEXT as a valid Table Entry (for `tabulated-list-mode').
+
+Inputs:
+
+• TEXT      — a `stringp'. 
+
+• WIDTH     — an `integerp' or nil. 
+  Defaults to nil (i.e. no maximum width).
+
+• SEPARATOR — a `stringp' or nil. 
+  Defaults to “ | ”.
+
+Transformations include:
+
+• Replace newlines with “|” (i.e. a vertical bar).
+• Truncate to a `string-width' of WIDTH, with “…” (i.e. ellipses)."
+
+  (let* ((SEPARATOR (or separator " | "))      ;TODO (propertize " | " 'face 'mtg-table-text-separator)
+
+         (TEXT-ONELINE
+          (string-join (split-string (string-trim text) "[\f\n\r\v]+" :omit-nulls) SEPARATOR))
+
+         (TEXT-TRUNCATED
+          (if (and width (natnump width))
+              (let ((PADDING  nil)
+                    (ELLIPSIS "…")
+                    (COLUMN-END width)
+                    (COLUMN-BEG 0)
+                    )
+                (truncate-string-to-width TEXT-ONELINE COLUMN-END COLUMN-BEG PADDING ELLIPSIS))
+            TEXT-ONELINE))
+         )
+
+    TEXT-TRUNCATED))
+
+;; ^ Examples:
+;;
+;; M-: (mtg-table/clean-text " \nEnchant creature\n{G}: Regenerate enchanted creature.\n " :width nil)
+;;   ⇒ "Enchant creature | {G}: Regenerate enchanted creature."
+;;
+;; M-: (mtg-table/clean-text " \nEnchant creature\n{G}: Regenerate enchanted creature.\n " :width 25)
+;;   ⇒ "Enchant creature | {G}: …"
+;;
+;; M-: (mtg-table/clean-text " \nEnchant creature\n{G}: Regenerate enchanted creature.\n " :separator " ")
+;;   ⇒ "Enchant creature {G}: Regenerate enchanted creature."
+;;
+
+;; ^ Notes:
+;;
+;; M-: (string-join (split-string (string-trim " \nEnchant creature\n{G}: Regenerate enchanted creature.\n ") "[\f\n\r\v]+" :omit-nulls) " | ")
+;;   ⇒ "Enchant creature | {G}: Regenerate enchanted creature."
+;;
+
+;;----------------------------------------------;;
+
+(defun mtg-table-list-format ()
+
+  "Accessor for `mtg-table-list-format'.
+
+Output:
+
+• a Table Format.
+  See `tabulated-list-format'.
+  Defaults to `mtg-default-table-list-format'."
+
+  (let* ((FORMAT-LIST   (bound-and-true-p mtg-table-list-format))
+         (FORMAT-VECTOR (if FORMAT-LIST
+                            (mtg-table/convert-to-tabulated-list-format FORMAT-LIST)
+                          mtg-default-table-list-format))
+         )
+
+    FORMAT-VECTOR))
+
+;;----------------------------------------------;;
+
+;;;###autoload
+(define-derived-mode mtg-table-mode tabulated-list-mode
+
+  (progn
+
+    (setq-local tabulated-list-format (mtg-table-list-format))
+
+    (tabulated-list-init-header)
+
+    ()))
+
+;;----------------------------------------------;;
+
+;;;###autoload
+(defun list-mtg-cards ()
+
+  "List all MTG Cards.
+
+Effects:
+
+• Activate the “*MTG Cards*” buffer
+  (creating it if necessary).
+• Fetch/Munge the MTG Card data.
+• Populate the that buffer with that data.
+• Turn on `mtg-table-mode'."
+
+  (interactive)
+
+  (let* ((BUFFER (get-buffer-create mtg-table-buffer-name))
+        )
+
+  (progn
+
+    (switch-to-buffer BUFFER)
+
+    ()
+
+    (tabulated-list-print ())
+
+    (mtg-table-mode +1))))
+
+;;----------------------------------------------;;
+;; (Un/)Loading --------------------------------;;
+;;----------------------------------------------;;
+
+;;;###autoload
+(defun mtg-setup ()
+
+  "Setup `mtg'.
+
+”Setup“ includes:
+
+• Registering `mtg-mode' with `auto-mode-alist'.
+• Registering `mtg-mode' with `interpreter-mode-alist'.
+
+Related:
+
+• Gated by `mtg-setup-p'.
+• Inverted by `mtg-unload-function'."
+
+  (progn
+
+    (add-to-list 'auto-mode-alist (cons mtg-filepath-regexp #'mtg-mode))
+
+    (with-eval-after-load 'company
+      (with-demoted-errors "[MTG] Company] %s"
+        (when (require 'mtg-company)
+          (mtg-company-setup))))
+
+    ()))
+
+;;----------------------------------------------;;
+
+(defun mtg-unload-function ()
+
+  "`unload-feature' for `mtg'.
+
+Inverts `mtg-setup' and `inferior-mtg-setup' 
+(which get executed by « (load \"mtg.el\") »).
+
+Effects:
+
+• Unregisters `mtg-mode' from `auto-mode-alist'.
+• Unregisters `mtg-mode' from `interpreter-mode-alist'."
+
+  (progn
+
+    (setq auto-mode-alist
+          (cl-remove #'mtg-mode auto-mode-alist        :test #'equal :key #'cdr))
+
+    (setq interpreter-mode-alist
+          (cl-remove #'mtg-mode interpreter-mode-alist :test #'equal :key #'cdr))
+
+    ()))
+
+;;----------------------------------------------;;
+;;; Data ---------------------------------------;;
+;;----------------------------------------------;;
+
+;;----------------------------------------------;;
+
+(defconst mtg-data/card-names-vector
 
   [
    "A Display of My Dark Power"
@@ -19410,9 +20477,9 @@ and/or are Vintage-legal and/or are black-brodered.")
 
 ;;==============================================;;
 
-(defun mtg-card-names (&optional type)
+(defun mtg-data/card-names (&optional type)
 
-  "Accessor for `mtg-card-names-vector'.
+  "Accessor for `mtg-data/card-names-vector'.
 
 Inputs:
 
@@ -19438,37 +20505,37 @@ Compatibility:
   (let* ()
 
     (if (and type (symbolp type))
-        (seq-into mtg-card-names-vector type)
-      mtg-card-names-vector)))
+        (seq-into mtg-data/card-names-vector type)
+      mtg-data/card-names-vector)))
 
 ;;----------------------------------------------;;
 
-(defun mtg-card-names-count ()
+(defun mtg-data/card-names-count ()
 
-  "Derive the `length' of `mtg-card-names'.
+  "Derive the `length' of `mtg-data/card-names'.
 
 Output:
 
 • a `natnump'.
   Currently, ~20,000"
 
-  (let* ((CARDS (mtg-card-names))
+  (let* ((CARDS (mtg-data/card-names))
          )
 
     (length CARDS)))
 
 ;;----------------------------------------------;;
 
-(defun mtg-longest-card-name-length ()
+(defun mtg-data/longest-card-name-length ()
 
-  "Derive the longest among `mtg-card-names'.
+  "Derive the longest among `mtg-data/card-names'.
 
 Output:
 
 • a `natnump'.
   Currently, 33."
 
-  (let* ((CARDS (mtg-card-names))
+  (let* ((CARDS (mtg-data/card-names))
          )
 
     (seq-reduce (lambda (*LENGTH* *STRING*) (max *LENGTH* (length *STRING*)))
@@ -19477,1033 +20544,21 @@ Output:
 
 ;;==============================================;;
 
-(defconst mtg-card-names-count (mtg-card-names-count)
+(defconst mtg-data/card-names-count (mtg-data/card-names-count)
 
-  "Default `mtg-card-names-count'.")
-
-;;----------------------------------------------;;
-
-(defconst mtg-longest-card-name-length (mtg-longest-card-name-length)
-
-  "Default `mtg-longest-card-name-length'.")
-
-;;----------------------------------------------;;
-;;; Variables ----------------------------------;;
-;;----------------------------------------------;;
-
-(defgroup mtg nil
-
-  "Customize “Magic: The Gathering”."
-
-  :link '(url-link :tag "GitHub" "https://github.com/sboosali/mtg.el")
-
-  )
-
-;;==============================================;;
-
-(defcustom mtg-search-path
-
-  '(default-directory
-    user-emacs-directory
-    mtg-xdg-data-dir
-    ".")
-
-  "Search Path for data files.
-
-`listp' of `stringp's and/or `symbolp's."
-
-  :type '(repeat (string :tag "Directory Literal")
-                 (symbol :tag "Directory Variable"))
-
-  :safe #'listp
-  :group 'mtg)
+  "Default `mtg-data/card-names-count'.")
 
 ;;----------------------------------------------;;
 
-(defcustom mtg-card-name-punctuation-characters-list
+(defconst mtg-data/longest-card-name-length (mtg-data/longest-card-name-length)
 
-  (list ?\-
-        ?\,
-        ?\.
-        ?\:
-        ?\"
-        ?\'
-        ?\&
-        ?\!
-        ?\?
-        )
-
-  "Punctuation in Card Names
-
-a `listp' of `characterp's.
-
-For example, these black-bordered cards 
-have such punctuation characters:
-
-• “Borrowing 100,000 Arrows”
-• “To Arms!”
-• “Looter il-Kor”
-• “Yawgmoth's Will”"
-
-  :type '(repeat (character))
-
-  :safe #'listp
-  :group 'mtg)
-
-;; ^ « " !\"',-.01:?ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyzàáâéíöúû" »
-
-;;----------------------------------------------;;
-
-(defcustom mtg-card-name-article-strings-list
-
-  '("a" "an" "and" "as" "at" "but" "by" "en" "for" "from" "il" "in" "into" "of" "on" "or" "the" "to" "upon" "with")
-
-  "Articles in Card Names.
-
-a `listp' of `stringp's."
-
-  :type '(repeat (character))
-
-  :safe #'listp
-  :group 'mtg)
-
-;; ^ « " !\"',-.01:?ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyzàáâéíöúû" »
-
-;;----------------------------------------------;;
-;;; Accessors ----------------------------------;;
-;;----------------------------------------------;;
-
-(cl-defun mtg-cards (&key force)
-
-  "Accessor for variable `mtg-cards'.
-
-Inputs:
-
-• FORCE — a `booleanp'.
-  (Defaults to nil).
-
-Initialize `mtg-cards' from `mtg-json-file', 
-only if necessary (or if FORCE is non-nil)."
-
-  (unless (or mtg-cards (not force))
-    (setq mtg-cards (mtg-read-cards)))
-
-  mtg-cards)
-
-;;----------------------------------------------;;
-;;; JSON ---------------------------------------;;
-;;----------------------------------------------;;
-
-(defgroup mtg-json nil
-
-  "Read JSON with schema MTGJSON or schema Scryfall."
-
-  :group 'mtg)
-
-;;==============================================;;
-;;; JSON Variables:
-
-(defcustom mtg-json-file
-
-  "Vintage.json.gz"
-
-  "Raw Data for `mtg-cards'.
-
-A `stringp', a “File Location”, which can be:
-
-• an absolute filepath.
-• a relative filepath — must be under `mtg-search-path'.
-• a URI — scheme must be HTTP(S).
-
-File Contents are JSON or ELisp data.
-
-Supported file extensions for the “File Location” are:
-
-• ‹.gz›   — assumes the File Contents are compressed.
-• ‹.json› — assumes the File Contents can be `json-read' as JSON.
-• ‹.el›   — assumes the File Contents can be `read' as Elisp struct (i.e. no code)."
-
-  :type '(choice
-          (string :tag "File")
-          (string :tag "URI"))
-
-  :safe #'stringp
-  :group 'mtg)
-
-;;==============================================;;
-;;; JSON Functions:
-
-(cl-defun mtg-read-cards ()
-
-  "Return an `mtg-cards' struct."
-
-  TODO)
-
-;;----------------------------------------------;;
-
-(defun mtg-json-parse (&optional json)
-
-  "Read a « .json » file of MTG Cards.
-
-Inputs:
-
-• JSON — a `stringp'.
-  Defaults to `mtg-json-file'.
-  The location of an ‘mtg.json’ file,
-  whose contents may be compressed.
-
-Output:
-
-• a set of `mtg-card's.
-
-Notes:
-
-• Schema — JSON's schema should be (as of circa 2019), at least: 
-
-    • the Scryfall card schema.
-    • the MTGJSON card schema.
-
-Links:
-
-• URL `https://mtgjson.com/downloads/compiled/'
-• URL `https://scryfall.com/docs/api/cards'"
-
-  (let ((json-object-type 'hash-table)
-        (json-array-type  'vector)
-        (json-key-type    'keyword)
-        )
-
-    (let* ((JSON  (or json mtg-json-file))
-           (TABLE (json-read-file JSON))
-           )
-
-      TABLE)))
-
-;; ^ e.g.:
-;;
-;; M-: (defconst mtg-vintage-cards (mtg-json-parse "../data/Vintage.json.gz"))
-;; M-: (with-temp-file "../gitignored/Vintage.el" (prin1 mtg-vintage-cards (current-buffer)))
-;;
-;; $ gzip -c9 ./gitignored/Vintage.el > ./data/Vintage.el.gz
-;;
-;; 
-
-;; ^ Notes:
-;;
-;; M-: (json-read-file "../data/Vintage.json.gz")
-;;
-;;
-
-;;==============================================;;
-;;; JSON Utilities:
-
-(defun mtg--read-lines (filepath)
-
-  "Read/Parse FILEPATH, whose contents are one (quoted) string per line.
-
-Input:
-
-• FILEPATH — a `stringp'.
-
-Output:
-
-• a `listp' of `stringp's."
-
-  (with-temp-buffer
-    (insert-file-contents filepath)
-    (goto-char (point-min))
-    (mapcar #'read
-     (split-string (buffer-string) "\n" t))))
-
-;;----------------------------------------------;;
-;;; Regexps ------------------------------------;;
-;;----------------------------------------------;;
-
-(defun mtg-card-name-regexp ()
-
-  "Return a `regexpp' matching an ‘mtg-card-name’.
-
-For example, this command matches these ‘mtg-card-name’s:
-
-• “Empty the Warrens”
-• “Borrowing 100,000 Arrows”"
-
-  (let* ((CHAR-REGEXP
-          (rx-to-string `(char alpha digit ,@mtg-card-name-punctuation-characters-list) t))
-
-         (ARTICLE-REGEXP
-          (regexp-opt mtg-card-name-article-strings-list 'symbols))
-
-         (WORD-REGEXP
-          (rx-to-string `(or (regexp ,ARTICLE-REGEXP)
-                             (and word-start
-                                  (and (char upper digit)
-                                       (0+ (regexp ,CHAR-REGEXP)))
-                                  word-end))
-                        t))
-
-         (PHRASE-REGEXP
-          (rx-to-string `(1+ (and blank (regexp ,WORD-REGEXP)))))
-         )
-
-    PHRASE-REGEXP))
-
-;; ^ M-: (mtg-card-name-regexp)
-;;     ⇒ "\\(?:\\(?:\\(a\\(?:nd\\|[nst]\\)?\\|b\\(?:ut\\|y\\)\\|en\\|f\\(?:or\\|rom\\)\\|i\\(?:nto\\|[ln]\\)\\|o[fnr]\\|t\\(?:he\\|o\\)\\|upon\\|with\\)\\|\\<[[:upper:]][!\"',-.:?[:digit:][:alpha:]]*\\>\\)+\\)"
-
-;; e.g. ‘mtg-card-name’s:
-;;
-;; • card Ancestral Recall card
-;; • card Looter il-Kor card
-;; • card Borrowing 100,000 Arrows card
-;; • card To Arms! card
-;; • card Empty the Warrens card
-;;
-;; (re-search-backward "\\(?:\\(?:\\(a\\(?:nd\\|[nst]\\)?\\|b\\(?:ut\\|y\\)\\|en\\|f\\(?:or\\|rom\\)\\|i\\(?:nto\\|[ln]\\)\\|o[fnr]\\|t\\(?:he\\|o\\)\\|upon\\|with\\)\\|\\<[[:upper:]][!\"',-.:?[:digit:][:alpha:]]*\\>\\)+\\)")
-;;
-
-;;----------------------------------------------;;
-;;; Search -------------------------------------;;
-;;----------------------------------------------;;
-
-;;
-
-(defvar mtg-query-mode-syntax-table
-
-
-
-  "Syntax Table for `mtg-query-mode'.
-
-")
-
-;;
-
-(define-derived-mode mtg-query-mode fundamental-mode
-
-  "Major Mode for writing “MTQ Queries”.
-
-`mtg-query' parses its minibuffer via `mtg-query-mode-syntax-table'.
-Because it doesn't initialize `mtg-query-mode' itself
-(i.e. enable `font-lock-mode' / run `
-`mtg-query-mode-hook' / etc),
-you can customize this mode without slowing down the command.")
-
-;;
-
-(defun mtg-search-parse-filter (filter)
-
-  "Parse the search-FILTER into a plist of search-constraints.
-
-Inputs:
-
-• FILTER — a `stringp'.
-
-Output:
-
-• a `listp' of `keywordp's and `atomp's (a plist)."
-
-  (let ((must-have ())
-        (must-not-have ())
-        (after nil)
-        (matches ())
-        (not-matches ())
-        (limit nil)
-        (feeds ()))
-
-  ;TODO; split the string on whitespace, while preserving (horizontal) whitespace within quotation marks. see `csv-split-string' (`csv-mode''s parser)?
-
-    (let* ((FILTER (or filter)))
-
-      (cl-loop for CHAR in FILTER
-
-         for CHAR-KIND = (cl-case CHAR
-                           (?\" 'quote)
-                           (?\( 'open-paren)
-                           (?\) 'close-paren)
-                           (_ nil))
-
-         do ))
-
-
-
-    (cl-loop for TOKEN in FILTER-TOKENS
-
-             for type = (aref TOKEN 0)
-
-             do (cl-case type
-
-                  (?+
-                   (let ((symbol (intern (substring element 1))))
-                     (unless (eq '## symbol)
-                       (push symbol must-have))))
-
-                  (?-
-                   (let ((symbol (intern (substring element 1))))
-                     (unless (eq '## symbol)
-                       (push symbol must-not-have))))
-
-                  (?@ (setf after (elfeed-time-duration (substring element 1))))
-
-                  (?! (let ((re (substring element 1)))
-                        (when (elfeed-valid-regexp-p re)
-                          (push re not-matches))))
-                  (?# (setf limit (string-to-number (substring element 1))))
-                  (?= (let ((url (substring element 1)))
-                        (push url feeds)))
-                  (otherwise (when (elfeed-valid-regexp-p element)
-                               (push element matches)))))
-
-    `(,@(when after
-          (list :after after))
-      ,@(when must-have
-          (list :must-have must-have))
-      ,@(when must-not-have
-          (list :must-not-have must-not-have))
-      ,@(when matches
-          (list :matches matches))
-      ,@(when not-matches
-          (list :not-matches not-matches))
-      ,@(when limit
-          (list :limit limit))
-      ,@(when feeds
-          (list :feeds feeds)))))
-
-;; Examples:
-;;
-;; * the `^ancestral *instant @draw` pattern — narrows to Card-Draw Instants. i.e. cards:
-;;
-;;     - whose Card Name starts with *Ancestral*.
-;;     - whose Card Type includes *Instant*.
-;;     - whose Rules Text includes *draw* case-insensitive and between word-boundaries. (e.g. *Draw ...* and *“... draw.”* both match, but *drawn* doesn't match).
-;;
-;; * the `elf *elf,warrior 1/` pattern — narrows to Card-Draw Instants. i.e. cards:
-;;
-;;    - whose Card Name includes the word *Elf*.
-;;    - whose Card Type includes both *Elf* and *Warrior*.
-;;    - whose Power is exactly `1` (and whose Toughness can be anything.)
-;;
-
-;; Related:
-;;
-;; • `elfeed-search-parse-filter'
-;; • `helm'
-;;
-
-;; Links:
-;;
-;; • URL `https://github.com/skeeto/elfeed'
-;; • URL `https://nullprogram.com/blog/2016/12/27/'
-;; • URL `https://nullprogram.com/blog/2016/12/11/'
-;;
-
-;; Elfeed:
-;;
-;; e.g. Elfeed Filter:
-;; 
-;; Here’s a filter that finds all entries from within the past year tagged “youtube” (+youtube) that mention Linux or Linus (linu[sx]), but aren’t tagged “bsd” (-bsd), limited to the most recent 15 entries (#15):
-;;
-;;     @1-year-old +youtube linu[xs] -bsd #15
-;;
-;;
-
-;;----------------------------------------------;;
-;;; Motion -------------------------------------;;
-;;----------------------------------------------;;
-
-(progn
-  
-  (defun mtg-forward-card-name (&optional count)
-
-    "Move across MTG Card Names.
-
-Inputs:
-
- • COUNT — an optional `integerp'.
-   When `called-interactively-p', the “Prefix Argument”. 
-   If COUNT is:
-       ° positive — Move forwards to (the end of) the next card name.
-       ° negative — Move backwards to (the end of) the prior card name.
-
-Effects:
-
-• Moves `point'.
-
-Metadata:
-
-• Registered with ‘thingatpt.el’ as `mtg-card-name’ —
-  Implements the property `forward-op' 
-  for the “thing” symbol `mtg-card-name'.
-
-Usage
-
-• M-: (thing-at-point 'mtg-card-name)
-
-Notes:
-
-• Card Names, idiomatically:
-
-    • must end with, and should start with, a `capitalize'd word.
-      (should mostly contain capitalized words, anyways).
-    • may have some punctuation characters (comma, hyphen, apostrophe, colon).
-    • may include `downcase'd articles.
-
-For example, this command skips across/until these ‘mtg-card-name’s:
-
-• “Empty the Warrens”
-• “Borrowing 100,000 Arrows”"
-
-    (interactive "P")
-
-    (let* ((COUNT (or count +1))
-           )
-
-      (if (natnump COUNT)
-
-          (re-search-forward (mtg-card-name-regexp) nil t COUNT)
-
-        (while (< COUNT 0)
-
-          (if (re-search-backward (mtg-card-name-regexp) nil t)
-              (skip-syntax-backward "w_"))
-
-          (setq COUNT (1+ COUNT))))))
-
-  (put 'mtg-card-name 'forward-op 'mtg-forward-card-name))
-
-;; ^ Notes:
-;;
-;; • « (put '_ 'forward-op #'_) » registers a “Thing” for `thingatpt.el'.
-;; • `forward-symbol' calls `re-search-forward': « (re-search-forward "\\(\\sw\\|\\s_\\)+" nil 'move arg) »
-;; • « "\\(\\sw\\|\\s_\\)+" » matches one-or-more Symbol Characters (w.r.t. Syntax Class)
-;;   and/or Word Characters (w.r.t. Syntax Class).
-;; • 
-;;
-
-;;----------------------------------------------;;
-;;; Styling ------------------------------------;;
-;;----------------------------------------------;;
-
-(cl-defun mtg-propertize-card-name (text)
-
-  "`propertize' TEXT as a Card Name.
-
-Inputs:
-
-• TEXT — a `stringp'.
-
-Output:
-
-• a `stringp'.
-  TEXT, with different Text Properties.
-
-Properties:
-
-• Italics — Italicize some prefixes,
-  like the “il” in  “il-Kor”.
-"
-
-  ())
-
-;;----------------------------------------------;;
-
-(cl-defun mtg-propertize-rules-text (text)
-
-  "`propertize' TEXT as Rules Text.
-
-Inputs:
-
-• TEXT — a `stringp'.
-
-Output:
-
-• a `stringp'.
-  TEXT, with different Text Properties."
-
-  ())
-
-;;----------------------------------------------;;
-
-(cl-defun mtg-propertize-flavor-text (text)
-
-  "`propertize' TEXT as Flavor Text.
-
-Inputs:
-
-• TEXT — a `stringp'.
-
-Output:
-
-• a `stringp'.
-  TEXT, with different Text Properties."
-
-  ())
-
-;;----------------------------------------------;;
-;;; ElDoc --------------------------------------;;
-;;----------------------------------------------;;
-
-(defun mtg-eldoc (&optional point)
-
-  "`eldoc-function' for `mtg-mode'."
-
-  (let* ((POINT (or point (point)))
-         (NAME (mtg-card-name-at-point POINT))
-         )
-
-    ()))
-
-;;----------------------------------------------;;
-
-(defun mtg-eldoc/argument-case (string)
-
-  "`eldoc-argument-case' for `mtg-mode'.
-
-Inflect and fontify STRING for `eldoc-mode'.
-
-=== Usage ===
-
-    (setq-local eldoc-argument-case #'mtg-eldoc-argument-case)"
-
-  (let* ((STRING (upcase string))
-         )
-    (propertize STRING 'face 'font-lock-variable-name-face)))
-
-;;----------------------------------------------;;
-
-(defun mtg-summarize (name)
-
-  "Return a oneline summary of NAME.
-
-Inputs:
-
-• NAME — a `stringp'.
-  A card name and/or edition name."
-
-  (when-let* ((CARD (or (mtg-get-card-by-name name) (mtg-get-edition-by-name name)))
- 
-
-    ())))
-
-;;----------------------------------------------;;
-;;; Indentation --------------------------------;;
-;;----------------------------------------------;;
-
-(defsubst mtg/within-comment-p ()
-  "Return non-nil if `point' is within a (oneline or multiline) comment"
-  (nth 4 (syntax-ppss)))
-
-;;----------------------------------------------;;
-;;; Skeletons ----------------------------------;;
-;;----------------------------------------------;;
-
-(define-skeleton mtg-card
-
-    "Prompt for a tag and insert it, optionally with attributes.
-Completion and configuration are done according to `sgml-tag-alist'.
-If you like tags and attributes in uppercase, customize
-`sgml-transformation-function' to `upcase'."
-  (funcall (or skeleton-transformation-function 'identity)
-           (setq sgml-tag-last
-		 (completing-read
-		  (if (> (length sgml-tag-last) 0)
-		      (format "Tag (default %s): " sgml-tag-last)
-		    "Tag: ")
-		  sgml-tag-alist nil nil nil 'sgml-tag-history sgml-tag-last)))
-  ?< str |
-  (("") -1 '(undo-boundary) (identity "&lt;")) |	; see comment above
-  `(("") '(setq v2 (sgml-attributes ,str t)) ?>
-    (cond
-      ((string= "![" ,str)
-       (backward-char)
-       '(("") " [ " _ " ]]"))
-      ((and (eq v2 t) sgml-xml-mode (member ,str sgml-empty-tags))
-       '(("") -1 " />"))
-      ((or (and (eq v2 t) (not sgml-xml-mode)) (string-match "^[/!?]" ,str))
-       nil)
-      ((symbolp v2)
-       ;; Make sure we don't fall into an infinite loop.
-       ;; For xhtml's `tr' tag, we should maybe use \n instead.
-       (if (eq v2 t) (setq v2 nil))
-       ;; We use `identity' to prevent skeleton from passing
-       ;; `str' through `skeleton-transformation-function' a second time.
-       '(("") v2 _ v2 "</" (identity ',str) ?> >))
-      ((eq (car v2) t)
-       (cons '("") (cdr v2)))
-      (t
-       (append '(("") (car v2))
-               (cdr v2)
-               '(resume: (car v2) _ "</" (identity ',str) ?> >))))))
-
-;;----------------------------------------------;;
-;;; Menu Bar -----------------------------------;;
-;;----------------------------------------------;;
-
-(defgroup mtg-menu nil
-
-  "MTG Menu (in the Menu Bar)."
-
-  :prefix 'mtg-menu
-  :group 'mtg)
-
-;;==============================================;;
-
-(defun mtg-menu/customization-changed (variable value)
-
-  "Function called when the MTG Menu customization has changed.
-Set VARIABLE with VALUE, and force a rebuild of the MTG Menu."
-
-  (if (and (featurep 'mtg) (mtg-enabled-p))
-
-      (progn
-        ;; Unavailable until mtg has been loaded.
-        (mtg-menu/hide)
-        (set-default variable value)
-        (mtg-menu/show))
-
-    (set-default variable value)))
-
-;;==============================================;;
-
-(defcustom mtg-menu/menu-title "Open Recent"
-
-  "Name of the MTG Menu."
-
-  :type 'string
-  :set #'mtg-menu/customization-changed
-
-  :group 'mtg-menu)
-
-;;----------------------------------------------;;
-
-(defcustom mtg-menu/menu-path '("File")
-
-  "Path where to add the MTG Menu.
-
-If nil add it at top level (see also `easy-menu-add-item')."
-
-  :type '(choice (const :tag "Top Level" nil)
-          (sexp :tag "Menu Path"))
-  :set 'mtg-menu/customization-changed
-
-  :group 'mtg-menu)
-
-;;----------------------------------------------;;
-
-(defcustom mtg-menu/next-menu-title "Help"
-
-  "Name of the menu before which the MTG Menu will be added.
-
-If nil, add it at end of menu (see also `easy-menu-add-item')."
-
-  :type '(choice (string :tag "Name")
-          (const :tag "Last" nil))
-  :set 'mtg-menu/customization-changed
-
-  :group 'mtg-menu)
-
-;;==============================================;;
-
-(defun mtg-menu/show ()
-  "Show the menu of recently opened files."
-  (easy-menu-add-item
-   (mtg-menu-bar) mtg-menu-path
-   (list mtg-menu-title :filter 'mtg-make-menu-items)
-   mtg-menu-before))
-
-;;----------------------------------------------;;
-
-(defun mtg-menu/hide ()
-  "Hide the menu of recently opened files."
-  (easy-menu-remove-item (mtg-menu--get-global-menubar) mtg-menu/menu-path
-                         mtg-menu/menu-title))
-
-;;==============================================;;
-
-(defsubst mtg-menu--get-global-menubar ()
-
-  "Return the `keymapp' of the global Menu Bar."
-
-  (lookup-key global-map [menu-bar]))
-
-;;----------------------------------------------;;
-;;; Tool Bar -----------------------------------;;
-;;----------------------------------------------;;
-
-;;----------------------------------------------;;
-;;; Table --------------------------------------;;
-;;----------------------------------------------;;
-
-(defgroup mtg-table nil
-
-  "Customize `mtg-table-mode'."
-
-  :link '(url-link :tag "GitHub" "https://github.com/sboosali/mtg.el")
-  :group 'mtg)
-
-;;==============================================;;
-
-(defconst mtg-table-buffer-name "*MTG Cards*"
-
-  "Default `buffer-name' for `mtg-table-mode'.
-
-a `stringp'.")
-
-;;----------------------------------------------;;
-
-(defconst mtg-default-table-list-format
-
-  (vector `("Name"      ,mtg-longest-card-name-length t)
-          `("Cost"      nil t)
-          `("Colors"    nil t)
-          `("Type"      nil t)
-          `("Body"      nil t)               ; both Power/Toughness and Loyalty.
-          `("Rules"     nil t)
-
-          `("Rarity"    nil t)
-          `("Set"       nil t)
-          `("Flavor"    nil t)
-          `("Artist"    nil t)
-          `("Frame"     nil t)
-          `("Watermark" nil t)
-          )
-
-  "Default `tabulated-list-format' for `mtg-table-mode'.
-
-a `vectorp' of `listp's of « (NAME WIDTH SORTER) » triplets.")
-
-;;----------------------------------------------;;
-
-(defcustom mtg-table-list-format-list
-
-  nil
-
-  "Table Format for `mtg-table-mode'.
-
-a `listp' of columns (`symbolp's) and/or triplets (`listp's) with form:
-
-    (NAME &optional WIDTH SORTER)
-
-Ignored if nil, defaulting to `mtg-default-table-list-format'."
-
-  :type '(repeat (choice (symbol :tag "Known Column Format")
-
-                         (list (string :tag "Column Name")
-
-                               (choice (integer   :tag "Minimum Column Width")
-                                       (const nil :tag "Don't Pad Column"))
-
-                               (choice (function  :tag "Sort Column by Comparator")
-                                       (const t   :tag "Sort Column as String")
-                                       (const nil :tag "Don't Sort Column")))))
-
-  :safe #'listp
-  :group 'mtg-table)
-
-;;----------------------------------------------;;
-
-(defun mtg-table/convert-to-tabulated-list-format (table-format)
-
-  "Convert TABLE-FORMAT to conform to `tabulated-list-format'.
-
-Notes:
-
-• `mtg-table-list-format''s form, a `listp', is more customizeable.
-• `mtg-default-table-list-format''s form, a `vectorp', is more efficient."
-
-  (todo))
-
-;;----------------------------------------------;;
-
-(defun mtg-tabulated-list-entries ()
-
-  "Return `tabulated-list-entries' for `mtg-table-mode'.
-
-Table Entries:
-
-• conform to `mtg-tabulated-list-format'.
-• are distinguished by their “Multiverse ID”."
-
-  ())
-
-;;----------------------------------------------;;
-
-(cl-defun mtg-table/clean-text (text &key width separator)
-
-  "Return TEXT as a valid Table Entry (for `tabulated-list-mode').
-
-Inputs:
-
-• TEXT      — a `stringp'. 
-
-• WIDTH     — an `integerp' or nil. 
-  Defaults to nil (i.e. no maximum width).
-
-• SEPARATOR — a `stringp' or nil. 
-  Defaults to “ | ”.
-
-Transformations include:
-
-• Replace newlines with “|” (i.e. a vertical bar).
-• Truncate to a `string-width' of WIDTH, with “…” (i.e. ellipses)."
-
-  (let* ((SEPARATOR (or separator " | "))      ;TODO (propertize " | " 'face 'mtg-table-text-separator)
-
-         (TEXT-ONELINE
-          (string-join (split-string (string-trim text) "[\f\n\r\v]+" :omit-nulls) SEPARATOR))
-
-         (TEXT-TRUNCATED
-          (if (and width (natnump width))
-              (let ((PADDING  nil)
-                    (ELLIPSIS "…")
-                    (COLUMN-END width)
-                    (COLUMN-BEG 0)
-                    )
-                (truncate-string-to-width TEXT-ONELINE COLUMN-END COLUMN-BEG PADDING ELLIPSIS))
-            TEXT-ONELINE))
-         )
-
-    TEXT-TRUNCATED))
-
-;; ^ Examples:
-;;
-;; M-: (mtg-table/clean-text " \nEnchant creature\n{G}: Regenerate enchanted creature.\n " :width nil)
-;;   ⇒ "Enchant creature | {G}: Regenerate enchanted creature."
-;;
-;; M-: (mtg-table/clean-text " \nEnchant creature\n{G}: Regenerate enchanted creature.\n " :width 25)
-;;   ⇒ "Enchant creature | {G}: …"
-;;
-;; M-: (mtg-table/clean-text " \nEnchant creature\n{G}: Regenerate enchanted creature.\n " :separator " ")
-;;   ⇒ "Enchant creature {G}: Regenerate enchanted creature."
-;;
-
-;; ^ Notes:
-;;
-;; M-: (string-join (split-string (string-trim " \nEnchant creature\n{G}: Regenerate enchanted creature.\n ") "[\f\n\r\v]+" :omit-nulls) " | ")
-;;   ⇒ "Enchant creature | {G}: Regenerate enchanted creature."
-;;
-
-;;----------------------------------------------;;
-
-(defun mtg-table-list-format ()
-
-  "Accessor for `mtg-table-list-format'.
-
-Output:
-
-• a Table Format.
-  See `tabulated-list-format'.
-  Defaults to `mtg-default-table-list-format'."
-
-  (let* ((FORMAT-LIST   (bound-and-true-p mtg-table-list-format))
-         (FORMAT-VECTOR (if FORMAT-LIST
-                            (mtg-table/convert-to-tabulated-list-format FORMAT-LIST)
-                          mtg-default-table-list-format))
-         )
-
-    FORMAT-VECTOR))
-
-;;----------------------------------------------;;
-
-;;;###autoload
-(define-derived-mode mtg-table-mode tabulated-list-mode
-
-  (progn
-
-    (setq-local tabulated-list-format (mtg-table-list-format))
-
-    (tabulated-list-init-header)
-
-    ()))
-
-;;----------------------------------------------;;
-
-;;;###autoload
-(defun list-mtg-cards ()
-
-  "List all MTG Cards.
-
-Effects:
-
-• Activate the “*MTG Cards*” buffer
-  (creating it if necessary).
-• Fetch/Munge the MTG Card data.
-• Populate the that buffer with that data.
-• Turn on `mtg-table-mode'."
-
-  (interactive)
-
-  (let* ((BUFFER (get-buffer-create mtg-table-buffer-name))
-        )
-
-  (progn
-
-    (switch-to-buffer BUFFER)
-
-    ()
-
-    (tabulated-list-print ())
-
-    (mtg-table-mode +1)))
-
-;;----------------------------------------------;;
-;; (Un/)Loading --------------------------------;;
-;;----------------------------------------------;;
-
-;;;###autoload
-(defun mtg-setup ()
-
-  "Setup `mtg'.
-
-”Setup“ includes:
-
-• Registering `mtg-mode' with `auto-mode-alist'.
-• Registering `mtg-mode' with `interpreter-mode-alist'.
-
-Related:
-
-• Gated by `mtg-setup-p'.
-• Inverted by `mtg-unload-function'."
-
-  (progn
-
-    (add-to-list 'auto-mode-alist (cons mtg-filepath-regexp #'mtg-mode))
-
-    (with-eval-after-load 'company
-      (with-demoted-errors "[MTG] Company] %s"
-        (when (require 'mtg-company)
-          (mtg-company-setup))))
-
-    ()))
-
-;;----------------------------------------------;;
-
-(defun mtg-unload-function ()
-
-  "`unload-feature' for `mtg'.
-
-Inverts `mtg-setup' and `inferior-mtg-setup' 
-(which get executed by « (load \"mtg.el\") »).
-
-Effects:
-
-• Unregisters `mtg-mode' from `auto-mode-alist'.
-• Unregisters `mtg-mode' from `interpreter-mode-alist'."
-
-  (progn
-
-    (setq auto-mode-alist
-          (cl-remove #'mtg-mode auto-mode-alist        :test #'equal :key #'cdr))
-
-    (setq interpreter-mode-alist
-          (cl-remove #'mtg-mode interpreter-mode-alist :test #'equal :key #'cdr))
-
-    ()))
+  "Default `mtg-data/longest-card-name-length'.")
 
 ;;----------------------------------------------;;
 ;;; Effects ------------------------------------;;
 ;;----------------------------------------------;;
 
-(when (bound-and-true-p 'mtg-setup-p)
+(when (bound-and-true-p mtg-setup-p)
   (mtg-setup))
 
 ;;----------------------------------------------;;
