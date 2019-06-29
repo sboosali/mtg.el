@@ -28,17 +28,17 @@
 ;;; Commentary:
 
 ;; Editor for “Magic: The Gathering”.
-;; 
+;;
 ;; Features include:
-;; 
+;;
 ;; • Completion for writing custom “Magic: The Gathering” cards.
 ;; • Builtins.
-;; • 
-;; • 
-;; • 
-;; • 
-;; • 
-;; 
+;; •
+;; •
+;; •
+;; •
+;; •
+;;
 
 ;;; Code:
 
@@ -382,20 +382,1137 @@ Related:
 ;;----------------------------------------------;;
 
 
-
 ;;----------------------------------------------;;
-;;; Variables ----------------------------------;;
+;;; Groups -------------------------------------;;
 ;;----------------------------------------------;;
 
 (defgroup mtg nil
 
-  "Customize “Magic: The Gathering”."
+  "“Magic: The Gathering” Search Engine and (Custom-)Card Editor."
 
   :link '(url-link :tag "GitHub" "https://github.com/sboosali/mtg.el")
 
-  )
+  :prefix "mtg-"
+  :group 'applications)
+
+;;----------------------------------------------;;
+
+(defgroup mtg-card nil
+
+  "“Magic: The Gathering” Cards (add custom keywords, colors, etc)."
+
+  :link '(url-link :tag "GitHub" "https://github.com/sboosali/mtg.el")
+
+  :prefix "mtg-"
+  :group 'mtg)
+
+;;----------------------------------------------;;
+;;; Variables (‘mtg-card’) ---------------------;;
+;;----------------------------------------------;;
+
+(defcustom mtg-colors
+
+  '(white blue black red green)
+
+  "All MTG Colors.
+
+This `listp' is Ring/Set. It determines:
+
+• The canonical identifier for each color.
+  (See `mtg-monocolor-alist' for abbreviations and knicknames.)
+
+• The canonical (ring-)ordering among the bicolors.
+  I.E. “white” before “blue”, but “green” before “white” (by default).
+
+Customization:
+
+• Custom Colors — You must register any colors introduced by your custom set. 
+  For example, to customize programmatically, evaluate:
+
+    M-: (add-to-list 'mtg-colors-list 'purple :append)
+      ↪ '(white blue black red green purple)
+
+  For example, to customize graphically, execute:
+
+    M-x (customize-variable 'mtg-colors)
+
+Related:
+
+• "
+
+  :type '(repeat (symbol :tag "MTG Color"))
+
+  :safe #'listp
+  :group 'mtg-card)
+
+;;----------------------------------------------;;
+
+(defcustom mtg-bicolors
+
+  '(azorius dimir rakdos gruul selesnya
+    orzhov golgari simic izzet boros)
+
+  "All MTG “Bi-Colors” (i.e. two-color pairs).
+
+This `listp' is Ring/Set. Like `mtg-colors', it determines:
+
+• The canonical identifier for each bicolor.
+  (See `mtg-bicolor-alist' for abbreviations and knicknames.)
+
+• The canonical ordering among the bicolors.
+
+Related:
+
+— `mtg-guilds-alist' — Ravnica Knicknames (e.g. symbol `azorius' for symbol `wu')."
+
+  :type '(repeat (symbol :tag "MTG “Bi-Color”"))
+
+  :safe #'listp
+  :group 'mtg-card)
+
+;;;TODO:
+ ;;
+ ;; White + Blue = Azorius
+ ;; Blue + Black = Dimir
+ ;; Black + Red = Rakdos
+ ;; Red + Green = Gruul
+ ;; Green + White = Selesnya
+ ;; White + Black = Orzhov
+ ;; Blue + Red = Izzet
+ ;; Black + Green = Golgari
+ ;; Red + White = Boros
+ ;; Green + Blue = Simic
+
+;;----------------------------------------------;;
+
+(defcustom mtg-tricolors
+
+  '(bant esper grixis jund naya          ; ← Shards
+    mardu temur abzan jeskai sultai)     ; ← Wedges
+
+  "All MTG “Tri-Colors” (i.e. three-color triplets).
+
+(See the documentation of `mtg-colors'.)
+
+Ordering (by default):
+
+• Shards then Wedges.
+• Shards — the colors in `mtg-colors' order, and their Ally Colors.
+  For example, “bant” is the first shard, since it's “white” (the first color)
+  and white's allies.
+• Wedges — the colors in `mtg-colors' order, and their Enemy Colors.
+  For example, “mardu” is the first wedge, since it's “white”
+  and white's enemies.
+
+Related:
+
+• "
+
+  :type '(repeat (symbol :tag "MTG “Tri-Color”"))
+
+  :safe #'listp
+  :group 'mtg-card)
+
+;;;TODO:
+ ;;
+ ;;  Red + green + black = Jund
+ ;;  White + green + blue = Bant
+ ;;  Black + red + blue = Grixis
+ ;;  Green + white + red = Naya
+ ;;  Blue + white + black = Esper
 
 ;;==============================================;;
+
+(defcustom mtg-monocolor-alist
+
+  `((w . white)
+    (u . blue)
+    (b . black)
+    (r . red)
+    (g . green)
+   )
+
+  "Any abbreviations/knicknames of the `mtg-colors'.
+
+An “Association List”, a `listp' of `consp's of `symbolp's.
+Each `cdr' must be in `mtg-colors'.
+
+This associates each ‘symbolp’ [TODO and/or ‘stringp’ and/or ‘characterp’?] with an MTG Color."
+
+  :type '(alist :key-type   (symbol :tag "Alias")
+                :value-type (symbol :tag "MTG Color"))
+
+  :safe #'listp
+  :group 'mtg-card)
+
+;;----------------------------------------------;;
+
+(defcustom mtg-bicolor-alist
+
+  `(
+
+    ;; Mana Costs:
+
+    (wu . azorius)
+    (ub . dimir)
+    (br . rakdos)
+    (rg . gruul)
+    (gw . selesnya)
+    (wb . orzhov)
+    (bg . golgari)
+    (gu . simic)
+    (ur . izzet)
+    (rw . boros)
+
+    ;; Mana Costs (Reversed):
+
+    (uw . azorius)
+    (bu . dimir)
+    (rb . rakdos)
+    (rg . gruu)l
+    (wg . selesnya)
+    (bw . orzhov)
+    (gb . golgari)
+    (ug . simic)
+    (ru . izzet)
+    (wr . boros)
+
+    ;;
+
+    )
+
+   "All MTG color-triplets (a.k.a. shardes & wedges)."
+
+  :type '(repeat (symbol :tag "MTG Color"))
+
+  :safe #'listp
+  :group 'mtg)
+
+;;----------------------------------------------;;
+
+(defcustom mtg-tricolor-alist
+
+  `(
+
+    ;; Pronounceable Mana Costs:
+
+    (rug . temur)
+    (bug . sultai)
+
+    ;; :
+
+    ;; :
+
+    )
+
+   "All MTG color-triplets (a.k.a. shardes & wedges)."
+
+  :type '(repeat (symbol :tag "MTG Color"))
+
+  :safe #'listp
+  :group 'mtg)
+
+;;;TODO:
+;;  Blue + red + white = Jeskai (clan on Tarkir), Numot (dragon from Apocalypse) or Raka (from Rakavolver)
+;;  Red + white + black = Mardu (clan on Tarkir), Oros (dragon from Apocalypse) or Dega (from Degavolver)
+;;  Black + green + blue = Sultai (clan on Tarkir), Vorosh (dragon from Apocalypse) or Ana (from Anavolver)
+;;  Green + blue + red = Temur (clan on Tarkir), Intet (dragon from Apocalypse) or Ceta (from Cetavolver)
+;;  White + black + green = Abzan (clan on Tarkir) Teneb (dragon from Apocalypse) Necra (from Necravolver), Junk , or Doran
+
+;; Informal usages:
+
+;; Red + white + black = Borzhov
+;; Red + green + blue = Grizzet
+;; In addition, it's especially common for red + blue + green and black + blue + green to be called by their abbreviations — "RUG" and "BUG" — because these are names that are easy to remember and pronounce.
+
+;;----------------------------------------------;;
+
+(defcustom mtg-guild-list
+
+  '(azorius
+    dimir
+    rakdos
+    gruul
+    selesnya
+    orzhov
+    izzet
+    golgari
+    boros
+    simic)
+
+   "All MTG guilds i.e. (color pairs)."
+
+  :type '(repeat (symbol :tag "MTG Color"))
+
+  :safe #'listp
+  :group 'mtg)
+
+;;----------------------------------------------;;
+
+Four colors
+Most decks do not have four full colors. As with three color enemies, if they reach this many colors, it's a shard with a splash of another color. So you're more likely to see something like "American splash black" instead of "Yore".
+
+Names for four-color identities come from one of two sources:
+
+The names of the Nephilims from Guildpact.
+The names of the four-colour “guild identities” defined during Commander 2016's design.
+Reference the one color the four-color combination is missing, thus Non-(color).
+So the four colour identities' names are:
+
+ Blue + black + red + green = Glint-Eye, or Chaos, or Non-white
+ Black + red + green + white = Dune (or Dune-Brood), or Aggression, or Non-blue
+ Red + green + white + blue = Ink-Treader, or Altruism, or Non-black
+ Green + white + blue + black = Witch (or Witch-Maw), or Growth, or Non-red
+White + blue + black + red = Yore (or Yore-Tiller), or Artifice, or Non-green
+
+;;----------------------------------------------;;
+
+(defcustom mtg-super-types-list
+
+  '(basic
+    legendary
+    snow
+    ongoing
+    world)
+
+  "Known Super-Types.
+
+`listp' of `symbolp's."
+
+  :type '(repeat (symbol :tag "Supertype"))
+
+  :safe #'listp
+  :group 'mtg)
+
+;;----------------------------------------------;;
+
+(defcustom mtg-card-types-list
+
+  '(instant        ; ?🗲
+    sorcery
+    land
+    artifact
+    enchantment
+    creature
+    planeswalker
+    conspiracy)
+
+  "Known Card-Types.
+
+`listp' of `symbolp's."
+
+  :type '(repeat (symbol :tag "Card type"))
+
+  :safe #'listp
+  :group 'mtg)
+
+;;----------------------------------------------;;
+
+(defcustom mtg-spell-subtypes-list
+
+  '(
+
+   )
+
+  "Known Subtypes for spells (i.e. instants and sorceries).
+
+a `listp' of `symbolp's."
+
+  :type '(repeat (symbol :tag "Subtype"))
+
+  :safe #'listp
+  :group 'mtg)
+
+;;----------------------------------------------;;
+
+(defcustom mtg-land-subtypes-list
+
+  '(
+
+   )
+
+  "Known Subtypes for lands.
+
+a `listp' of `symbolp's."
+
+  :type '(repeat (symbol :tag "Subtype"))
+
+  :safe #'listp
+  :group 'mtg)
+
+;;----------------------------------------------;;
+
+(defcustom mtg-artifact-subtypes-list
+
+  '(
+
+   )
+
+  "Known Subtypes for artifacts.
+
+a `listp' of `symbolp's."
+
+  :type '(repeat (symbol :tag "Subtype"))
+
+  :safe #'listp
+  :group 'mtg)
+
+;;----------------------------------------------;;
+
+(defcustom mtg-enchantment-subtypes-list
+
+  '(
+
+   )
+
+  "Known Subtypes for enchantments.
+
+a `listp' of `symbolp's."
+
+  :type '(repeat (symbol :tag "Subtype"))
+
+  :safe #'listp
+  :group 'mtg)
+
+;;----------------------------------------------;;
+
+(defcustom mtg-creature-subtypes-list
+
+  '(
+
+   )
+
+  "Known Subtypes for creatures.
+
+a `listp' of `symbolp's."
+
+  :type '(repeat (symbol :tag "Subtype"))
+
+  :safe #'listp
+  :group 'mtg)
+
+;;----------------------------------------------;;
+
+(defcustom mtg-planeswalker-subtypes-list
+
+  '(
+
+   )
+
+  "Known Subtypes for planeswalkers.
+
+a `listp' of `symbolp's."
+
+  :type '(repeat (symbol :tag "Subtype"))
+
+  :safe #'listp
+  :group 'mtg)
+
+;;----------------------------------------------;;
+
+(defcustom mtg-subtypes-alist
+
+  '(
+    (spell        . mtg-spell-subtypes-list)
+    (land         . mtg-land-subtypes-list)
+    (artifact     . mtg-artifact-subtypes-list)
+    (enchantment  . mtg-enchantment-subtypes-list)
+    (creature     . mtg-creature-subtypes-list)
+    (planeswalker . mtg-planeswalker-subtypes-list)
+   )
+
+  "Known Subtypes, by Card-Type.
+
+an association `listp':
+
+• from `symbolp'
+• to EITHER a `listp' of `symbolp's OR a `symbolp' thereof.
+
+`mtg-subtypes-alist' represents both ‘instant’ and ‘sorcery’
+(which are in `mtg-card-types-list') as ‘spell’
+(which isn't in `mtg-card-types-list')."
+
+  :type '(alist :key-type   (symbol :tag "Card type")
+                :value-type (choice (variable :tag "List Variable")
+                                    (repeat (symbol :tag "Subtypes"))))
+
+  :safe #'listp
+  :group 'mtg)
+
+;;----------------------------------------------;;
+
+(defcustom mtg-rules-keywords-list
+
+  '(
+    absorb
+    affinity
+    afflict
+    aftermath
+    amplify
+    annihilator
+    ascend
+    aura-swap
+    awaken
+    banding
+    battle-cry
+    bestow
+    bloodthirst
+    bushido
+    buyback
+    cascade
+    champion
+    changeling
+    cipher
+    conspire
+    convoke
+    crew
+    cumulative-upkeep
+    cycling
+    dash
+    deathtouch
+    defender
+    delve
+    dethrone
+    devoid
+    devour
+    double-strike
+    dredge
+    echo
+    embalm
+    emerge
+    enchant
+    entwine
+    epic
+    equip
+    escalate
+    eternalize
+    evoke
+    evolve
+    exalted
+    exploit
+    extort
+    fabricate
+    fading
+    fear
+    first-strike
+    flanking
+    flash
+    flashback
+    flying
+    forecast
+    fortify
+    frenzy
+    fuse
+    graft
+    gravestorm
+    haste
+    haunt
+    hexproof
+    hidden-agenda
+    hideaway
+    horsemanship
+    improvise
+    indestructible
+    infect
+    ingest
+    intimidate
+    kicker
+    landwalk
+    level-up
+    lifelink
+    living-weapon
+    madness
+    melee
+    menace
+    miracle
+    modular
+    morph
+    myriad
+    ninjutsu
+    offering
+    outlast
+    overload
+    partner
+    persist
+    phasing
+    poisonous
+    protection
+    provoke
+    prowess
+    prowl
+    rampage
+    reach
+    rebound
+    recover
+    reinforce
+    renown
+    replicate
+    retrace
+    ripple
+    scavenge
+    shadow
+    shroud
+    skulk
+    soulbond
+    soulshift
+    splice
+    split-second
+    storm
+    sunburst
+    surge
+    suspend
+    totem-armor
+    trample
+    transfigure
+    transmute
+    tribute
+    undaunted
+    undying
+    unearth
+    unleash
+    vanishing
+    vigilance
+    wither
+    )
+
+  "Known Keywords (in rules text).
+
+A `symbolp' `listp'."
+
+  :type '(repeat (symbol :tag "Keyword"))
+
+  :safe #'listp
+  :group 'mtg)
+
+;;----------------------------------------------;;
+
+(defcustom mtg-symbol-list
+
+  '(
+   )
+
+  "MTG Symbols.
+
+`listp' of `symbolp's."
+
+  :type '(repeat (symbol :tag "MTG Symbol"))
+
+  :safe #'listp
+  :group 'mtg)
+
+;;----------------------------------------------;;
+
+(defcustom mtg-symbol-alist
+
+  `(
+    (tap . ,(mtg-symbol-create :symbol 'tap :abbreviation 'T :image 'mtg-tap-symbol-svg-image :char 'mtg-tap-symbol-char))
+   )
+
+  "Symbol metadata (abbreviations and endonyms).
+
+`listp' of `mtg-symbol-p's:
+
+• each ‘:symbol’ should be in `mtg-symbol-list'."
+
+  :type '(repeat (symbol :tag "Symbol Info"))
+
+  :safe #'listp
+  :group 'mtg)
+
+;;==============================================;;
+
+(defcustom mtg-card-border-color-list
+
+  '(black
+    white
+    silver)
+
+  "Known Border Colors.
+
+`listp' of `symbolp's."
+
+  :type '(repeat (symbol :tag "Border Color"))
+
+  :safe #'listp
+  :group 'mtg)
+
+;;----------------------------------------------;;
+
+(defcustom mtg-card-frame-list
+
+  '(old
+    new
+    timeshifted
+    future)
+
+  "Known Card Frames.
+
+`listp' of `symbolp's."
+
+  :type '(repeat (symbol :tag "Card Frame"))
+
+  :safe #'listp
+  :group 'mtg)
+
+;;----------------------------------------------;;
+
+(defcustom mtg-card-layout-list
+
+  '(
+    aftermath
+    double-faced
+    flip
+    leveler
+    meld
+    normal
+    phenomenon
+    plane
+    scheme
+    split
+    token
+    vanguard
+   )
+
+  "Known Card Layouts.
+
+`listp' of `symbolp's."
+
+  :type '(repeat (symbol :tag "Card Layout"))
+
+  :safe #'listp
+  :group 'mtg)
+
+;;----------------------------------------------;;
+
+(defcustom mtg-language-list
+
+  '(english
+    german
+    french
+    italian
+    spanish
+    portuguese
+    japanese
+    chinese
+    russian
+    taiwanese
+    korean
+    )
+
+  "Language names.
+
+`listp' of `symbolp's.
+
+Languages into which cards have been translated."
+
+  :type '(repeat (symbol :tag "Language Name"))
+
+  :safe #'listp
+  :group 'mtg)
+
+;;----------------------------------------------;;
+
+(defcustom mtg-language-alist
+
+  `(
+    (english    . ,(mtg-language-create :language 'english    :abbreviation 'en :endonym "English"   :flag "🇺🇸"))
+    (german     . ,(mtg-language-create :language 'german     :abbreviation 'de :endonym "Deutsch"   :flag ""))
+    (french     . ,(mtg-language-create :language 'french     :abbreviation 'fr :endonym "Français"  :flag ""))
+    (italian    . ,(mtg-language-create :language 'italian    :abbreviation 'it :endonym "Italiano"  :flag ""))
+    (spanish    . ,(mtg-language-create :language 'spanish    :abbreviation 'es :endonym "Español"   :flag ""))
+    (portuguese . ,(mtg-language-create :language 'portuguese :abbreviation 'pt :endonym "Português" :flag ""))
+    (japanese   . ,(mtg-language-create :language 'japanese   :abbreviation 'jp :endonym "日本語"    :flag ""))
+    (chinese    . ,(mtg-language-create :language 'chinese    :abbreviation 'cn :endonym "简体中文"  :flag ""))
+    (russian    . ,(mtg-language-create :language 'russian    :abbreviation 'ru :endonym "Русский"   :flag ""))
+    (taiwanese  . ,(mtg-language-create :language 'taiwanese  :abbreviation 'tw :endonym "繁體中文"  :flag ""))
+    (korean     . ,(mtg-language-create :language 'korean     :abbreviation 'ko :endonym "한국어"    :flag ""))
+    )
+
+  "Language metadata (abbreviations and endonyms).
+
+`listp' of `mtg-language-p's:
+
+• each ‘:language’ should be in `mtg-language-list'."
+
+  :type '(repeat (symbol :tag "Language Info"))
+
+  :safe #'listp
+  :group 'mtg)
+
+;;----------------------------------------------;;
+
+(defcustom mtg-rarity-list
+
+  '(common
+    uncommon
+    rare
+    mythic)
+
+  "Rarity names.
+
+`listp' of `symbolp's.
+
+Raritys into which cards have been translated."
+
+  :type '(repeat (symbol :tag "Rarity Name"))
+
+  :safe #'listp
+  :group 'mtg)
+
+;;----------------------------------------------;;
+
+(defcustom mtg-rarity-alist
+
+  `(
+    (common   . ,(mtg-rarity-create :rarity 'common   :abbreviation 'C :color "black"))
+    (uncommon . ,(mtg-rarity-create :rarity 'uncommon :abbreviation 'U :color "silver"))
+    (rare     . ,(mtg-rarity-create :rarity 'rare     :abbreviation 'R :color "gold"))
+    (mythic   . ,(mtg-rarity-create :rarity 'mythic   :abbreviation 'M :color "bronze"))
+    )
+
+  "Rarity metadata (abbreviations and endonyms).
+
+`listp' of `mtg-rarity-p's:
+
+• each ‘:rarity’ should be in `mtg-rarity-list'."
+
+  :type '(alist :key-type   (symbol     :tag "Rarity")
+                :value-type (mtg-rarity :tag "Rarity Info"))
+
+  :safe #'listp
+  :group 'mtg)
+
+;;----------------------------------------------;;
+
+(defcustom mtg-formats-list
+
+  '(block
+    classic
+    commander
+    extended
+    legacy
+    modern
+    standard
+    vintage)
+
+  "Known MTG formats.
+
+AN MTG Format is a set of MTG Sets, with its own Banned&Restricted List,
+and (possibly) its own Rules changes.
+
+`listp' of `symbolp's
+
+Customization:
+
+• Programmatically — via `add-to-list'.
+• Graphically — via checklist widget."
+
+  :type '(repeat (symbol :tag "MTG Format"))
+
+  :safe #'listp
+  :group 'mtg)
+
+;;----------------------------------------------;;
+
+(defcustom mtg-rarities
+
+  '(common
+    uncommon
+    rare
+    mythic)
+
+  "Known MTG Rarities.
+
+`listp' of `symbolp's.
+
+Symbols into which cards have been translated."
+
+  :type '(repeat (symbol :tag "Symbol Name"))
+
+  :safe #'listp
+  :group 'mtg)
+
+;;----------------------------------------------;;
+
+(defcustom mtg-symbol-alist
+
+  `(
+
+    (tap                    . ,(make-mtg-symbol :symbol 'tap                    :abbreviation 'T   :char ?Ⓣ))
+    (untap                  . ,(make-mtg-symbol :symbol 'untap                  :abbreviation 'Q   :char ?🅤))
+
+    (white-mana             . ,(make-mtg-symbol :symbol 'white-mana             :abbreviation 'W   :char ?🌞))
+    (blue-mana              . ,(make-mtg-symbol :symbol 'blue-mana              :abbreviation 'U   :char ?🌢))
+    (black-mana             . ,(make-mtg-symbol :symbol 'black-mana             :abbreviation 'B   :char ?💀))
+    (red-mana               . ,(make-mtg-symbol :symbol 'red-mana               :abbreviation 'R   :char ?⛰))
+    (green-mana             . ,(make-mtg-symbol :symbol 'green-mana             :abbreviation 'G   :char ?🌲))
+
+    (colorless-mana         . ,(make-mtg-symbol :symbol 'colorless-mana         :abbreviation 'C   :char ?◇))
+    (snow-mana              . ,(make-mtg-symbol :symbol 'snow-mana              :abbreviation 'S   :char ?❄))
+    (energy-mana            . ,(make-mtg-symbol :symbol 'energy-mana            :abbreviation 'E   :char ?⚡))
+    (variable-X-mana        . ,(make-mtg-symbol :symbol 'variable-X-mana        :abbreviation 'X   :char ?X))
+    (variable-Y-mana        . ,(make-mtg-symbol :symbol 'variable-Y-mana        :abbreviation 'Y   :char ?Y))
+    (variable-Z-mana        . ,(make-mtg-symbol :symbol 'variable-Z-mana        :abbreviation 'Z   :char ?Z))
+
+    (phyrexian-white-mana   . ,(make-mtg-symbol :symbol 'phyrexian-white-mana   :abbreviation 'P/W :char ?ϕ))
+    (phyrexian-blue-mana    . ,(make-mtg-symbol :symbol 'phyrexian-blue-mana    :abbreviation 'P/U :char ?ϕ))
+    (phyrexian-black-mana   . ,(make-mtg-symbol :symbol 'phyrexian-black-mana   :abbreviation 'P/B :char ?ϕ))
+    (phyrexian-red-mana     . ,(make-mtg-symbol :symbol 'phyrexian-red-mana     :abbreviation 'P/R :char ?ϕ))
+    (phyrexian-green-mana   . ,(make-mtg-symbol :symbol 'phyrexian-green-mana   :abbreviation 'P/G :char ?ϕ))
+
+    (monohybrid-white-mana  . ,(make-mtg-symbol :symbol 'monohybrid-white-mana  :abbreviation '2/W :char ?🌞))
+    (monohybrid-blue-mana   . ,(make-mtg-symbol :symbol 'monohybrid-blue-mana   :abbreviation '2/U :char ?🌢))
+    (monohybrid-black-mana  . ,(make-mtg-symbol :symbol 'monohybrid-black-mana  :abbreviation '2/B :char ?💀))
+    (monohybrid-red-mana    . ,(make-mtg-symbol :symbol 'monohybrid-red-mana    :abbreviation '2/R :char ?⛰))
+    (monohybrid-green-mana  . ,(make-mtg-symbol :symbol 'monohybrid-green-mana  :abbreviation '2/G :char ?🌲))
+
+    (zero-generic-mana      . ,(make-mtg-symbol :symbol 'zero-generic-mana      :abbreviation '0   :char ?⓪))
+    (one-generic-mana       . ,(make-mtg-symbol :symbol 'one-generic-mana       :abbreviation '1   :char ?⓵))
+    (two-generic-mana       . ,(make-mtg-symbol :symbol 'two-generic-mana       :abbreviation '2   :char ?⓶))
+    (three-generic-mana     . ,(make-mtg-symbol :symbol 'three-generic-mana     :abbreviation '3   :char ?⓷))
+    (four-generic-mana      . ,(make-mtg-symbol :symbol 'four-generic-mana      :abbreviation '4   :char ?⓸))
+    (five-generic-mana      . ,(make-mtg-symbol :symbol 'five-generic-mana      :abbreviation '5   :char ?⓹))
+    (six-generic-mana       . ,(make-mtg-symbol :symbol 'six-generic-mana       :abbreviation '6   :char ?⓺))
+    (seven-generic-mana     . ,(make-mtg-symbol :symbol 'seven-generic-mana     :abbreviation '7   :char ?⓻))
+    (eight-generic-mana     . ,(make-mtg-symbol :symbol 'eight-generic-mana     :abbreviation '8   :char ?⓼))
+    (nine-generic-mana      . ,(make-mtg-symbol :symbol 'nine-generic-mana      :abbreviation '9   :char ?⓽))
+
+    )
+
+  "Symbol metadata (abbreviations and endonyms).
+
+`listp' of `mtg-symbol-p's:
+
+• each ‘:symbol’ should be in `mtg-symbol-list'."
+
+  :type '(alist :key-type   (symbol     :tag "Symbol")
+                :value-type (mtg-symbol :tag "Symbol Info"))
+
+  :safe #'listp
+  :group 'mtg)
+
+;;----------------------------------------------;;
+
+(defcustom mtg-edition-kind-list
+
+  '(expansion
+    core
+    reprint
+    box
+    un
+    from the vault
+    premium deck
+    duel deck
+    starter
+    commander
+    planechase
+    archenemy
+    promo
+    vanguard
+    masters
+    conspiracy
+    masterpiece)
+
+  "Kinds of MTG Editions.
+
+a `listp' of `symbolp's."
+
+  :type '(repeat (symbol :tag "Edition Type"))
+
+  :safe #'listp
+  :group 'mtg)
+
+;;----------------------------------------------;;
+
+(defcustom mtg-edition-alist
+
+  `(
+
+   )
+
+  "Known MTG Editions.
+
+a `listp' of `mtg-edition-p's."
+
+  :type '(repeat (mtg-edition :tag "Edition"))
+
+  :safe #'listp
+  :group 'mtg)
+
+;;----------------------------------------------;;
+
+(defcustom mtg-edition-name-list
+
+  '(
+    al
+    be
+    un
+    rv
+    summer
+    e4
+    e5
+    e6
+    e7
+    e8
+    e9
+    e10
+    m10
+    m11
+    m12
+    m13
+    m14
+    m15
+    ori
+    an
+    aq
+    lg
+    dk
+    fe
+    hl
+    mr
+    vi
+    wl
+    tp
+    sh
+    ex
+    us
+    ul
+    ud
+    mm
+    ne
+    pr
+    in
+    ps
+    ap
+    od
+    tr
+    ju
+    on
+    le
+    sc
+    mi
+    ds
+    dn5
+    chk
+    bok
+    sok
+    rav
+    gp
+    di
+    ia
+    ai
+    cs
+    tsts
+    ts
+    pc
+    fut
+    lw
+    mt
+    shm
+    eve
+    ala
+    cfx
+    arb
+    zen
+    wwk
+    roe
+    som
+    mbs
+    nph
+    isd
+    dka
+    avr
+    rtr
+    gtc
+    dgm
+    ths
+    bng
+    jou
+    ktk
+    frf
+    dtk
+    bfz
+    ogw
+    soi
+    emn
+    kld
+    aer
+    akh
+    hou
+    xln
+    rix
+    dom
+    bbd
+    m19
+    c18
+    grn
+    rna
+    war
+    mh1
+    m20
+    c19
+   )
+
+  "Known MTG Editions.
+
+a `listp' of `mtg-edition-p's.
+
+URL `https://mtg.gamepedia.com/Template:List_of_Magic_sets'"
+
+  :type '(repeat (symbol :tag "Edition"))
+
+  :safe #'listp
+  :group 'mtg)
+
+;;----------------------------------------------;;
+
+(defcustom mtg-block-list
+
+  (list (mtg-block-create :abbreviation 'antediluvian   :name "Antediluvian Sets"      :editions '())
+        (mtg-block-create :abbreviation 'ordinal        :name "Ordinal Core Sets"      :editions '())
+        (mtg-block-create :abbreviation 'cardinal       :name "Cardinal Core Sets"     :editions '())
+        (mtg-block-create :abbreviation 'mirage         :name "Mirage"                 :editions '())
+        (mtg-block-create :abbreviation 'rath           :name "The Rath Cycle"         :editions '())
+        (mtg-block-create :abbreviation 'urza           :name "The Urza Cycle"         :editions '())
+        (mtg-block-create :abbreviation 'masques        :name "Masques"                :editions '())
+        (mtg-block-create :abbreviation 'invasion       :name "Invasion"               :editions '())
+        (mtg-block-create :abbreviation 'odyssey        :name "Odyssey"                :editions '())
+        (mtg-block-create :abbreviation 'onslaught      :name "Onslaught"              :editions '())
+        (mtg-block-create :abbreviation 'mirrodin       :name "Mirrodin"               :editions '())
+        (mtg-block-create :abbreviation 'kamigawa       :name "Kamigawa"               :editions '())
+        (mtg-block-create :abbreviation 'ravnica        :name "Ravnica"                :editions '())
+        (mtg-block-create :abbreviation 'iceage         :name "Ice Age"                :editions '())
+        (mtg-block-create :abbreviation 'timespiral     :name "Time Spiral"            :editions '())
+        (mtg-block-create :abbreviation 'lorwyn         :name "Lorwyn"                 :editions '())
+        (mtg-block-create :abbreviation 'shadowmoor     :name "Shadowmoor"             :editions '())
+        (mtg-block-create :abbreviation 'alara          :name "Shards Of Alara"        :editions '())
+        (mtg-block-create :abbreviation 'zendikar       :name "Zendikar"               :editions '())
+        (mtg-block-create :abbreviation 'scars          :name "Scars Of Mirrodin"      :editions '())
+        (mtg-block-create :abbreviation 'innistrad      :name "Innistrad"              :editions '())
+        (mtg-block-create :abbreviation 'ravnica2       :name "Return To Ravnica"      :editions '())
+        (mtg-block-create :abbreviation 'theros         :name "Theros"                 :editions '())
+        (mtg-block-create :abbreviation 'khans          :name "Khans Of Tarkir"        :editions '())
+        (mtg-block-create :abbreviation 'zendikar2      :name "Battle For Zendikar"    :editions '())
+        (mtg-block-create :abbreviation 'shadows        :name "Shadows Over Innistrad" :editions '())
+        (mtg-block-create :abbreviation 'kaladesh       :name "Kaladesh"               :editions '())
+        (mtg-block-create :abbreviation 'amonkhet       :name "Amonkhet"               :editions '())
+        (mtg-block-create :abbreviation 'ixalan         :name "Ixalan"                 :editions '())
+        (mtg-block-create :abbreviation 'ravnica3       :name "Guilds of Ravnica"      :editions '())
+        (mtg-block-create :abbreviation 'war            :name "War of the Spark"       :editions '())
+        )
+
+  "Known MTG Blocks (of MTG Editions).
+
+a `listp' of `mtg-block-p's."
+
+  :type '(repeat (mtg-block :tag "Block"))
+
+  :safe #'listp
+  :group 'mtg)
+
+;;----------------------------------------------;;
+;;; Variables (‘mtg-json’) ---------------------;;
+;;----------------------------------------------;;
 
 (defcustom mtg-search-path
 
@@ -433,7 +1550,7 @@ a `listp' of: `stringp's-and/or `symbolp's."
 
 a `listp' of `characterp's.
 
-For example, these black-bordered cards 
+For example, these black-bordered cards
 have such punctuation characters:
 
 • “Borrowing 100,000 Arrows”
@@ -481,7 +1598,7 @@ Inputs:
 • QUICK — a `booleanp'.
   (Defaults to nil).
 
-Initialize `mtg-cards' from `mtg-json-file', 
+Initialize `mtg-cards' from `mtg-json-file',
 only if necessary (or if FORCE is non-nil)."
 
   (cond ((quick mtg-data/card-names-vector)
@@ -612,7 +1729,7 @@ Output:
 ;;
 ;; ~$ gzip -c9 ./gitignored/Vintage.el > ./data/Vintage.el.gz
 ;;
-;; 
+;;
 
 ;;----------------------------------------------;;
 
@@ -638,7 +1755,7 @@ Notes:
     • the MTGJSON card schema.  [✓]
     • the Scryfall card schema. [❌] (TODO)
 
-  ... as of circa 2019. 
+  ... as of circa 2019.
   i.e. the Json MUST HAVE all Required Fields of the two schemata (above);
   it MAY HAVE extra fields (which are gracefully ignored.)
 
@@ -648,7 +1765,7 @@ Links:
 • URL `https://scryfall.com/docs/api/cards'"
 
   (let* ((TABLE (mtg-read-cards json))
-         
+
          )
 
     ()))
@@ -863,7 +1980,7 @@ you can customize this mode without slowing down the command.")
 ;; Elfeed:
 ;;
 ;; e.g. Elfeed Filter:
-;; 
+;;
 ;; Here’s a filter that finds all entries from within the past year tagged “youtube” (+youtube) that mention Linux or Linus (linu[sx]), but aren’t tagged “bsd” (-bsd), limited to the most recent 15 entries (#15):
 ;;
 ;;     @1-year-old +youtube linu[xs] -bsd #15
@@ -875,7 +1992,7 @@ you can customize this mode without slowing down the command.")
 ;;----------------------------------------------;;
 
 (progn
-  
+
   (defun mtg-forward-card-name (&optional count)
 
     "Move across MTG Card Names.
@@ -883,7 +2000,7 @@ you can customize this mode without slowing down the command.")
 Inputs:
 
  • COUNT — an optional `integerp'.
-   When `called-interactively-p', the “Prefix Argument”. 
+   When `called-interactively-p', the “Prefix Argument”.
    If COUNT is:
        ° positive — Move forwards to (the end of) the next card name.
        ° negative — Move backwards to (the end of) the prior card name.
@@ -895,7 +2012,7 @@ Effects:
 Metadata:
 
 • Registered with ‘thingatpt.el’ as `mtg-card-name’ —
-  Implements the property `forward-op' 
+  Implements the property `forward-op'
   for the “thing” symbol `mtg-card-name'.
 
 Usage
@@ -940,7 +2057,7 @@ For example, this command skips across/until these ‘mtg-card-name’s:
 ;; • `forward-symbol' calls `re-search-forward': « (re-search-forward "\\(\\sw\\|\\s_\\)+" nil 'move arg) »
 ;; • « "\\(\\sw\\|\\s_\\)+" » matches one-or-more Symbol Characters (w.r.t. Syntax Class)
 ;;   and/or Word Characters (w.r.t. Syntax Class).
-;; • 
+;; •
 ;;
 
 ;;----------------------------------------------;;
@@ -1044,7 +2161,7 @@ Inputs:
   A card name and/or edition name."
 
   (when-let* ((CARD (or (mtg-get-card-by-name name) (mtg-get-edition-by-name name)))
- 
+
 
     ())))
 
@@ -1310,12 +2427,12 @@ Table Entries:
 
 Inputs:
 
-• TEXT      — a `stringp'. 
+• TEXT      — a `stringp'.
 
-• WIDTH     — an `integerp' or nil. 
+• WIDTH     — an `integerp' or nil.
   Defaults to nil (i.e. no maximum width).
 
-• SEPARATOR — a `stringp' or nil. 
+• SEPARATOR — a `stringp' or nil.
   Defaults to “ | ”.
 
 Transformations include:
@@ -1458,7 +2575,7 @@ Related:
 
   "`unload-feature' for `mtg'.
 
-Inverts `mtg-setup' and `inferior-mtg-setup' 
+Inverts `mtg-setup' and `inferior-mtg-setup'
 (which get executed by « (load \"mtg.el\") »).
 
 Effects:
@@ -20830,7 +21947,7 @@ Compatibility:
 
 • For future-compatibility, consumers should either:
 
-    • ❶ consume the output only as a `sequencep' 
+    • ❶ consume the output only as a `sequencep'
         (i.e. not as a `vectorp').
     • ❷ specify TYPE."
 
@@ -20897,7 +22014,7 @@ Output:
 ;;; Notes --------------------------------------;;
 ;;----------------------------------------------;;
 
-;; 
+;;
 ;;
 ;;
 
