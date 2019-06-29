@@ -94,6 +94,295 @@ embedded in ‘mtg.el’ (i.e. this file) is:
 
 URL `https://mtgjson.com/json/version.json'")
 
+
+;;----------------------------------------------;;
+;;; Types --------------------------------------;;
+;;----------------------------------------------;;
+
+(cl-defstruct (mtg-card (:constructor mtg-card-create)
+                        (:copier      nil))
+
+  "`mtg-card' represents a (unique) “Magic: The Gathering” card.
+
+Field Docs:
+
+• NAME          — Card Name.
+                  Normalized (via ‘mtg-normalize-card-name’) and Cached (via `intern').
+• COST          — Mana Cost.
+• TYPES         — Card Type(s).
+• SUBTYPES      — Subtype(s). e.g. Creature Type(s), ‹Aura›, ‹Equipment›, etc.
+• SUPERTYPES    — Supertypes(s). e.g. ‹Legendary›, ‹Snow›, etc.
+• COLORS        — .
+• RULES         — .
+• POWER         — .
+• TOUGHNESS     — .
+• LOYALTY       — .
+• CMC           — .
+• COLORIDENTITY — .
+• FLAVOR        — .
+• FRAME         — .
+• LAYOUT        — .
+• RARITY        — .
+• EDITION       — .
+• TYPELINE      — .
+• LANGUAGE      — .
+• IMAGE         — .
+• ARTIST        — .
+• RULINGS       — .
+• LEGALITY      — .
+• SCRYFALL      — Scryfall Metadata, see URL `https://scryfall.com/docs/api/cards'.
+
+Field Types:
+
+• NAME          ∷ a `symbolp'.
+• COST          ∷ a `listp' of `symbolp's.
+• TYPES         ∷ a `listp' of `symbolp's.
+• SUBTYPES      ∷ a `listp' of `symbolp's.
+• SUPERTYPES    ∷ a `listp' of `symbolp's.
+• COLORS        ∷ a `listp' of `symbolp's.
+• RULES         ∷ a `stringp'.
+• POWER         ∷ an `integerp', or `stringp'.
+• TOUGHNESS     ∷ an `integerp', or `stringp'.
+• LOYALTY       ∷ an `integerp', or `stringp'.
+• CMC           ∷ a `natnump' (i.e. non-negative `integerp').
+• COLORIDENTITY ∷ a `listp' of `stringp's and/or `symbolp's.
+• FLAVOR        ∷ a `stringp'.
+• FRAME         ∷ a `stringp' or `symbolp'.
+• LAYOUT        ∷ a `stringp' or `symbolp'.
+• RARITY        ∷ a `stringp' or `symbolp'.
+• EDITION       ∷ a `stringp' or `symbolp'.
+• TYPELINE      ∷ a `stringp' or `symbolp'.
+• LANGUAGE      ∷ a `stringp' or `symbolp'.
+• IMAGE         ∷ a `symbolp' (an Image Symbol, from ‘defimage’),
+                  or a `stringp' (a URI, e.g. a file-path or website-adderess, with Image Content-Type).
+• ARTIST        ∷ a `stringp' or `symbolp'.
+• RULINGS       ∷ a `stringp'.
+• LEGALITY      ∷ a `stringp'.
+• SCRYFALL      ∷ a `stringp'.
+
+Related:
+
+• `make-mtg-card' — Smart Constructor which further documents the type(s) of each field."
+
+  ;; Mechanical & Primary:
+
+  (name          nil)
+  (cost          nil)
+  (types         nil)
+  (subtypes      nil)
+  (supertypes    nil)
+  (colors        nil)
+  (rules         nil)
+  (power         nil)
+  (toughness     nil)
+  (loyalty       nil)
+
+  ;; Mechanical & Secondary (i.e. can be derived from the “Primary” above):
+
+  (cmc           0)
+  (coloridentity nil)
+
+  ;; Non-Mechanical & Internal (i.e. present on the card itself):
+
+  (image         nil)
+  (flavor        nil)
+  (frame         nil)
+  (layout        nil)
+  (border        nil)
+  (rarity        nil)
+  (edition       nil)
+  (typeline      nil)
+  (language      nil)
+  (artist        nil)
+
+  ;; Non-Mechanical & External (i.e. from an external resource, like a website):
+
+  (rulings       nil)
+  (legality      nil)
+  (date          nil)
+  (scryfall      nil))
+
+;; M-: (mtg-card-create :name "" :cost "" :types "" :supertypes "" :subtypes "" :colors "" :rules "" :power "" :toughness "" :loyalty "" :cmc 1 :coloridentity "" :image "" :flavor "" :frame "" :layout "" :rarity "" :typeline "" :language "" :artist "" :rulings "" :legality "" :scryfall "")
+;;  ⇒
+
+;;TODO color cmc supertypes subtypes layout watermark collector language
+
+;; TODO legality  'legal 'banned' 'restricted 'illegal
+;; TODO color     'white 'blue 'black 'red 'green
+;; TODO language  'en ...
+
+;;----------------------------------------------;;
+
+(cl-defun make-mtg-card (&key name cost types subtypes supertypes colors rules power toughness loyalty cmc coloridentity image flavor frame layout rarity edition typeline language artist rulings legality date scryfall)
+
+  "Make an `mtg-card', with validation & defaulting.
+
+Inputs:
+
+• NAME          — a `stringp' or `symbolp'.
+• COST          — a `stringp', or a `listp' of `stringp's.
+• TYPES         — a `listp' of `stringp's.
+• SUBTYPES      — a `listp' of `stringp's.
+• SUPERTYPES    — a `listp' of `stringp's.
+• COLORS        — a `listp' of `stringp's.
+• RULES         — a `stringp'.
+• POWER         — an `integerp', or `stringp'.
+• TOUGHNESS     — an `integerp', or `stringp'.
+• LOYALTY       — an `integerp', or `stringp'.
+• CMC           — a `natnump' (i.e. non-negative `integerp').
+• COLORIDENTITY — a `listp' of `stringp's and/or `symbolp's.
+• FLAVOR        — a `stringp'.
+• FRAME         — a `stringp' or `symbolp'.
+• LAYOUT        — a `stringp' or `symbolp'.
+• RARITY        — a `stringp' or `symbolp'.
+• EDITION       — a `stringp' or `symbolp'.
+• TYPELINE      — a `stringp' or `symbolp'.
+• LANGUAGE      — a `stringp' or `symbolp'.
+• IMAGE         — a `symbolp' (an Image Symbol, from ‘defimage’),
+                  or a `stringp' (a URI, e.g. a file-path or website-adderess, with Image Content-Type).
+• ARTIST        — a `stringp' or `symbolp'.
+• RULINGS       — a `stringp'.
+• LEGALITY      — a `stringp'.
+• SCRYFALL      — a `stringp'.
+
+Output:
+
+• an `mtg-card-p'.
+
+Example:
+
+• M-: (make-mtg-card)
+    ⇒ (mtg-card-create)
+    ⇒ #s(mtg-card nil nil nil nil nil nil nil nil nil nil 0 ...)
+
+Links:
+
+• URL `'
+
+Related:
+
+• `mtg-card-create'"
+
+  (let* ((NAME          (cl-typecase name
+                          (symbol name)
+                          (string (intern name))))
+         (COST          cost)
+         (TYPES         types)
+         (SUBTYPES      subtypes)
+         (SUPERTYPES    supertypes)
+         (COLORS        colors)
+         (RULES         rules)
+         (POWER         power)
+         (TOUGHNESS     toughness)
+         (LOYALTY       loyalty)
+         (CMC           cmc)
+         (COLORIDENTITY coloridentity)
+         (IMAGE         image)
+         (FLAVOR        flavor)
+         (FRAME         frame)
+         (LAYOUT        layout)
+         (BORDER        border)
+         (RARITY        rarity)
+         (EDITION       edition)
+         (TYPELINE      typeline)
+         (LANGUAGE      language)
+         (ARTIST        artist)
+         (DATE          date)
+         (IDENTIFIERS   identifiers)
+         (RULINGS       rulings)
+         (LEGALITY      legality)
+         (SCRYFALL      scryfall)
+         )
+
+    (mtg-card-create :name          NAME
+                     :cost          COST
+                     :types         TYPES
+                     :subtypes      SUBTYPES
+                     :supertypes    SUPERTYPES
+                     :colors        COLORS
+                     :rules         RULES
+                     :power         POWER
+                     :toughness     TOUGHNESS
+                     :loyalty       LOYALTY
+                     :cmc           CMC
+                     :coloridentity COLORIDENTITY
+                     :image         IMAGE
+                     :flavor        FLAVOR
+                     :frame         FRAME
+                     :layout        LAYOUT
+                     :border        BORDER
+                     :rarity        RARITY
+                     :edition       EDITION
+                     :typeline      TYPELINE
+                     :language      LANGUAGE
+                     :artist        ARTIST
+                     :date          DATE
+                     :identifiers   IDENTIFIERS
+                     :rulings       RULINGS
+                     :legality      LEGALITY
+                     :scryfall      SCRYFALL)))
+
+;;==============================================;;
+
+(cl-defstruct (mtg-symbol
+               (:constructor mtg-symbol-create)
+               (:copier      nil))
+
+  symbol abbreviation (image nil) (char nil))
+
+;; M-: (mtg-symbol-create :symbol 'tap :abbreviation 'T :image 'mtg-tap-symbol-svg-image :char 'mtg-tap-symbol-char)
+;;  ⇒ #s(mtg-symbol tap T mtg-tap-symbol-svg-image mtg-tap-symbol-char)
+
+;;==============================================;;
+
+(cl-defstruct (mtg-rarity
+               (:constructor mtg-rarity-create)
+               (:copier      nil))
+
+  rarity abbreviation color)
+
+;; M-: (mtg-rarity-create :rarity 'rare :abbreviation 'r)
+;;  ⇒ #s(mtg-rarity rare r nil)
+
+;;==============================================;;
+
+(cl-defstruct (mtg-language
+               (:constructor mtg-language-create)
+               (:copier      nil))
+
+  language abbreviation endonym (flag nil))
+
+;; M-: (mtg-language-create :language 'spanish :abbreviation 'es :endonym "Español")
+;;  ⇒ #s(mtg-language spanish es "Español" nil)
+
+;;==============================================;;
+
+(cl-defstruct (mtg-edition
+               (:constructor mtg-edition-create)
+               (:copier      nil))
+
+  abbreviation name (type 'expansion) (image nil))
+
+;; M-: (mtg-edition-create :abbreviation 'abu :name "Alpha Beta Unlimited")
+;;  ⇒ #s(mtg-edition abu "Alpha Beta Unlimited" nil)
+
+;;==============================================;;
+
+(cl-defstruct (mtg-block
+               (:constructor mtg-block-create)
+               (:copier      nil))
+
+  abbreviation (name "") (editions '()))
+
+;; M-: (mtg-block-create :abbreviation 'ia :name "Ice Age Block" :editions '())
+;;  ⇒ #s(mtg-block ia "Ice Age Block" ())
+
+;;----------------------------------------------;;
+;;; Types: “Enums” -----------------------------;;
+;;----------------------------------------------;;
+
+
+
 ;;----------------------------------------------;;
 ;;; Variables ----------------------------------;;
 ;;----------------------------------------------;;
@@ -117,7 +406,7 @@ URL `https://mtgjson.com/json/version.json'")
 
   "Search Path for data files.
 
-`listp' of `stringp's and/or `symbolp's."
+a `listp' of: `stringp's-and/or `symbolp's."
 
   :type '(repeat (string :tag "Directory Literal")
                  (symbol :tag "Directory Variable"))
@@ -180,7 +469,7 @@ a `listp' of `stringp's."
 ;;; Accessors ----------------------------------;;
 ;;----------------------------------------------;;
 
-(cl-defun mtg-cards (&key force)
+(cl-defun mtg-cards (&key force quick)
 
   "Accessor for variable `mtg-cards'.
 
@@ -189,13 +478,53 @@ Inputs:
 • FORCE — a `booleanp'.
   (Defaults to nil).
 
+• QUICK — a `booleanp'.
+  (Defaults to nil).
+
 Initialize `mtg-cards' from `mtg-json-file', 
 only if necessary (or if FORCE is non-nil)."
 
-  (unless (or mtg-cards (not force))
-    (setq mtg-cards (mtg-read-cards)))
+  (cond ((quick mtg-data/card-names-vector)
 
-  mtg-cards)
+         ((not (or mtg-cards (not force)))
+          (progn
+            (setq mtg-cards (mtg-read-cards))
+            mtg-cards)))))
+
+;;----------------------------------------------;;
+
+(defun mtg-get-search-path ()
+
+  "Gets and `eval's variable `mtg-search-path'.
+
+Output:
+
+• a `listp' of: `stringp's.
+
+Examples:
+
+• M-: (mtg-get-search-path)
+    ↪ nil"
+
+  (let* ()
+
+    (cl-loop for STRING-OR-SYMBOL in mtg-search-path
+
+       for STRING = (cl-typecase STRING-OR-SYMBOL
+                      (string STRING-OR-SYMBOL)
+                      (symbol (cond ((fboundp STRING-OR-SYMBOL) (funcall STRING-OR-SYMBOL))
+                                    ((boundp  STRING-OR-SYMBOL) (symbol-value STRING-OR-SYMBOL))
+                                    (t nil))))
+
+       for PATH = (if STRING (file-name-as-directory STRING))
+
+       collect STRING)))
+
+;;----------------------------------------------;;
+;;; Functions ----------------------------------;;
+;;----------------------------------------------;;
+
+;;(cl-loop for STRING in mtg-data/card-names-vector do (intern STRING))
 
 ;;----------------------------------------------;;
 ;;; JSON ---------------------------------------;;
@@ -1149,8 +1478,6 @@ Effects:
 
 ;;----------------------------------------------;;
 ;;; Data ---------------------------------------;;
-;;----------------------------------------------;;
-
 ;;----------------------------------------------;;
 
 (defconst mtg-data/card-names-vector
@@ -20474,6 +20801,11 @@ a `vectorp' of `stringp's.
 
 Includes all cards which have been officially-printed
 and/or are Vintage-legal and/or are black-brodered.")
+
+;; ^ e.g.:
+;;
+;; M-: (cl-loop for STRING in mtg-data/card-names-vector do (intern STRING))
+;;
 
 ;;==============================================;;
 
