@@ -51,6 +51,8 @@
 ;;----------------------------------------------;;
 
 (progn
+  (require 'url)
+  (require 'mm-url)
   (require 'seq)
   (require 'cl-lib))
 
@@ -67,13 +69,59 @@
   (require 'helm))
 
 ;;----------------------------------------------;;
+;;; Functions ----------------------------------;;
+;;----------------------------------------------;;
+
+(defun helm-mtg/browse-scryfall (card-name)
+
+  "Browse Scryfall for CARD-NAME.
+
+Inputs:
+
+• CARD-NAME — a `stringp'.
+
+Examples:
+
+• M-: (helm-mtg/browse-scryfall \"Ancestral Recall\")
+   ;; (browse-url \"https://scryfall.com/search?q=ancestral+recall&order=released&dir=asc&as=grid&unique=art\")
+    ↪ nil
+
+Related:
+
+• Calls ‘browse-url'
+• Browses URL `https://scryfall.com/search'"
+
+  (let* ((CARD-NAME (downcase card-name))
+                                       
+                                        ; ^ ① lowercase letters.
+
+
+         (URL-QUERY (mm-url-encode-www-form-urlencoded `(("q" . ,CARD-NAME) ("order" . "released") ("dir" . "asc") ("as" . "grid") ("unique" . "art"))))
+
+                                        ; ^ ② replace spaces with plus-signs.
+
+         (URL (format "https://scryfall.com/search?%s" URL-QUERY))
+         )
+
+    (browse-url URL)))
+
+;; ^ e.g. (helm-mtg/browse-scryfall "Ancestral Recall")
+
+;; ^ notes:
+;;
+;; M-: (mm-url-encode-www-form-urlencoded '(("q" . "Ancestral Recall") ("order" . "released") ("dir" . "asc") ("as" . "grid") ("unique" . "art")))
+;;    ↪ "q=Ancestral+Recall&order=released&dir=asc&as=grid&unique=art"
+;;
+
+;;----------------------------------------------;;
 ;;; Helm Actions -------------------------------;;
 ;;----------------------------------------------;;
 
 (defconst helm-mtg/card-name-actions
 
-  (helm-make-actions "Insert" #'insert
-                     "Copy"   #'helm-kill-new
+  (helm-make-actions "Insert"   #'insert
+                     "Copy"     #'helm-kill-new
+                     "Scryfall" #'helm-mtg/browse-scryfall
                      )
 
   "Helm Actions for MTG Card Names.")
@@ -116,14 +164,11 @@
 ;; Notes ---------------------------------------;;
 ;;----------------------------------------------;;
 
-;; Feature `helm-buffers':
+;; Links:
 ;; 
 ;; • URL `https://github.com/emacs-helm/helm/wiki/Developing#creating-a-source'
-;;
-
+;; • URL `http://kitchingroup.cheme.cmu.edu/blog/2015/02/01/Handling-multiple-selections-in-helm'
 ;; 
-;;
-;;
 
 ;;----------------------------------------------;;
 ;; EOF -----------------------------------------;;
