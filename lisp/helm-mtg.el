@@ -67,21 +67,35 @@
   (require 'helm))
 
 ;;----------------------------------------------;;
-;; Types ---------------------------------------;;
+;;; Helm Actions -------------------------------;;
 ;;----------------------------------------------;;
 
+(defconst helm-mtg/card-name-actions
+
+  (helm-make-actions "Insert" #'insert
+                     "Copy"   #'helm-kill-new
+                     )
+
+  "Helm Actions for MTG Card Names.")
+
 ;;----------------------------------------------;;
-;; Variables -----------------------------------;;
+;;; Helm Sources -------------------------------;;
 ;;----------------------------------------------;;
 
 (defconst helm-mtg/card-name-source
 
-  (mtg-cards :type 'list :quick t :force nil)
+  (helm-build-sync-source "MTG Card Names"
+
+    :candidates (mtg-cards :type 'list :quick t :force nil)
+
+    :action 'helm-mtg/card-name-actions
+
+    )
 
   "Helm Source for MTG Card Names.")
 
 ;;----------------------------------------------;;
-;; Commands ------------------------------------;;
+;;; Helm Commands ------------------------------;;
 ;;----------------------------------------------;;
 
 (defun helm-mtg/card-names ()
