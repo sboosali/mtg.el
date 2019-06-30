@@ -31,14 +31,190 @@
 ;;
 ;; Features include:
 ;;
-;; • Completion for writing custom “Magic: The Gathering” cards.
-;; • Builtins.
-;; •
-;; •
-;; •
-;; •
+;; • ‘mtg-mode’  — Major Mode for editing custom MTG Cards.
+;; • ‘mtg-query’ — Search Engine for MTG Cards 
+;; • ‘mtg-json’  — 
+;; • ‘mtg-’      — 
+;; • ‘mtg-’      — 
+;; 
+;; Integrations include:
+;;
+;; • ‘helm-mtg’    — ‘helm’ integration: Helm TUIs for .
+;; • ‘company-mtg’ — ‘company’ integration: Company Backends for card names/types/keywords/….
+;; • ‘yas-mtg’     — ‘yasnippet’ integration: Snippets for phrases/cycles/….
 ;; •
 ;;
+;; ‘mtg-mode’ features:
+;;
+;; ① Write custom cards conveniently:
+;;
+;;    • Completion — Complete these groups of words/phrases:
+;; 
+;;        • Card Names  — There are ~20,000 card names.
+;;        • Keywords    — i.e. Keyword Abilities / Keyword Actions / Ability Words.
+;;        • Types       — i.e. Card Types / Sub Types / Super Types.
+;;        • Editions    — i.e. Set Codes / Set Names.
+;;
+;;    ↪ Benefits include:
+;; 
+;;        • Type fewer characters.
+;;        • Make fewer mistakes.
+;;        • 
+;;        • 
+;; 
+;;    • Formatting — 
+;; 
+;;        • Capitalization — 
+;;        • Keywords    — i.e. Keyword Abilities / Keyword Actions / Ability Words.
+;;        • Types       — i.e. Card Types / Sub Types / Super Types.
+;;        • Editions    — i.e. Set Codes / Set Names.
+;;
+;;    ↪ Benefits include:
+;; 
+;;    • Skeletons — 
+;;
+;;        • Cycles  — e.g. by Color, by Rarity.
+;;        • Phrases — e.g. typing “etb ” (i.e. e-t-b-SPC) automatically expands to “enters the battlefield ”.
+;;
+;;    ↪ Benefits include:
+;;
+;;    • Linting — 
+;; 
+;;        • Pitfalls — e.g. « The rules text “if ~ would die” isn't valid; instead, write “if ~ would be put into a graveyard from anywhere” or “when ~ dies” ».
+;;        •  — 
+;;        •  — 
+;;        •  — 
+;;
+;;    ↪ Benefits include:
+;;
+;; ② Export your custom set as:
+;;
+;;     • [✓] MTGJSON          — as a ‹.json› file (a.k.a. a JSON Object), with the schema.
+;;     • [✓] Magic Set Editor — as a ‹.tar› file (a.k.a. a Tar Archive), with the ‹.mse-set› schema.
+;;     • [✓] /r/custommagic   — as a ‹.md› file (a.k.a. Markdown), in Reddit-flavored Markdown, with the Subreddit-specific pseudo-links.
+;;     • [❌] MTG Salvation    — as a ‹.bb› file (a.k.a. BBCode). 
+;;
+;;    Render your custom set for:
+;;
+;;     • [✓] websites   — as a ‹.html› file (a.k.a. a Web Page), that's beautifully styled and completely standalone.
+;;     • [❌] printers   — as a ‹.pdf› file (?),
+;;
+;;         • HTML Styling    — via SVG mana symbols, the “Belern” font, and appropriate Bold/Italic (e.g. italics for flavor/remdinder text).
+;;         • Standalone HTML — all assets (e.g. artwork PNGs, CSS symbols) are embedded (via “Data URIs” and inline <style>s).
+;;           Thus, no 
+;;
+;; ③ 
+;;
+;; ④ 
+;;
+;; ⑤ 
+;;
+;; ‘mtg-query’ features:
+;;
+;; ① DSL .
+;;   e.g. « %u *instant` » finds
+;;
+;; ② No Installation — This file embeds most data.
+;;
+;;    Thus, as long as Emacs knows where ‘mtg.el’ is (i.e. within your ‘load-path’) and is able to run it successfully (i.e. to ‘load’ it), you can immediately begin querying.
+;;    I.E. Without downloading anything else, without being required to put the right file in the right place, without losing track of any files, etc.
+;;    . 
+;;
+;;    The current version of this file has all data (except coprighted artwork) for all cards from “Alpha/Beta/Unlimited” to “War Of The Spark”.
+;;
+;; ③ Offline — (Obviously.)
+;;
+;;     Unlike online MTG search engines (e.g. URL `https://scryfall.com' or URL `https://gatherer.wizards.com'),
+;;    ‘mtg-query’ both runs offline (it's just the code in this file) and stores its data offline.
+;;
+;;    Thus, you don't need an internet connection or anyting to search though this relatively miniscule database.
+;; 
+;; ③ Extensibility — Emacs
+;;
+;;    • Data Extensibility — Search through custom cards and custom sets.
+;;
+;;      Register them (easily) wtih ‘mtg-sources’:
+;;
+;;          • e.g. TODO « (add-to-list 'mtg-sources "my-custom-set.mtg" »).
+;;          • e.g. TODO « (add-to-list 'mtg-sources "https:///www.planesculptors.net/set/lorado" ») via ""https://drive.google.com/uc?export=download&id=1BY-t55McScHEDB09R7QMs52JHG1MTycp".
+;;
+;;    • Query Extensibility — Write your own predicates. For example:
+;;
+;;        • e.g. « `square » — “square-statted creatures” have the same power and toughness (i.e. ‹1/1›'s, ‹2/2›'s, ‹3/3›'s, ...).
+;;          TODO « POWER==TOUGHNESS ».
+;;
+;;        • e.g. « *arbor »  — “arbor cards” are Treefolk-or-Forest cards.
+;;          c.f. ‹Treefolk Harbinger›, which reads « When Treefolk Harbinger enters the battlefield, you may search your library for a Treefolk or Forest card, reveal it, then shuffle your library and put that card on top of it. »
+;;          TODO « *treefolk;forest ».
+;;
+;;
+;; 
+;;
+;; 
+;;
+;; ④ 
+;;
+;; ⑤ 
+;;
+;;
+;; ‘helm-mtg’ features:
+;;
+;; ①
+;;
+;; ②
+;;
+;; ③ 
+;;
+;; ‘company-mtg’ features:
+;;
+;; ① Annotations — Unlike ‘mtg-complete/*’, Company can annotate candidates. For example:
+;;
+;;        • Card Names  — are annotated with a summary of the card (color, type, cost).
+;;        • Keywords    — are annotated with their Reminder Text.
+;;        • Set Codes   — are annotated with their full names (e.g. « AN “Arabian Nights” »).
+;;
+;;   Completion was is helpful for
+;;   Disambiguating between:
+;;
+;;        • Different Legends — e.g. ‹Borborygmus› vs ‹Borborygmus Enraged›. e.g. ‹Yagmoth's Bargain› vs ‹Yagmoth's Will›.
+;;        • Similar Names    — are annotated with a summary of the card (color, type, cost).
+;;        • Types    — are annotated with .
+;;        • Sets     — are annotated with their full names (e.g. « AN “Arabian Nights” »).
+;;
+;;
+;;   [Author's Note] I post a lot about MTG (on forums and with my group chat).
+;;                   Way before this package, I wrote my own MTG Company Backend for card names,
+;;                   Its usefulness was one of the inspirations for everthing else.
+;;
+;; ②
+;;
+;; ③ 
+;;
+;; ‘yas-mtg’ features:
+;;
+;; ① Unlike ‘mtg-skeleton/*’: — 
+;;
+;;        • 
+;;        • 
+;;        • 
+;;        • 
+;;
+;; ②
+;;
+;; ③ 
+;;
+;; Links:
+;;
+;; • MTGJSON          — URL `https://mtgjson.com/'
+;; • Magic Set Editor — URL `http://magicseteditor.sourceforge.net/'
+;; • /r/custommagic   — URL `https://www.reddit.com/r/custommagic'
+;; • MTG Salvation    — URL `https://www.mtgsalvation.com/forums/magic-fundamentals/custom-card-creation'
+;; • Planesculptors   — URL `https:///www.planesculptors.net'
+;;
+;; • Scryfall — URL `https://scryfall.com'
+;; • Gatherer — URL `https://gatherer.wizards.com'
+;;
+;; 
 
 ;;; Code:
 
@@ -162,7 +338,9 @@ Field Types:
 
 Related:
 
-• `make-mtg-card' — Smart Constructor which further documents the type(s) of each field."
+• `make-mtg-card' — Smart Constructor which further documents the type(s) of each field.
+
+• URL `https://mtgjson.com/files/all-cards/' — Documents the JSON Schema for an MTG Card in MTGJSON."
 
   ;; Mechanical & Primary:
 
@@ -401,7 +579,14 @@ Related:
 
   "“Magic: The Gathering” Cards (add custom keywords, colors, etc)."
 
-  :link '(url-link :tag "GitHub" "https://github.com/sboosali/mtg.el")
+  :prefix "mtg-"
+  :group 'mtg)
+
+;;----------------------------------------------;;
+
+(defgroup mtg-json nil
+
+  "Read/Parse ‹.json› datafiles w.r.t. the URL `mtgjson.com' schemata."
 
   :prefix "mtg-"
   :group 'mtg)
@@ -1612,16 +1797,16 @@ only if necessary (or if FORCE is non-nil)."
 
 (defun mtg-get-search-path ()
 
-  "Gets and `eval's variable `mtg-search-path'.
+  "Gets and `eval's everything in variable `mtg-search-path'.
 
 Output:
 
-• a `listp' of: `stringp's.
+• a `listp' of `stringp's.
 
 Examples:
 
 • M-: (mtg-get-search-path)
-    ↪ nil"
+    ↪ (\"/home/sboo/elisp/mtg/lisp/\" \"~/.emacs.d/\" \"./\")"
 
   (let* ()
 
@@ -1633,9 +1818,13 @@ Examples:
                                     ((boundp  STRING-OR-SYMBOL) (symbol-value STRING-OR-SYMBOL))
                                     (t nil))))
 
-       for PATH = (if STRING (file-name-as-directory STRING))
+       for DIR = (if STRING (file-name-as-directory STRING))
 
-       collect STRING)))
+       if DIR
+       collect DIR into SEARCH-PATH
+       end
+
+       finally return (seq-uniq SEARCH-PATH))))
 
 ;;----------------------------------------------;;
 ;;; Functions ----------------------------------;;
@@ -1646,17 +1835,9 @@ Examples:
 ;;----------------------------------------------;;
 ;;; JSON ---------------------------------------;;
 ;;----------------------------------------------;;
-
-(defgroup mtg-json nil
-
-  "Read JSON with schema MTGJSON or schema Scryfall."
-
-  :group 'mtg)
-
-;;==============================================;;
 ;; JSON Variables:
 
-(defcustom mtg-json-file
+(defcustom mtg-json-default-file
 
   "Vintage.json.gz"
 
@@ -1681,7 +1862,30 @@ Supported file extensions for the “File Location” are:
           (string :tag "URI"))
 
   :safe #'stringp
-  :group 'mtg)
+  :group 'mtg-json)
+
+;;----------------------------------------------;;
+
+(defcustom mtg-json-basenames
+
+  '("Vintage" "Modern" "Standard" "mtg")
+
+  "Basenames of the ‹mtg.json› datafile.
+
+Order: from highest priority to lowest priority.
+
+‹mtgjson.com› compiles different formats (“Vintage”, “Modern”, “Standard”)
+under the same schema. `mtg-json-basenames' determines which are 
+preferred and/or acceoptable, when present locally.
+All can be parsed (successfully) by the same function `mtg-json-parse'.
+
+URL `https://mtgjson.com/downloads/compiled/'"
+
+  :type '(choice
+          (string :tag "Filename"))
+
+  :safe #'listp
+  :group 'mtg-json)
 
 ;;==============================================;;
 ;; JSON Functions:
@@ -2540,58 +2744,40 @@ Effects:
     (mtg-table-mode +1))))
 
 ;;----------------------------------------------;;
-;; (Un/)Loading --------------------------------;;
+;;; MTGJSON ------------------------------------;;
 ;;----------------------------------------------;;
 
-;;;###autoload
-(defun mtg-setup ()
-
-  "Setup `mtg'.
-
-”Setup“ includes:
-
-• Registering `mtg-mode' with `auto-mode-alist'.
-• Registering `mtg-mode' with `interpreter-mode-alist'.
-
-Related:
-
-• Gated by `mtg-setup-p'.
-• Inverted by `mtg-unload-function'."
-
-  (progn
-
-    (add-to-list 'auto-mode-alist (cons mtg-filepath-regexp #'mtg-mode))
-
-    (with-eval-after-load 'company
-      (with-demoted-errors "[MTG] Company] %s"
-        (when (require 'mtg-company)
-          (mtg-company-setup))))
-
-    ()))
+;; e.g. JSON Syntax:
+;;
+;;     « {"mana": "{1}{U}{U}{G}" } »  »
+;;
 
 ;;----------------------------------------------;;
+;;; Magic Set Editor ---------------------------;;
+;;----------------------------------------------;;
 
-(defun mtg-unload-function ()
+;; e.g. Conf Syntax:
+;;
+;;     « card:  »
+;;
 
-  "`unload-feature' for `mtg'.
+;;----------------------------------------------;;
+;;; /r/custommagic -----------------------------;;
+;;----------------------------------------------;;
 
-Inverts `mtg-setup' and `inferior-mtg-setup'
-(which get executed by « (load \"mtg.el\") »).
+;; e.g. Markdown Syntax:
+;;
+;;     « [1](/1)[U](/U)[U](/U)[G](/G) »
+;;
 
-Effects:
+;;----------------------------------------------;;
+;;; MTG Salvation ------------------------------;;
+;;----------------------------------------------;;
 
-• Unregisters `mtg-mode' from `auto-mode-alist'.
-• Unregisters `mtg-mode' from `interpreter-mode-alist'."
-
-  (progn
-
-    (setq auto-mode-alist
-          (cl-remove #'mtg-mode auto-mode-alist        :test #'equal :key #'cdr))
-
-    (setq interpreter-mode-alist
-          (cl-remove #'mtg-mode interpreter-mode-alist :test #'equal :key #'cdr))
-
-    ()))
+;; e.g. BBCode Syntax:
+;;
+;;     « [mana]1UUG[/mana] »
+;;
 
 ;;----------------------------------------------;;
 ;;; Data ---------------------------------------;;
@@ -22002,6 +22188,60 @@ Output:
 (defconst mtg-data/longest-card-name-length (mtg-data/longest-card-name-length)
 
   "Default `mtg-data/longest-card-name-length'.")
+
+;;----------------------------------------------;;
+;; (Un/)Loading --------------------------------;;
+;;----------------------------------------------;;
+
+;;;###autoload
+(defun mtg-setup ()
+
+  "Setup `mtg'.
+
+”Setup“ includes:
+
+• Registering `mtg-mode' with `auto-mode-alist'.
+• Registering `mtg-mode' with `interpreter-mode-alist'.
+
+Related:
+
+• Gated by `mtg-setup-p'.
+• Inverted by `mtg-unload-function'."
+
+  (progn
+
+    (add-to-list 'auto-mode-alist (cons mtg-filepath-regexp #'mtg-mode))
+
+    (with-eval-after-load 'company
+      (with-demoted-errors "[MTG] Company] %s"
+        (when (require 'mtg-company)
+          (mtg-company-setup))))
+
+    ()))
+
+;;----------------------------------------------;;
+
+(defun mtg-unload-function ()
+
+  "`unload-feature' for `mtg'.
+
+Inverts `mtg-setup' and `inferior-mtg-setup'
+(which get executed by « (load \"mtg.el\") »).
+
+Effects:
+
+• Unregisters `mtg-mode' from `auto-mode-alist'.
+• Unregisters `mtg-mode' from `interpreter-mode-alist'."
+
+  (progn
+
+    (setq auto-mode-alist
+          (cl-remove #'mtg-mode auto-mode-alist        :test #'equal :key #'cdr))
+
+    (setq interpreter-mode-alist
+          (cl-remove #'mtg-mode interpreter-mode-alist :test #'equal :key #'cdr))
+
+    ()))
 
 ;;----------------------------------------------;;
 ;;; Effects ------------------------------------;;

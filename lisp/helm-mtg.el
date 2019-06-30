@@ -1,4 +1,4 @@
-;;; mtg-helm.el --- -*- coding: utf-8; lexical-binding: t -*-
+;;; helm-mtg.el --- -*- coding: utf-8; lexical-binding: t -*-
 
 ;; Copyright © 2019 Spiros Boosalis
 
@@ -29,8 +29,10 @@
 
 ;; Helm Integration for MTG.
 ;; 
-;; • `helm' source for `mtg-read-card'.
-;; • 
+;; `helm' comamnds/sources for:
+;;
+;; • `mtg-read-card'
+;; • `mtg-query-cards'
 ;;
 ;; 
 
@@ -56,7 +58,13 @@
 
 ;; project:
 
-(require 'mtg)
+(progn
+  (require 'mtg))
+
+;;==============================================;;
+
+(progn
+  (require 'helm))
 
 ;;----------------------------------------------;;
 ;; Types ---------------------------------------;;
@@ -95,6 +103,6 @@
 ;; EOF -----------------------------------------;;
 ;;----------------------------------------------;;
 
-(provide 'mtg-helm)
+(provide 'helm-mtg)
 
-;;; mtg-helm.el ends here
+;;; helm-mtg.el ends here
