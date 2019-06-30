@@ -147,11 +147,6 @@
 ;;          c.f. ‹Treefolk Harbinger›, which reads « When Treefolk Harbinger enters the battlefield, you may search your library for a Treefolk or Forest card, reveal it, then shuffle your library and put that card on top of it. »
 ;;          TODO « *treefolk;forest ».
 ;;
-;;
-;; 
-;;
-;; 
-;;
 ;; ④ 
 ;;
 ;; ⑤ 
@@ -1771,11 +1766,20 @@ a `listp' of `stringp's."
 ;;; Accessors ----------------------------------;;
 ;;----------------------------------------------;;
 
-(cl-defun mtg-cards (&key force quick)
+(cl-defun mtg-cards (&key type force quick)
 
   "Accessor for variable `mtg-cards'.
 
 Inputs:
+
+• TYPE — an optional `symbolp', one of:
+
+  • symbol ‘vector’
+  • symbol ‘list’
+
+  If non-nil, convert the output to the ‘type-of’ TYPE.
+
+  see “Sequence Type” w.r.t. `seq-into'.
 
 • FORCE — a `booleanp'.
   (Defaults to nil).
@@ -1786,12 +1790,30 @@ Inputs:
 Initialize `mtg-cards' from `mtg-json-file',
 only if necessary (or if FORCE is non-nil)."
 
-  (cond ((quick mtg-data/card-names-vector)
+  (let* ((TYPE (or type))
+         (DATA (cond (quick mtg-data/card-names-vector)
 
-         ((not (or mtg-cards (not force)))
-          (progn
-            (setq mtg-cards (mtg-read-cards))
-            mtg-cards)))))
+                     ((not (or mtg-cards (not force)))  (progn
+                                                          (setq mtg-cards (mtg-read-cards))
+                                                          mtg-cards))))
+         )
+
+
+    (if TYPE
+        (seq-into DATA TYPE)
+      DATA)))
+
+;; ^ e.g.:
+;;
+;; M-: (length (mtg-cards :quick t :force nil))
+;;   ↪ 19310
+;;
+;; M-: (type-of (mtg-cards :type 'list :quick t :force nil))
+;;   ↪ 'cons
+;;
+;; M-: (type-of (mtg-cards :type 'vector :quick t :force nil))
+;;   ↪ 'vector
+;;
 
 ;;----------------------------------------------;;
 
