@@ -168,7 +168,7 @@
 ;;        • Keywords    — are annotated with their Reminder Text.
 ;;        • Set Codes   — are annotated with their full names (e.g. « AN “Arabian Nights” »).
 ;;
-;;   Completion was is helpful for
+];;   Completion was is helpful for
 ;;   Disambiguating between:
 ;;
 ;;        • Different Legends — e.g. ‹Borborygmus› vs ‹Borborygmus Enraged›. e.g. ‹Yagmoth's Bargain› vs ‹Yagmoth's Will›.
@@ -229,6 +229,7 @@
 (progn
   (require 'json)
   (require 'url)
+  (require 'map)
   (require 'seq))
 
 ;;==============================================;;
@@ -549,6 +550,51 @@ Related:
 
 ;; M-: (mtg-block-create :abbreviation 'ia :name "Ice Age Block" :editions '())
 ;;  ⇒ #s(mtg-block ia "Ice Age Block" ())
+
+;;==============================================;;
+
+
+(cl-defstruct (mtg-
+               (:constructor mtg--create)
+               (:copier      nil))
+
+  abbreviation (name ""))
+
+;; M-: (mtg--create :abbreviation ' :name "")
+;;  ⇒ #s(mtg- )
+
+;;==============================================;;
+
+(cl-defstruct (mtg-
+               (:constructor mtg--create)
+               (:copier      nil))
+
+  abbreviation (name ""))
+
+;; M-: (mtg--create :abbreviation ' :name "")
+;;  ⇒ #s(mtg- )
+
+;;==============================================;;
+
+(cl-defstruct (mtg-
+               (:constructor mtg--create)
+               (:copier      nil))
+
+  abbreviation (name ""))
+
+;; M-: (mtg--create :abbreviation ' :name "")
+;;  ⇒ #s(mtg- )
+
+;;==============================================;;
+
+(cl-defstruct (mtg-
+               (:constructor mtg--create)
+               (:copier      nil))
+
+  abbreviation (name ""))
+
+;; M-: (mtg--create :abbreviation ' :name "")
+;;  ⇒ #s(mtg- )
 
 ;;----------------------------------------------;;
 ;;; Types: “Enums” -----------------------------;;
@@ -2001,6 +2047,81 @@ Links:
 ;; M-: (defconst mtg-vintage-cards-structs (mtg-json-parse "../data/Vintage.json.gz"))
 ;;
 
+;;----------------------------------------------;;
+
+;;----------------------------------------------;;
+
+;;----------------------------------------------;;
+
+;;----------------------------------------------;;
+
+;;----------------------------------------------;;
+
+;;----------------------------------------------;;
+
+;;----------------------------------------------;;
+
+(defun mtg-json/parse-rulings (array)
+
+  "Parse an MTGJSON “rulings” array.
+
+Input:
+
+• ARRAY — any ‘'json-array-type’.
+
+URL `https://mtgjson.com/structures/rulings/'"
+
+  (cl-check-type array #'sequencep "a Json Array (c.f. ‘seq.el’)")
+
+  (cl-loop )) 
+
+;;----------------------------------------------;;
+
+(defun mtg-json/parse-legalities (object)
+
+  "Parse an MTGJSON “legalities” object.
+
+Input:
+
+• OBJECT — any ‘'json-object-type’, whose keys are any ‘json-key-type’.
+
+URL `https://mtgjson.com/structures/legalities/'"
+
+  (cl-check-type object #'mapp "a Json Object (c.f. ‘map.el’)")
+
+  (cl-loop ))
+
+;;----------------------------------------------;;
+
+(defun mtg-json/parse-translations (object)
+
+  "Parse an MTGJSON “foreignData” object.
+Input:
+
+• OBJECT — any ‘'json-object-type’, whose keys are any ‘json-key-type’.
+
+URL `https://mtgjson.com/structures/foreign-data/'"
+
+  (cl-check-type object #'mapp "a Json Object (c.f. ‘map.el’)")
+
+  ())
+
+;;----------------------------------------------;;
+
+;;----------------------------------------------;;
+
+(defun mtg-json/mtgjson/fetch ()
+
+  "Fetch « .json » datafiles from URL `https://mtgjson.com' ."
+
+  (progn
+
+    `("wget" "https://mtgjson.com/json/AllCards.json.gz")
+    `("wget" "https://mtgjson.com/json/AllSets.sqlite.gz")
+    `("wget" "https://mtgjson.com/json/Vintage.json.gz")
+
+    ()))
+
 ;;==============================================;;
 ;; JSON Utilities:
 
@@ -2346,6 +2467,187 @@ Output:
   ())
 
 ;;----------------------------------------------;;
+;;; Integration: ‘seq.el’ ----------------------;;
+;;----------------------------------------------;;
+
+;; ‘seq.el’ integration for ‘mtg’ types. i.e.:
+;;
+;; • the ‘cl-defmethod’s implements sequence-generic functions.
+;;
+;;
+;;
+;;----------------------------------------------;;
+
+(cl-defmethod seqp ((_ ,mtg-card))
+
+  t)
+
+;;----------------------------------------------;;
+
+(cl-defmethod seqp ((_ ,mtg-set))
+
+  t)
+
+;;----------------------------------------------;;
+
+;; (cl-defmethod seq-elt ((stream stream) n)
+;;   "Return the element of STREAM at index N."
+;;   (while (> n 0)
+;;     (setq stream (stream-rest stream))
+;;     (setq n (1- n)))
+;;   (stream-first stream))
+
+;; (cl-defmethod seq-length ((stream stream))
+;;   "Return the length of STREAM.
+;; This function will eagerly consume the entire stream."
+;;   (let ((len 0))
+;;     (while (not (stream-empty-p stream))
+;;       (setq len (1+ len))
+;;       (setq stream (stream-rest stream)))
+;;     len))
+
+;; (cl-defmethod seq-subseq ((stream stream) start end)
+;;   (seq-take (seq-drop stream start) (- end start)))
+
+;; (cl-defmethod seq-into-sequence ((stream stream))
+;;   "Convert STREAM into a sequence."
+;;   (let ((list))
+;;     (seq-doseq (elt stream)
+;;       (push elt list))
+;;     (nreverse list)))
+
+;; (cl-defmethod seq-into ((stream stream) type)
+;;   "Convert STREAM into a sequence of type TYPE."
+;;   (seq-into (seq-into-sequence stream) type))
+
+;; (cl-defmethod seq-into ((stream stream) (_type (eql stream)))
+;;   stream)
+
+;; (cl-defmethod seq-into ((seq sequence) (_type (eql stream)))
+;;   (stream seq))
+
+;; (cl-defmethod seq-take ((stream stream) n)
+;;   "Return a stream of the first N elements of STREAM."
+;;   (if (or (zerop n)
+;;           (stream-empty-p stream))
+;;       (stream-empty)
+;;     (stream-cons
+;;      (stream-first stream)
+;;      (seq-take (stream-rest stream) (1- n)))))
+
+;; (cl-defmethod seq-drop ((stream stream) n)
+;;   "Return a stream of STREAM without its first N elements."
+;;   (stream-make
+;;    (while (not (or (stream-empty-p stream) (zerop n)))
+;;      (setq n (1- n))
+;;      (setq stream (stream-rest stream)))
+;;    (unless (stream-empty-p stream)
+;;      (cons (stream-first stream)
+;;            (stream-rest stream)))))
+
+;; (cl-defmethod seq-take-while (pred (stream stream))
+;;   "Return a stream of the successive elements for which (PRED elt) is non-nil in STREAM."
+;;   (stream-make
+;;    (when (funcall pred (stream-first stream))
+;;      (cons (stream-first stream)
+;;            (seq-take-while pred (stream-rest stream))))))
+
+;; (cl-defmethod seq-drop-while (pred (stream stream))
+;;   "Return a stream from the first element for which (PRED elt) is nil in STREAM."
+;;   (stream-make
+;;    (while (not (or (stream-empty-p stream)
+;;                    (funcall pred (stream-first stream))))
+;;      (setq stream (stream-rest stream)))
+;;    (unless (stream-empty-p stream)
+;;      (cons (stream-first stream)
+;;            (stream-rest stream)))))
+
+;; (cl-defmethod seq-map (function (stream stream))
+;;     "Return a stream representing the mapping of FUNCTION over STREAM.
+;; The elements of the produced stream are the results of the
+;; applications of FUNCTION on each element of STREAM in succession."
+;;   (stream-make
+;;    (when (not (stream-empty-p stream))
+;;      (cons (funcall function (stream-first stream))
+;;            (seq-map function (stream-rest stream))))))
+
+;; (cl-defmethod seq-do (function (stream stream))
+;;   "Evaluate FUNCTION for each element of STREAM eagerly, and return nil.
+
+;; `seq-do' should never be used on infinite streams without some
+;; kind of nonlocal exit."
+;;   (while (not (stream-empty-p stream))
+;;     (funcall function (stream-first stream))
+;;     (setq stream (stream-rest stream))))
+
+;; (cl-defmethod seq-filter (pred (stream stream))
+;;   "Return a stream of the elements for which (PRED element) is non-nil in STREAM."
+;;   (if (stream-empty-p stream)
+;;       stream
+;;     (stream-make
+;;      (while (not (or (stream-empty-p stream)
+;;                      (funcall pred (stream-first stream))))
+;;        (setq stream (stream-rest stream)))
+;;      (if (stream-empty-p stream)
+;;          nil
+;;        (cons (stream-first stream)
+;;              (seq-filter pred (stream-rest stream)))))))
+
+;;----------------------------------------------;;
+;;; Integration: ‘map.el’ ----------------------;;
+;;----------------------------------------------;;
+
+;; ‘map.el’ integration for ‘mtg’ types. i.e.:
+;;
+;; • the ‘cl-defmethod’s implements mapping-generic functions.
+;;
+;;
+;;
+;;----------------------------------------------;;
+
+(cl-defmethod mapp ((_ ,mtg-set))
+
+  t)
+
+;;----------------------------------------------;;
+
+(cl-defmethod mapp ((_ ,mtg-))
+
+  t)
+
+;;----------------------------------------------;;
+
+(cl-defmethod mapp ((_ ,mtg-))
+
+  t)
+
+;;----------------------------------------------;;
+
+(cl-defmethod mapp ((_ ,mtg-))
+
+  t)
+
+;;----------------------------------------------;;
+
+(cl-defmethod mapp ((_ ,mtg-))
+
+  t)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+;;----------------------------------------------;;
 ;;; ElDoc --------------------------------------;;
 ;;----------------------------------------------;;
 
@@ -2550,12 +2852,55 @@ If nil, add it at end of menu (see also `easy-menu-add-item')."
 ;;----------------------------------------------;;
 
 ;;----------------------------------------------;;
-;;; Table --------------------------------------;;
+;;; MTG Edit (Major) Mode ----------------------;;
+;;----------------------------------------------;;
+
+;;==============================================;;
+
+;;----------------------------------------------;;
+;;; MTG Query (Major) Mode ---------------------;;
+;;----------------------------------------------;;
+
+(defgroup mtg-query nil
+
+  "‘mtg-query-mode’ parses Search Queries."
+
+  :link '(url-link :tag "GitHub" "https://github.com/sboosali/mtg.el")
+  :group 'mtg)
+
+;;==============================================;;
+
+
+;; Syntax Table:
+;;
+;; > ‘p’ identifies an additional prefix character for Lisp syntax. These characters are treated as whitespace when they appear between expressions. When they appear within an expression, they are handled according to their usual syntax classes.
+;;
+;; > Expression prefixes: ‘'’
+;; > Characters used for syntactic operators that are considered as part of an expression if they appear next to one. In Lisp modes, these characters include the apostrophe, ‘'’ (used for quoting), the comma, ‘,’ (used in macros), and ‘#’ (used in the read syntax for certain data types).
+;;
+
+;;----------------------------------------------;;
+
+;;;###autoload
+(define-derived-mode mtg-query-mode fundamental-mode "MTG Queries"
+
+  "Major Mode parses Search Queries.
+
+‘mtg-query-mode’ derives from ‘fundamental-mode’."
+
+  (progn
+
+    
+
+    ()))
+
+;;----------------------------------------------;;
+;;; MTG Table (Major) Mode ---------------------;;
 ;;----------------------------------------------;;
 
 (defgroup mtg-table nil
 
-  "Customize `mtg-table-mode'."
+  "‘mtg-table-mode’ renders Search Results."
 
   :link '(url-link :tag "GitHub" "https://github.com/sboosali/mtg.el")
   :group 'mtg)
@@ -2725,7 +3070,11 @@ Output:
 ;;----------------------------------------------;;
 
 ;;;###autoload
-(define-derived-mode mtg-table-mode tabulated-list-mode
+(define-derived-mode mtg-table-mode tabulated-list-mode "MTG Results"
+
+  "Major Mode renders Search Results.
+
+‘mtg-table-mode’ derives from ‘tabulated-list-mode’."
 
   (progn
 
@@ -2766,7 +3115,39 @@ Effects:
     (mtg-table-mode +1))))
 
 ;;----------------------------------------------;;
-;;; MTGJSON ------------------------------------;;
+;;; Readers ------------------------------------;;
+;;----------------------------------------------;;
+
+;; “Readers” read/‘load’/deserialize/import MTG Types from different
+;; formats or applications.
+;;
+;; 
+;;
+
+;;----------------------------------------------;;
+;;; Readers: MTGJSON ---------------------------;;
+;;----------------------------------------------;;
+
+;;----------------------------------------------;;
+;;; Readers: Scryfall --------------------------;;
+;;----------------------------------------------;;
+
+;;----------------------------------------------;;
+;;; Readers: Magic Set Editor ------------------;;
+;;----------------------------------------------;;
+
+;;----------------------------------------------;;
+;;; Writers ------------------------------------;;
+;;----------------------------------------------;;
+
+;; “Writers” write/‘print’/render/export MTG Types into different
+;; formats or applications.
+;;
+;; 
+;;
+
+;;----------------------------------------------;;
+;;; Writers: MTGJSON ---------------------------;;
 ;;----------------------------------------------;;
 
 ;; e.g. JSON Syntax:
@@ -2775,7 +3156,7 @@ Effects:
 ;;
 
 ;;----------------------------------------------;;
-;;; Magic Set Editor ---------------------------;;
+;;; Writers: Magic Set Editor ------------------;;
 ;;----------------------------------------------;;
 
 ;; e.g. Conf Syntax:
@@ -2784,7 +3165,7 @@ Effects:
 ;;
 
 ;;----------------------------------------------;;
-;;; /r/custommagic -----------------------------;;
+;;; Writers: /r/custommagic --------------------;;
 ;;----------------------------------------------;;
 
 ;; e.g. Markdown Syntax:
@@ -2793,13 +3174,21 @@ Effects:
 ;;
 
 ;;----------------------------------------------;;
-;;; MTG Salvation ------------------------------;;
+;;; Writers: MTG Salvation ---------------------;;
 ;;----------------------------------------------;;
 
 ;; e.g. BBCode Syntax:
 ;;
 ;;     « [mana]1UUG[/mana] »
 ;;
+
+;;----------------------------------------------;;
+;;; Writers: HTML ------------------------------;;
+;;----------------------------------------------;;
+
+;;----------------------------------------------;;
+;;; Writers: PS / PDF --------------------------;;
+;;----------------------------------------------;;
 
 ;;----------------------------------------------;;
 ;;; Data ---------------------------------------;;
@@ -22278,6 +22667,14 @@ Effects:
 
 ;;
 ;;
+;;
+
+;; Syntax Table:
+;;
+;; > ‘p’ identifies an additional prefix character for Lisp syntax. These characters are treated as whitespace when they appear between expressions. When they appear within an expression, they are handled according to their usual syntax classes.
+;;
+;; > Expression prefixes: ‘'’
+;; > Characters used for syntactic operators that are considered as part of an expression if they appear next to one. In Lisp modes, these characters include the apostrophe, ‘'’ (used for quoting), the comma, ‘,’ (used in macros), and ‘#’ (used in the read syntax for certain data types).
 ;;
 
 ;;----------------------------------------------;;
