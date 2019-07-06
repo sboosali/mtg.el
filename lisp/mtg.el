@@ -2852,13 +2852,15 @@ If nil, add it at end of menu (see also `easy-menu-add-item')."
 ;;----------------------------------------------;;
 
 ;;----------------------------------------------;;
-;;; MTG Edit (Major) Mode ----------------------;;
+;;;; MTG Edit Mode -----------------------------;;
 ;;----------------------------------------------;;
 
-;;==============================================;;
+;;----------------------------------------------;;
+;;; MTG Edit Mode: Syntax ----------------------;;
+;;----------------------------------------------;;
 
 ;;----------------------------------------------;;
-;;; MTG Query (Major) Mode ---------------------;;
+;;;; MTG Search-Query Mode ---------------------;;
 ;;----------------------------------------------;;
 
 (defgroup mtg-query nil
@@ -2868,15 +2870,99 @@ If nil, add it at end of menu (see also `easy-menu-add-item')."
   :link '(url-link :tag "GitHub" "https://github.com/sboosali/mtg.el")
   :group 'mtg)
 
-;;==============================================;;
+;;----------------------------------------------;;
+;;; MTG Search-Query Mode: Syntax --------------;;
+;;----------------------------------------------;;
 
+;;;###autoload
+(defvar mtg-query-mode-syntax-table
 
-;; Syntax Table:
+  (let ((TABLE (make-syntax-table))
+        )
+
+    ;; Prefix (Unary) Operators:
+
+    (modify-syntax-entry ?\! "'"   TABLE)
+    (modify-syntax-entry ?\@ "'"   TABLE)
+    (modify-syntax-entry ?\# "'"   TABLE)
+    (modify-syntax-entry ?\% "'"   TABLE)
+    (modify-syntax-entry ?\& "_ p" TABLE)
+    (modify-syntax-entry ?\* "'"   TABLE)
+
+    (modify-syntax-entry ?\^ "_ p" TABLE)
+    (modify-syntax-entry ?\$ "_ p" TABLE)
+
+    ;; « - » is punctuation (as an operator),
+    ;; but « -- » is a comment-starter:
+
+    (modify-syntax-entry ?- ". 123" TABLE)
+
+    ;; « \n » is a comment-ender:
+
+    (modify-syntax-entry ?\n ">" TABLE)
+
+    ;; Whitespace (i.e. spaces, tabs, newlines) is conventional:
+
+    (modify-syntax-entry ?\  " " TABLE)
+    (modify-syntax-entry ?\t " " TABLE)
+    ;; (see above for the Syntax Class of « \n »):
+
+    ;; Brackets (i.e. parens, curly braces, square braces):
+
+    (modify-syntax-entry ?\( "()"    TABLE)
+    (modify-syntax-entry ?\) ")("    TABLE)
+    (modify-syntax-entry ?\[ "(]"    TABLE)
+    (modify-syntax-entry ?\] ")["    TABLE)
+    (modify-syntax-entry ?\{ "(}1nb" TABLE) ; « "n" » means: Multi-Line Coments can be nested.
+    (modify-syntax-entry ?\} "){4nb" TABLE)
+
+    ;; « " » is a string delimiter:
+
+    (modify-syntax-entry ?\" "\"" TABLE)
+
+    TABLE)
+
+  "MTG Query Mode's `syntax-table-p'.
+
+For example, the hyphen character (i.e. « - ») in MTG Query Mode plays several roles:
+
+• a punctuation character (« - ») — e.g. `(2 - 3)` or `(xs --. y)`.
+• the characters of a (single-line) *start-of-comment* sequence (« -- ») — e.g. « -- ... ».
+• the second character of a (multi-line) *start-of-comment* sequence (« {- ») — e.g. « {- ... ».
+• the first character of a (multi-line) *end-of-comment* sequence (« -} ») — e.g. « ... -} ».
+
+These roles (punctuation and single-line comment and multi-line comment) are represented by this Syntax Entry:
+
+    (modify-syntax-entry ?- \". 123\" `mtg-query-mode-syntax-table')")
+
+;; ^ Notes:
+;; 
+;; • e.g. in `emacs-lisp-mode', the apostrophe is *Syntactically-Classified* as an *Expression-Prefix Character*.
+;;   “Expressions”, w.r.t “Expression-Prefix Character”, are TODO.
 ;;
-;; > ‘p’ identifies an additional prefix character for Lisp syntax. These characters are treated as whitespace when they appear between expressions. When they appear within an expression, they are handled according to their usual syntax classes.
+;;   M-: (string (char-syntax ?\'))
+;;     ↪ "'"
 ;;
-;; > Expression prefixes: ‘'’
-;; > Characters used for syntactic operators that are considered as part of an expression if they appear next to one. In Lisp modes, these characters include the apostrophe, ‘'’ (used for quoting), the comma, ‘,’ (used in macros), and ‘#’ (used in the read syntax for certain data types).
+;;   M-: (string (char-syntax ?\`))
+;;     ↪ "'"
+;;
+;;   M-: (string (char-syntax ?\,))
+;;     ↪ "'"
+;;
+;;   M-: (string (char-syntax ?\@))
+;;     ↪ "_ p" TODO
+;;
+;;
+;; • Syntax Table:
+;;
+;;   > ‘p’ identifies an additional prefix character for Lisp syntax. These characters are treated as whitespace when they appear between expressions. When they appear within an expression, they are handled according to their usual syntax classes.
+;;   >
+;;   > Expression prefixes: ‘'’
+;;   > Characters used for syntactic operators that are considered as part of an expression if they appear next to one. In Lisp modes, these characters include the apostrophe, ‘'’ (used for quoting), the comma, ‘,’ (used in macros), and ‘#’ (used in the read syntax for certain data types).
+;;
+;;
+;; • 
+;;
 ;;
 
 ;;----------------------------------------------;;
@@ -2895,7 +2981,26 @@ If nil, add it at end of menu (see also `easy-menu-add-item')."
     ()))
 
 ;;----------------------------------------------;;
-;;; MTG Table (Major) Mode ---------------------;;
+;;; MTG Search-Query Mode: Commands ------------;;
+;;----------------------------------------------;;
+
+;;;###autoload
+(define-derived-mode mtg-table-mode tabulated-list-mode "MTG Results"
+
+  "Major Mode renders Search Results.
+
+‘mtg-table-mode’ derives from ‘tabulated-list-mode’."
+
+  (progn
+
+    (setq-local tabulated-list-format (mtg-table-list-format))
+
+    (tabulated-list-init-header)
+
+    ()))
+
+;;----------------------------------------------;;
+;;; MTG Search-Result Mode ---------------------;;
 ;;----------------------------------------------;;
 
 (defgroup mtg-table nil
@@ -3067,6 +3172,12 @@ Output:
 
     FORMAT-VECTOR))
 
+;;----------------------------------------------;;
+;;; MTG Search-Query Mode: Syntax --------------;;
+;;----------------------------------------------;;
+
+;;----------------------------------------------;;
+;;; MTG Search-Query Mode: Commands ------------;;
 ;;----------------------------------------------;;
 
 ;;;###autoload
