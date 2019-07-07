@@ -102,7 +102,7 @@
 ;;; Code:
 
 ;;----------------------------------------------;;
-;; Imports -------------------------------------;;
+;;; Imports ------------------------------------;;
 ;;----------------------------------------------;;
 
 ;; builtin requirements:
@@ -131,7 +131,7 @@
   (require 'mtg-image nil :no-error))
 
 ;;----------------------------------------------;;
-;; Constants -----------------------------------;;
+;;; Constants ----------------------------------;;
 ;;----------------------------------------------;;
 
 (defconst mtg-file-regexp
@@ -140,7 +140,7 @@
 
   "Match a filename whose contents should be MTG cards.
 
-a `regexpp's.
+a `regexpp's
 
 (Conforms to `auto-mode-alist'.)")
 
@@ -153,7 +153,20 @@ a `regexpp's.
   "Regular expression for matching block boundaries.")
 
 ;;----------------------------------------------;;
-;; Macros: `rx' --------------------------------;;
+;;; Groups -------------------------------------;;
+;;----------------------------------------------;;
+
+(defgroup mtg-mode nil
+
+  "“Magic: The Gathering” Custom Card Editor."
+
+  :link '(url-link :tag "GitHub" "https://github.com/sboosali/mtg.el")
+
+  :prefix "mtg-"
+  :group 'mtg)
+
+;;----------------------------------------------;;
+;;; Macros: `rx' -------------------------------;;
 ;;----------------------------------------------;;
 
 (eval-when-compile
@@ -273,20 +286,9 @@ Related:
 ;; 
 
 ;;----------------------------------------------;;
-;; Variables -----------------------------------;;
+;;; Variables ----------------------------------;;
 ;;----------------------------------------------;;
 
-(defgroup mtg nil
-
-  "Edit “Magic The Gathering” cards.
-
-Customize the behavior & appearence of `mtg-mode'."
-
-  :link (url-link :tag "GitHub" "https://github.com/sboosali/mtg.el#readme")
-
-  :group 'language)
-
-;;----------------------------------------------;;
 
 (defcustom mtg-keywords-list
 

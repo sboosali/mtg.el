@@ -553,7 +553,6 @@ Related:
 
 ;;==============================================;;
 
-
 (cl-defstruct (mtg-
                (:constructor mtg--create)
                (:copier      nil))
@@ -1795,18 +1794,18 @@ have such punctuation characters:
 
 (defcustom mtg-card-name-article-strings-list
 
-  '("a" "an" "and" "as" "at" "but" "by" "en" "for" "from" "il" "in" "into" "of" "on" "or" "the" "to" "upon" "with")
+  '("a" "an" "and" "as" "at" "but" "by" "en" "for" "from" "il" "in" "into" "le" "o'" "of" "on" "or" "the" "to" "upon" "with")
 
   "Articles in Card Names.
 
 a `listp' of `stringp's."
 
-  :type '(repeat (character))
+  :type '(repeat (string :tag "Word"))
 
   :safe #'listp
   :group 'mtg)
 
-;; ^ « " !\"',-.01:?ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyzàáâéíöúû" »
+;; ^ (a an and as at but by en for from il in into le o\' of on or the to upon with)
 
 ;;----------------------------------------------;;
 ;;; Accessors ----------------------------------;;
@@ -22688,9 +22687,13 @@ Compatibility:
         (seq-into mtg-data/card-names-vector type)
       mtg-data/card-names-vector)))
 
+;; ^ M-: (defconst sboo-mtg-card-name-list (mtg-data/card-names 'list))
+;;
+;;
+
 ;;----------------------------------------------;;
 
-(defun mtg-data/card-names-count ()
+(defun mtg-data/get-card-names-count ()
 
   "Derive the `length' of `mtg-data/card-names'.
 
@@ -22699,14 +22702,14 @@ Output:
 • a `natnump'.
   Currently, ~20,000"
 
-  (let* ((CARDS (mtg-data/card-names))
+  (let* ((CARD-NAMES (mtg-data/card-names))
          )
 
-    (length CARDS)))
+    (length CARD-NAMES)))
 
 ;;----------------------------------------------;;
 
-(defun mtg-data/longest-card-name-length ()
+(defun mtg-data/get-longest-card-name-length ()
 
   "Derive the longest among `mtg-data/card-names'.
 
@@ -22715,24 +22718,79 @@ Output:
 • a `natnump'.
   Currently, 33."
 
-  (let* ((CARDS (mtg-data/card-names))
+  (let* ((CARD-NAMES (mtg-data/card-names))
          )
 
     (seq-reduce (lambda (*LENGTH* *STRING*) (max *LENGTH* (length *STRING*)))
-                CARDS
+                CARD-NAMES
                 0)))
-
-;;==============================================;;
-
-(defconst mtg-data/card-names-count (mtg-data/card-names-count)
-
-  "Default `mtg-data/card-names-count'.")
 
 ;;----------------------------------------------;;
 
-(defconst mtg-data/longest-card-name-length (mtg-data/longest-card-name-length)
+(defun mtg-data/get-card-name-articles-list ()
 
-  "Default `mtg-data/longest-card-name-length'.")
+  ""
+
+  (let* ((CARD-NAMES         (mtg-data/card-names 'list))
+
+         (CARD-NAME-WORDS    (cl-loop for s in CARD-NAMES
+                                collect (split-string s "[-/ ]+" :omit-nulls)
+                                  into STRINGS
+                                finally
+                                  return (delete-dups (apply #'append STRINGS))))
+
+         (CARD-NAME-ARTICLES (cl-loop for s in CARD-NAME-WORDS
+                                if (mtg-data/word-is-alphabetic-and-is-not-capitalized-p s)
+                                collect (intern s)
+                                  into SYMBOLS
+                                finally
+                                  return (cl-sort SYMBOLS 'string< :key #'symbol-name)))
+         )
+
+    CARD-NAME-ARTICLES))
+
+;;----------------------------------------------;;
+
+(defun mtg-data/word-is-alphabetic-and-is-not-capitalized-p (s)
+
+  ""
+
+  (let* ((CHAR             (string-to-char s))
+         (CHAR-LOWERCASE?  (= CHAR (downcase CHAR)))
+         (CHAR-ALPHABETIC? (eq 'Ll (get-char-code-property CHAR 'general-category)))
+         )
+
+    (and CHAR-ALPHABETIC? CHAR-LOWERCASE?)))
+
+;;----------------------------------------------;;
+
+
+
+;;==============================================;;
+
+(defconst mtg-data/default-card-names-count (mtg-data/get-card-names-count)
+
+  "Default `mtg-data/get-card-names-count'.")
+
+;; ^ 19,310
+
+;;----------------------------------------------;;
+
+(defconst mtg-data/default-longest-card-name-length (mtg-data/get-longest-card-name-length)
+
+  "Default `mtg-data/get-longest-card-name-length'.")
+
+;; ^ 33
+
+;;----------------------------------------------;;
+
+(defconst mtg-data/default-card-name-articles-list (mtg-data/get-card-name-articles-list)
+
+  "Default `mtg-data/get-card-name-articles-list'.")
+
+;; ^ (a abara\'s an and as at but by en for from il in into le legged o\' of on or the to upon with)
+
+;; ^ (a an and as at but by en for from il in into le of on or the to upon with)
 
 ;;----------------------------------------------;;
 ;; (Un/)Loading --------------------------------;;
