@@ -36,7 +36,7 @@ an *MTQ Expression* is a query which matches zero-or-more *MTG Cards*.
 
 *Match Operators*:
 
-* `”…"` — Match the *Name(s)*. 
+* `"…"` — Match the *Name(s)*. 
 
 * `*…` — Match the *Types* (including *Card Types*, *Subtypes*, *Supertypes*). e.g. `*instant` means *“Instant cards”*. `*` is a *Prefix Operator*. Matches aliases too (see `mtg-syntax-type-aliases-alist`); e.g. `*spell` is an alias for `*instant | *sorcery`
 
@@ -50,6 +50,10 @@ an *MTQ Expression* is a query which matches zero-or-more *MTG Cards*.
 
 * `&` — Match *Rarity*. e.g. `&r` means *“rares”*. `&` is a *Prefix Operator*.
 
+* `` ` `` — Matches cards satisfying a *Predefined Predicate*. *Customize* via `mtg-syntax-satisfaction-alist`. e.g. `` `dfc `` means *“Double-Faced Cards”*. e.g. `` `red `` is equivalent to `` %r ``.
+
+* `~` — Matches cards belonging to a *Predefined Set*. *Customize* via `mtg-syntax-membership-alist`. e.g. `~bounce` means *“Bounce spells/effects”"; e.g. `~bounce` means *“Counterspells / Counterspell effects”". Meaning: membership in a manually-curated (and possibly subjective) set of cards; unlike other predicates which are automatically-searched against a card's text. For example, `~bounce` selects members in the customizable variable `mtg-bounce-list`, which includes both `Unsummon` and `Commit // Memory` (but not `Sensei's Divining Top`). See `mtg-syntax-named-alist` (which has an entry like `'(bounce . mtg-bounce-list)`). Mnemonic: `~` and `\`` share the same key (`~` is `` Shift+` ``), and both take phrases which are the names of arbitrary predicates).
+
 * `**` — Match the *Subtypes*. e.g. `**^go` means *“match cards which have a subtype which starts with ‘Go’”* (including *Goblin*, *Golem*, *Gorgon*, *God*, and *Goat*). e.g. `**^go,n$` means *“match cards which have a subtype which starts with ‘Go’ and ends with ‘n’”* (i.e. *Goblin* and *Gorgon*). `**` is a *Prefix Operator*. (*NOTE:* Subtypes are lexically simple; they're all single words, made up of only letters (besides a few exceptions of a hyphen or apostrophe); thus we can unambiguously parse (for example) the comma in `**^go,n$`.)
 
 * `%%` — Match the *Color Identity*. e.g. `%%u` means *“a card with blue color identity”* (e.g. an *Island*); a.k.a., equivalent, *“a card which can be played in an EDH deck with a monoblue Commander”* (e.g. *Memnarch*). `%%` is a *Prefix Operator*.
@@ -61,14 +65,9 @@ e.g. `##<=3` means *“cards with converted mana cost three or less”*. `##` is
 
 * `$$` — Match the *Original Edition*. e.g. `$$an` means *“cards originally printed in Arabian Nights”*, i.e. *“cards introduced by the Arabian Nights edition, and thus which existed since near the start of the game”*. `$$` is a *Prefix Operator*. *Mnemonic*: the *single dollar-sign operator* and the *double dollar-sign operator* both match cards' *Editions*.
 
-* `\`` — Matches cards satisfying a *Predefined Predicate*. *Customize* via `mtg-syntax-satisfaction-alist`. e.g. `` `dfc `` means *“Double-Faced Cards”*. e.g. `` `red `` is equivalent to `` %r ``.
-
-* `~` — Matches cards belonging to a *Predefined Set*. *Customize* via `mtg-syntax-membership-alist`. e.g. `~bounce` means *“Bounce spells/effects”"; e.g. `~bounce` means *“Counterspells / Counterspell effects”".
-Meaning: membership in a manually-curated (and possibly subjective) set of cards; unlike other predicates which are automatically-searched against a card's text. For example, `~bounce` selects members in the customizable variable `mtg-bounce-list`, which includes both `Unsummon` and `Commit // Memory` (but not `Sensei's Divining Top`). See `mtg-syntax-named-alist` (which has an entry like `'(bounce . mtg-bounce-list)`). Mnemonic: `~` and `\`` share the same key (`~` is `` Shift+` ``), and both take phrases which are the names of arbitrary predicates).
+* `%%%` — Match the *Color Personality*: my own custom predicate, which extends *Color Identity* with the *Basic Land Types*. e.g. `%%%u` means *“a card with blue color personality”* (e.g. *Spire Golem*, whose *Color Personality* is *Blue* while its *Color Identity* is *Colorless*; e.g. *Dukhara Peafowl*, whose *Color Identity* is *Blue* too). `%%%` is a *Prefix Operator*. *Mnemonic*: *Color Personality* generalizes *Color Identity*; its operator has an additional percent-sign.
 
 * `$$$` — Match *Block(s)*. e.g. `$$$tsp` means *“Time Spiral block cards”* (i.e., *“cards printed in the Time Spiral block, including Planar Chaos and Future Sight”*). `$$$` is a *Prefix Operator*. *Mnemonic*: most blocks have three sets; sets are matched by one dollar-sign, blocks are matched by three dollar-signs.
-
-* `%%%` — Match the *Color Personality*: my own custom predicate, which extends *Color Identity* with the *Basic Land Types*. e.g. `%%%u` means *“a card with blue color personality”* (e.g. *Spire Golem*, whose *Color Personality* is *Blue* while its *Color Identity* is *Colorless*; e.g. *Dukhara Peafowl*, whose *Color Identity* is *Blue* too). `%%%` is a *Prefix Operator*. *Mnemonic*: *Color Personality* generalizes *Color Identity*; its operator has an additional percent-sign.
 
 *Regexp Operators*:
 
@@ -88,6 +87,7 @@ Meaning: membership in a manually-curated (and possibly subjective) set of cards
 * `=`  — 
 * `>=` — 
 * `<=` — 
+* `/=` — 
 * `!=` — 
 
 *Query Operators*:
@@ -114,7 +114,7 @@ Other operators:
 * `_` — e.g. `_`. an *Infix Operator*.
 
 * `?` — e.g. `?`. a *Suffix Operator*.
-* `` — e.g. `$`. a *Suffix Operator*.
+* `` ` `` — e.g. `` ` ``. a *Suffix Operator*.
 
 __Non__-Operator characters:
 
