@@ -1,22 +1,26 @@
-# `mtg.el`
+# `mtg`
 
-`mtg` is a *Multi-Library Package* for editing MTG cards, searching through all MTG cards, and parsing MTG cards/decklists.
+the `mtg` package provides libraries for editing custom *MTG* cards (with syntax-highlighting, completions and abbreviations, embedded images, *Magic Set Editor* importing/exporting, etc), for searching efficiently through all *MTG* cards (with regular expressions, extensible predicates, etc), and more.
 
-## Links
+## `mtg-*.el`
 
-* <https://github.com/sboosali/mtg.el>
-* <>
-* <>
+`mtg` is a *Multi-Library Package*, which `provide`s:
 
-## Multi-Library Package
+* these *Libraries* that `require` only *Builtin Packages* in *GNU Emacs*:
 
-`mtg` is a *Multi-Library Package*, with these *Elisp Libraries*:
+    - `mtg.el`
+    - `mtg-mode.el`
+    - `mtg-search.el`
 
-* `mtg.el`
-* `mtg-types.el`
-* `mtg-mode.el`
-* `mtg-query.el`
-* `mtg-company.el`
+* these *Libraries* that `require` *Third-Party Packages* on *MELPA*:
+
+    - `helm-mtg.el`
+    - `company-mtg.el`
+
+* these *Datafiles* with `read`able databases (i.e. *Emacs-Lisp Objects*) from <https://mtgjson.com>:
+
+    - `mtg-card-data.el.gz`      — a `vectorp`.
+    - `mtg-card-name-data.el.gz` — a `hash-table-p`.
 
 ## Completion
 
@@ -80,9 +84,19 @@ e.g. `##<=3` means *“cards with converted mana cost three or less”*. `##` is
 * `|`  — *Logical Disjunction* a.k.a. `OR`. e.g. `%u | *instant` means *“either blue cards or instants”*.
 * `&`  — *Logical Conjunction* a.k.a. `AND`. e.g. `%u & *instant` means *“blue instants”*.*NOTE* most whitespace is equivalent to ampersands; for example, `%u & *instant` is equivalent to `%u *instant`.
 
-*Numeric Operators*:
+*Logical Operators*
 
 * `>`  — 
+* `<`  — 
+* `=`  — 
+* `>=` — 
+* `<=` — 
+* `/=` — 
+* `!=` — 
+
+*Numeric Operators*:
+
+* `+`  — 
 * `<`  — 
 * `=`  — 
 * `>=` — 
@@ -239,6 +253,12 @@ Land cards with colorless identity
 ## Notes
 
 >
+
+## Links
+
+* <https://github.com/sboosali/mtg.el>
+* <>
+* <>
 
 
 

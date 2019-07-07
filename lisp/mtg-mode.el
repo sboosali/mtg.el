@@ -1,13 +1,11 @@
-;;; mtg-mode.el --- Major mode to edit MTG cards -*- coding: utf-8; lexical-binding: t -*-
-
-;; Copyright © 2019 Spiros Boosalis
+;;; mtg.el --- Magic The Gathering custom card editor -*- coding: utf-8; lexical-binding: t -*-
 
 ;; Version: 0.0.0
-;; Package-Requires: ((emacs "25"))
+;; Package-Requires: ((emacs "25.1") (cl-lib "0.5") (seq "2.16"))
 ;; Author:  Spiros Boosalis <samboosalis@gmail.com>
 ;; Homepage: https://github.com/sboosali/mtg.el
 ;; Keywords: local
-;; Created: 25 May 2019
+;; Created: 06 Jun 2019
 ;; License: GPL-3.0-or-later
 
 ;; This file is not part of GNU Emacs.
@@ -27,9 +25,79 @@
 
 ;;; Commentary:
 
-;; `mtg-mode' is a major mode for editing custom MTG cards.
+;; Editor for “Magic: The Gathering”.
+;;
+;; Contents include:
+;;
+;; • ‘mtg-mode-*’     — the `major-mode'.
+;; • ‘mtg-insert-*’   — Insert template ‘skeleton’s (e.g. « M-x `mtg-insert-*' »).
+;; • ‘mtg-abbrev-*’   — Expand abbreviations (e.g. « etb<TAB> » → « enters the battlefield, »).
+;; • ‘mtg-*-face’     — `facep's for `font-lock'.
+;; • ‘mtg-’           — 
 ;; 
+;; Features include:
+;;
+;; ① Completion.
+;;
+;;    Complete these groups of words/phrases:
 ;; 
+;;        • Card Names  — There are ~20,000 card names.
+;;        • Keywords    — i.e. Keyword Abilities / Keyword Actions / Ability Words.
+;;        • Types       — i.e. Card Types / Sub Types / Super Types.
+;;        • Editions    — i.e. Set Codes / Set Names.
+;;
+;; ② Formatting.
+;; 
+;;    Formats:
+;; 
+;;        • Capitalization — 
+;;        • Keywords       — i.e. Keyword Abilities / Keyword Actions / Ability Words.
+;;        • Types          — i.e. Card Types / Sub Types / Super Types.
+;;        • Editions       — i.e. Set Codes / Set Names.
+;;
+;; ③ Skeletons. 
+;;
+;;        • Cycles  — e.g. by Color, by Rarity.
+;;        • Phrases — e.g. typing “etb ” (i.e. e-t-b-SPC) automatically expands to “enters the battlefield ”.
+;;
+;; ④ Linting.
+;; 
+;;    Checks for:
+;; 
+;;        • Pitfalls — e.g. « The rules text “if ~ would die” isn't valid; instead, write “if ~ would be put into a graveyard from anywhere” or “when ~ dies” ».
+;;        •  — 
+;;        •  — 
+;;        •  — 
+;;
+;; ⑤ .
+;;
+;;    for:
+;; 
+;;        •  — 
+;;        •  — 
+;;        •  — 
+;;
+;; ⑨ Export.
+;;
+;;   Export your custom set as:
+;;
+;;     • [✓] MTGJSON          — as a ‹.json› file (a.k.a. a JSON Object), with the schema.
+;;     • [✓] Magic Set Editor — as a ‹.tar› file (a.k.a. a Tar Archive), with the ‹.mse-set› schema.
+;;     • [❌] /r/custommagic   — as a ‹.md› file (a.k.a. Markdown), in Reddit-flavored Markdown, with the Subreddit-specific pseudo-links.
+;;     • [❌] MTG Salvation    — as a ‹.bb› file (a.k.a. BBCode). 
+;;
+;;    Render your custom as:
+;;
+;;     • [✓] a webpage — as a ‹.html› file (a.k.a. a Web Page), that's beautifully styled and completely standalone.
+;;
+;;         • HTML Styling    — via SVG mana symbols, the “Belern” font, and appropriate Bold/Italic (e.g. italics for flavor/remdinder text).
+;;         • Standalone HTML — all assets (e.g. artwork PNGs, CSS symbols) are embedded (via “Data URIs” and inline <style>s).
+;;           Thus, no 
+;;
+;;     • [❌] a document — as a ‹.pdf› file (?),
+;;
+;;
+;;
 
 ;;; Code:
 
@@ -59,9 +127,8 @@
 ;; project requirements:
 
 (progn
-  (require 'mtg)
-  (require 'mtg-types)
-  (require 'mtg-image))
+;;TODO  (require 'mtg)
+  (require 'mtg-image nil :no-error))
 
 ;;----------------------------------------------;;
 ;; Constants -----------------------------------;;

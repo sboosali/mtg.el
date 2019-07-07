@@ -1,4 +1,4 @@
-;;; mtg.el --- Magic The Gathering editor -*- coding: utf-8; lexical-binding: t -*-
+;;; mtg.el --- Magic The Gathering search engine and custom card editor -*- coding: utf-8; lexical-binding: t -*-
 
 ;; Copyright © 2019 Spiros Boosalis
 
@@ -2935,13 +2935,13 @@ If nil, add it at end of menu (see also `easy-menu-add-item')."
     ;; (i.e. most are “Symbolic Characters”)
     ;;
 
-* `>`  — 
-* `<`  — 
-* `=`  — 
-* `>=` — 
-* `<=` — 
-* `/=` — 
-* `!=` — 
+;; * `>`  — 
+;; * `<`  — 
+;; * `=`  — 
+;; * `>=` — 
+;; * `<=` — 
+;; * `/=` — 
+;; * `!=` — 
 
     ;; Whitespace (i.e. spaces, tabs, newlines) is conventional:
 
@@ -2954,18 +2954,9 @@ If nil, add it at end of menu (see also `easy-menu-add-item')."
 
     TABLE)
 
-  "MTG Query Mode's `syntax-table-p'.
+  "Syntax Table of MTG Query Mode.
 
-For example, the hyphen character (i.e. « - ») in MTG Query Mode plays several roles:
-
-• a punctuation character (« - ») — e.g. `(2 - 3)` or `(xs --. y)`.
-• the characters of a (single-line) *start-of-comment* sequence (« -- ») — e.g. « -- ... ».
-• the second character of a (multi-line) *start-of-comment* sequence (« {- ») — e.g. « {- ... ».
-• the first character of a (multi-line) *end-of-comment* sequence (« -} ») — e.g. « ... -} ».
-
-These roles (punctuation and single-line comment and multi-line comment) are represented by this Syntax Entry:
-
-    (modify-syntax-entry ?- \". 123\" `mtg-query-mode-syntax-table')")
+a `syntax-table-p'.")
 
 ;; ^ Notes:
 ;; 
