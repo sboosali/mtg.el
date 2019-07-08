@@ -248,46 +248,6 @@ id:c t:land
 %%c *land
 Land cards with colorless identity
 
-
-
-## Notes
-
->
-
-## Links
-
-* <https://github.com/sboosali/mtg.el>
-* <>
-* <>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# `mtg.el`
-
 ## `mtg-mode.el`
 
 `mtg-mode` is a *Major Mode* for rendering and editing *Magic: the Gathering* cards.
@@ -304,11 +264,33 @@ Render symbols either:
 * as Unicode, for portability — e.g. `{2}{U}` as *②💧*.
 * as Images, for prettiness — e.g. `{2}{U}` as <span><abbr class="mtg-two-generic-mana">{2}</abbr><abbr class="mtg-blue-mana">{U}</abbr></span>
 
+#### Example
+
+For example, this text:
+
+```
+Powerstone Curio {1}
+Artifact (c)
+{T}: Draw a card. Activate this ability only if you have seven or more cards in hand.
+Your maximum hand size is increased by one.
+"It strobes at the rate of thought."
+```
+
+can be rendered as this:
+
+__Powerstone Curio__ ①
+*Artifact* ©
+Ⓣ: Draw a card. Activate this ability only if you have seven or more cards in hand.
+Your maximum hand size is increased by one.
+*“It strobes at the rate of thought.”*
+
+#### Customization
+
 Customize `mtg-prettify-symbols-style`:
 
-* `nil` means — no prettification (display text between curly-braces literally).
-* `'characters` means — display as *Unicode Characters*.
-* `'images` means — display as *SVG Images*.
+* `nil`          — no prettification (display text between curly-braces literally).
+* `'characters`  — display as *Unicode Characters*.
+* `'images`      — display as *SVG Images*.
 
 Customize `mtg-prettify-symbols-*-alist` to:
 
@@ -326,6 +308,38 @@ e.g. Register a custom symbol and its display image:
 ``` elisp
 (add-to-list 'mtg-prettify-symbols-images-alist '("U/H" . ""))
 ```
+
+## Links
+
+* <https://github.com/sboosali/mtg.el>
+* <>
+* <>
+
+## Notes
+
+>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 ## `mtg-company.el`
 

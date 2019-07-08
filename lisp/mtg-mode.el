@@ -158,7 +158,7 @@ a `regexpp's
 
 (defgroup mtg-mode nil
 
-  "“Magic: The Gathering” Custom Card Editor."
+  "“Magic: The Gathering” Search Engine and (Custom-)Card Editor."
 
   :link '(url-link :tag "GitHub" "https://github.com/sboosali/mtg.el")
 
@@ -288,7 +288,6 @@ Related:
 ;;----------------------------------------------;;
 ;;; Variables ----------------------------------;;
 ;;----------------------------------------------;;
-
 
 (defcustom mtg-keywords-list
 
@@ -755,7 +754,7 @@ run at the same time."
   :group 'mtg)
 
 ;;----------------------------------------------;;
-;; Faces ---------------------------------------;;
+;;; Faces --------------------------------------;;
 ;;----------------------------------------------;;
 
 (defgroup mtg-faces nil
@@ -764,156 +763,136 @@ run at the same time."
 
 Customize the appearence of `mtg-mode'."
 
-  :prefix 'mtg
+  :prefix "mtg-"
   :group  'mtg)
 
 ;;==============================================;;
 
-(defface mtg-default-face
+(defface mtg-card '((t :inherit default))
+  "Base face for MTG Cards."
+  :group 'mtg-faces)
 
-  '((t :inherit default)
-    )
+;;----------------------------------------------;;
 
-  "Default Mtg face."
+(defface mtg-card-name '((t :underline t :inherit (mtg-card font-lock-variable-name-face)))
+  "Face for MTG Card Names."
+  :group 'mtg-faces)
+
+;;----------------------------------------------;;
+
+(progn
+
+  (defface mtg-color-white '((t :foreground white :inherit mtg-card))
+    "Face for white Mana Symbols and Plains."
+    :group 'mtg-faces)
+
+  (put 'white 'mtg-face 'mtg-color-white))
+
+;;----------------------------------------------;;
+
+(progn
+
+  (defface mtg-color-blue '((t :foreground blue :inherit mtg-card))
+    "Face for blue Mana Symbols and Islands"
+    :group 'mtg-faces)
+
+  (put 'blue 'mtg-face 'mtg-color-blue))
+
+;;----------------------------------------------;;
+
+(progn
+
+  (defface mtg-color-black '((t :foreground black :inherit mtg-card))
+    "Face for black Mana Symbols and Swamps."
+    :group 'mtg-faces)
+
+  (put 'black 'mtg-face 'mtg-color-black))
+
+;;----------------------------------------------;;
+
+(progn
+
+  (defface mtg-color-red '((t :foreground red :inherit mtg-card))
+    "Face for red Mana Symbols and Mountains."
+    :group 'mtg-faces)
+
+  (put 'red 'mtg-face 'mtg-color-red))
+
+;;----------------------------------------------;;
+
+(progn
+
+  (defface mtg-color-green '((t :foreground green :inherit mtg-card))
+    "Face for green Mana Symbols and Forests."
+    :group 'mtg-faces)
+
+  (put 'green 'mtg-face 'mtg-color-green))
+
+;;----------------------------------------------;;
+
+(defface mtg-rules-text '((t :inherit mtg-card))
+  "Face for MTG Rules Text."
+  :group 'mtg-faces)
+
+;;----------------------------------------------;;
+
+(defface mtg-rules-keyword '((t :weight bold :inherit mtg-rules-text))
+  "Face for keywords within MTG Rules Text."
+  :group 'mtg-faces)
+
+;;----------------------------------------------;;
+
+(defface mtg-flavor-text '((t :slant italic :inherit mtg-card))
+  "Face for MTG Flavor Text."
+  :group 'mtg-faces)
+
+;;----------------------------------------------;;
+
+(defface mtg-typeline '((t :slant italic :inherit (mtg-card font-lock-type-face)))
+  "Base face for MTG Card/Sub/Super Types."
+  :group 'mtg-faces)
+
+;;----------------------------------------------;;
+
+(defface mtg-card-type '((t :inherit (mtg-typeline font-lock-builtin-face)))
+  "Base face for MTG Card Types."
+  :group 'mtg-faces)
+
+;;----------------------------------------------;;
+
+(defface mtg-sub-type '((t :inherit mtg-typeline))
+  "Base face for MTG Card Subtypes."
+  :group 'mtg-faces)
+
+;;----------------------------------------------;;
+
+(defface mtg-super-type '((t :inherit mtg-typeline))
+  "Base face for MTG Card Supertypes."
+  :group 'mtg-faces)
+
+;;----------------------------------------------;;
+
+(defface mtg-comment '((t :inherit font-lock-comment-face))
+
+  "Face for comments (beneath MTG Cards)."
 
   :group 'mtg-faces)
 
 ;;----------------------------------------------;;
 
-(defface mtg-keyword-face
+(defface mtg-string '((t :inherit (mtg-card font-lock-string-face)))
 
-  '((t :inherit font-lock-keyword-face)
-    )
-
-  "Face for Mtg keywords."
+  "Face for strings (within MTG Cards)."
 
   :group 'mtg-faces)
 
 ;;----------------------------------------------;;
 
-(defface mtg-builtin-face
+(defface mtg-preprocessor '((t :inherit (mtg-card font-lock-preprocessor-face)))
 
-  '((t :inherit font-lock-builtin-face)
-    )
-
-  "Face for Mtg builtins."
+  "Face for preprocessor directives (within MTG Cards)."
 
   :group 'mtg-faces)
-
-;;----------------------------------------------;;
-
-(defface mtg-type-face
-
-  '((t :inherit font-lock-type-face)
-    )
-
-  "Face for Mtg types."
-
-  :group 'mtg-faces)
-
-;;----------------------------------------------;;
-
-(defface mtg-constructor-face
-
-  '((t :inherit font-lock-type-face)
-    )
-
-  "Face for Mtg constructors."
-
-  :group 'mtg-faces)
-
-;;----------------------------------------------;;
-
-(defface mtg-builtin-type-face
-
-  '((t :inherit mtg-type-face
-       :slant   italic
-       )
-    )
-
-  "Face for Mtg builtin types."
-
-  :group 'mtg-faces)
-
-;;----------------------------------------------;;
-
-(defface mtg-variable-face
-
-  '((t :inherit font-lock-variable-name-face)
-    )
-
-  "Face for Mtg variables."
-
-  :group 'mtg-faces)
-
-;;----------------------------------------------;;
-
-(defface mtg-function-face
-
-  '((t :inherit font-lock-function-name-face)
-    )
-
-  "Face for Mtg functions."
-
-  :group 'mtg-faces)
-
-;;----------------------------------------------;;
-
-(defface mtg-operator-face
-
-  '((t :inherit font-lock-variable-name-face)
-    )
-
-  "Face for Mtg operators."
-
-  :group 'mtg-faces)
-
-;;----------------------------------------------;;
-
-(defface mtg-constant-face
-
-  '((t :inherit font-lock-constant-face)
-    )
-
-  "Face for Mtg constants."
-
-  :group 'mtg-faces)
-
-;;----------------------------------------------;;
-
-(defface mtg-string-face
-
-  '((t :inherit font-lock-string-face)
-    )
-
-  "Face for Mtg strings."
-
-  :group 'mtg-faces)
-
-;;----------------------------------------------;;
-
-(defface mtg-comment-face
-
-  '((t :inherit font-lock-comment-face)
-    )
-
-  "Face for Mtg comments."
-
-  :group 'mtg-faces)
-
-;;----------------------------------------------;;
-
-(defface mtg-comment-face
-
-  '((t :inherit font-lock-comment-delimiter-face)
-    )
-
-  "Face for Mtg comment delimieters (i.e. “--”)."
-
-  :group 'mtg-faces)
-
-;; mtg-definition-face       → font-lock-function-name-face
-;; mtg-operator-face         → font-lock-variable-name-face
 
 ;;----------------------------------------------;;
 ;; Accessors: Regexps --------------------------;;
