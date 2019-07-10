@@ -59,6 +59,13 @@ SHELL=bash
 
 ### Constants:
 
+PKG := mtg
+
+SUMMARY := ""
+
+# ^ Extract, from the very first line of the Package File,
+#   text between « --- » (or bol) and « -*- » (or eol).
+
 PKG=mtg
 
 # ^ (Elisp) Package Name.
@@ -88,8 +95,8 @@ tmpdir ?=$(CURDIR)/tmp
 srcdir ?=$(CURDIR)/lisp
 
 # ^ Source Directory — find lisp source files within this directory.
- 
-EMACSLOADPATH ?= .:$(CURDIR)/lisp
+
+EMACSLOADPATH ?= -L$(scrdir)/lisp
 
 # ^  List of directories (colon-separated).
 #
@@ -98,7 +105,7 @@ EMACSLOADPATH ?= .:$(CURDIR)/lisp
 # registers directories with the ‹load-path› elisp variable.
 #
 
-EFLAGS ?= --eval "(when (boundp 'load-prefer-newer) (setq load-prefer-newer t))" --eval "(setq byte-compile-error-on-warn t)" 
+EFLAGS ?= --eval "(when (boundp 'load-prefer-newer) (setq load-prefer-newer t))" --eval "(setq byte-compile-error-on-warn t)"
 
 # ^ Command-Line Options (not Arguments) for ‹emacs›.
 #
@@ -118,7 +125,9 @@ DISTFILE = $(PKG)-$(VERSION).tar.gz
 
 ### Programs:
 
-EMACS := $(shell which "$${EMACS}" 2> /dev/null || which "emacs" 2> /dev/null)
+# EMACS := emacs
+
+EMACS ?= $(shell which "$${EMACS}" 2> /dev/null || which "emacs" 2> /dev/null)
 
 EmacsVersion := $(shell "$(EMACS)" -Q --batch --eval '(princ emacs-version)')
 
@@ -356,3 +365,147 @@ check-autoloads: $(AUTOLOADS)
 	$(EmacsBuild) -l "$@"
 
 #
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+SRCDIR := ./lisp
+
+SOURCES := $(sort $(wildcard ./$(SRCDIR)/*$(PKG)*.el))
+OBJECTS := $(EL:.el=.elc)
+
+# ^ e.g. 
+#
+# ≈ (mtg.el mtg-mode.el …)
+# ≈ (mtg.elc mtg-mode.elc …)
+#
+
+TESTDIR  := ./test
+TESTFILE := $(TESTDIR)/test-$(PKG).el
+
+BENCHDIR  := ./bench
+BENCHFILE := $(BENCHDIR)/bench-$(PKG).el
+
+#
+
+EmacsRun   := $(EMACS) -Q --batch
+EmacsEval  := $(EMACS) --eval
+
+EmacsBuild := $(EMACS) -Q --batch -L$(SRCDIR)
+EmacsCheck := $(EMACS) -Q --batch -L$(SRCDIR) -L$(DIR) --load ert
+
+EmacsBench := $(EMACS) -Q --batch -L$(SRCDIR) -L$(BENCHDIR) --load benchmark
+
+#
+
+# ‹*.el› → ‹*.elc›
+
+%.el: %.elc
+
+	$(EmacsBuild) -f batch-byte-compile $^
+
+#
+
+build: bytecompile
+
+.PHONY: build
+
+#
+
+check: ert
+
+.PHONY: check
+
+#
+
+bytecompile: $(SOURCES)
+
+	$(EmacsBuild) -f batch-byte-compile $^
+
+.PHONY: bytecompile
+
+#
+
+ert: $(TESTFILE)
+
+	$(EmacsCheck) --load $< -f ert-run-tests-batch-and-exit 
+
+.PHONY: ert
+
+#
+
+bench: $(BENCHFILE)
+
+	$(EmacsBench) --load "bench-$(PKG).el" -f batch-byte-compile 
+	$(EmacsBench) --load "bench-$(PKG).elc" -f batch-benchmark-mtg
+
+.PHONY: bench
+
+#
+
+elpa: *.el
+	@ver=`grep -o "Version: .*" history.el | cut -c 10-`; \
+	dir=history-$$ver; \
+	mkdir -p "$$dir"; \
+	cp `git ls-files '*.el' | xargs` history-$$ver; \
+	echo "(define-package \"history\" \"$$version\" \
+	\"Modular in-buffer completion framework\")" \
+	> "$$dir"/history-pkg.el; \
+	tar cvf history-$$ver.tar "$$dir"
+
+.PHONY: elpa
+
+#
+
+release:
+
+	git fetch && \
+	git diff remotes/origin/master --exit-code && \
+	git tag -a -m "Release" release-$(VERSION) && \
+	# woger lua-l lua-mode lua-mode "release $(VERSION)" "Emacs major mode for editing Lua files" release-notes-$(VERSION) http://github.com/immerrr/lua-mode/ && \
+
+	git push origin master
+	@echo 'Send update to ELPA!'
+
+.PHONY: release
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

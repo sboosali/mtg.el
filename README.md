@@ -2,6 +2,18 @@
 
 the `mtg` package provides libraries for editing custom *MTG* cards (with syntax-highlighting, completions and abbreviations, embedded images, *Magic Set Editor* importing/exporting, etc), for searching efficiently through all *MTG* cards (with regular expressions, extensible predicates, etc), and more.
 
+## Files
+
+* `./lisp/*.el`           — Elisp Source Files.
+* `./test/*.el`           — Emacs Unit Tests.
+* `./data/*.{json,el}.gz` — MTG Data.
+* `./img/*.gif`           — *Animated GIFs*.
+
+## Libraries
+
+* `mtg-query` — Search Engine for *Magic: The Gathering* cards, with a powerful (and extensible) query language.
+* `mtg-mode` — Major Mode for editing and rendering custom *Magic: The Gathering* cards.
+
 ## `mtg-*.el`
 
 `mtg` is a *Multi-Library Package*, which `provide`s:

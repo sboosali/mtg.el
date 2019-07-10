@@ -768,9 +768,14 @@ Customize the appearence of `mtg-mode'."
 
 ;;==============================================;;
 
-(defface mtg-card '((t :inherit default))
+(defface mtg-card '((t))
   "Base face for MTG Cards."
   :group 'mtg-faces)
+
+;; ^ face ‘mtg-card’, being a Base-Face, specifies no Face-Attributes (in particularm ‘:inherit’s no faces);
+;;   this prevents shadowing the ‘font-lock-*-face’s (e.g. in face ‘mtg-card-name’),
+;;   unless explicitly/intentionally specified.
+;;
 
 ;;----------------------------------------------;;
 
