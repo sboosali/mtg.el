@@ -2,8 +2,8 @@
 
 ;; Copyright © 2019 Spiros Boosalis
 
-;; Version: 0.0.0
-;; Package-Requires: ((emacs "25.1") (cl-lib "0.5") (seq "2.16"))
+;; Version: 0.0
+;; Package-Requires: ((emacs "25"))
 ;; Author:  Spiros Boosalis <samboosalis@gmail.com>
 ;; Homepage: https://github.com/sboosali/mtg.el
 ;; Keywords: local
@@ -250,22 +250,21 @@
 
   "Package Version of ‘mtg.el’.")
 
+
 ;;----------------------------------------------;;
 
-(defconst mtg-json-version "4.4.2"
+(defconst mtg-known-spell-cardtypes
 
-  "Scheme/Data Version of ‘mtg.json’ (from which the builtin data is loaded).
+  '(instant sorcery)
 
-The ‘version.json’ which corresponds to ‘mtg.json’ data
-embedded in ‘mtg.el’ (i.e. this file) is:
+"Card Types which are known  to be Spell Types.
 
-    {
-      \"date\": \"2019-06-26\",
-      \"version\": \"4.4.2\"
-    }
+a ‘listp’ of ‘symbolp’s.
 
-URL `https://mtgjson.com/json/version.json'")
+Related:
 
+• ‘mtg-known-spell-supertypes’
+• ‘mtg-card/is-known-spell-p’")
 
 ;;----------------------------------------------;;
 ;;; Types --------------------------------------;;
@@ -291,15 +290,8 @@ Field Docs:
 • LOYALTY       — .
 • CMC           — .
 • COLORIDENTITY — .
-• FLAVOR        — .
-• FRAME         — .
-• LAYOUT        — .
-• RARITY        — .
-• EDITION       — .
-• TYPELINE      — .
-• LANGUAGE      — .
-• IMAGE         — .
-• ARTIST        — .
+• PRINTINGS     — ‘car’ (i.e. the first item) should be the Original Printing.
+                  ‘cdr’ are Re-Printings, in any order.
 • RULINGS       — .
 • LEGALITY      — .
 • SCRYFALL      — Scryfall Metadata, see URL `https://scryfall.com/docs/api/cards'.
@@ -318,16 +310,7 @@ Field Types:
 • LOYALTY       ∷ an `integerp', or `stringp'.
 • CMC           ∷ a `natnump' (i.e. non-negative `integerp').
 • COLORIDENTITY ∷ a `listp' of `stringp's and/or `symbolp's.
-• FLAVOR        ∷ a `stringp'.
-• FRAME         ∷ a `stringp' or `symbolp'.
-• LAYOUT        ∷ a `stringp' or `symbolp'.
-• RARITY        ∷ a `stringp' or `symbolp'.
-• EDITION       ∷ a `stringp' or `symbolp'.
-• TYPELINE      ∷ a `stringp' or `symbolp'.
-• LANGUAGE      ∷ a `stringp' or `symbolp'.
-• IMAGE         ∷ a `symbolp' (an Image Symbol, from ‘defimage’),
-                  or a `stringp' (a URI, e.g. a file-path or website-adderess, with Image Content-Type).
-• ARTIST        ∷ a `stringp' or `symbolp'.
+• PRINTINGS     ∷ a (nonempty) `listp' of `mtg-printing-p's.
 • RULINGS       ∷ a `stringp'.
 • LEGALITY      ∷ a `stringp'.
 • SCRYFALL      ∷ a `stringp'.
@@ -358,23 +341,15 @@ Related:
 
   ;; Non-Mechanical & Internal (i.e. present on the card itself):
 
-  (image         nil)
-  (flavor        nil)
-  (frame         nil)
-  (layout        nil)
-  (border        nil)
-  (rarity        nil)
-  (edition       nil)
-  (typeline      nil)
-  (language      nil)
-  (artist        nil)
+  (printings     nil)
 
   ;; Non-Mechanical & External (i.e. from an external resource, like a website):
 
   (rulings       nil)
   (legality      nil)
   (date          nil)
-  (scryfall      nil))
+  (scryfall      nil)
+  (uuid          nil))
 
 ;; M-: (mtg-card-create :name "" :cost "" :types "" :supertypes "" :subtypes "" :colors "" :rules "" :power "" :toughness "" :loyalty "" :cmc 1 :coloridentity "" :image "" :flavor "" :frame "" :layout "" :rarity "" :typeline "" :language "" :artist "" :rulings "" :legality "" :scryfall "")
 ;;  ⇒
@@ -387,7 +362,38 @@ Related:
 
 ;;----------------------------------------------;;
 
-(cl-defun make-mtg-card (&key name cost types subtypes supertypes colors rules power toughness loyalty cmc coloridentity image flavor frame layout rarity edition typeline language artist rulings legality date scryfall)
+(cl-defun make-mtg-card (&key name
+                              cost
+                              types
+                              subtypes
+                              supertypes
+                              colors
+                              rules
+                              power
+                              toughness
+                              loyalty
+                              cmc
+                              coloridentity
+
+                              printings
+                              image
+                              flavor
+                              frame
+                              layout
+                              rarity
+                              edition
+                              typeline
+                              language
+                              artist
+                              date-printed
+                              is-reprint
+
+                              rulings
+                              legalities
+                              date
+                              date-released
+                              scryfall
+                              uuid)
 
   "Make an `mtg-card', with validation & defaulting.
 
@@ -405,6 +411,17 @@ Inputs:
 • LOYALTY       — an `integerp', or `stringp'.
 • CMC           — a `natnump' (i.e. non-negative `integerp').
 • COLORIDENTITY — a `listp' of `stringp's and/or `symbolp's.
+• PRINTINGS     — a `listp' of `mtg-printing-p's and/or Property-Lists thereof.
+  To directly create a singleton ‘mtg-card-printings’, see “Inputs (Printing)” below.
+• RULINGS       — a `stringp'.
+• LEGALITIES    — a p`listp' (a Property-List).
+• SCRYFALL      — a `stringp'.
+• UUID          — a `stringp' or `symbolp'.
+
+Inputs (Printing):
+
+• IMAGE         — a `symbolp' (an Image Symbol, from ‘defimage’),
+                  or a `stringp' (a URI, e.g. a file-path or website-adderess, with Image Content-Type).
 • FLAVOR        — a `stringp'.
 • FRAME         — a `stringp' or `symbolp'.
 • LAYOUT        — a `stringp' or `symbolp'.
@@ -412,12 +429,7 @@ Inputs:
 • EDITION       — a `stringp' or `symbolp'.
 • TYPELINE      — a `stringp' or `symbolp'.
 • LANGUAGE      — a `stringp' or `symbolp'.
-• IMAGE         — a `symbolp' (an Image Symbol, from ‘defimage’),
-                  or a `stringp' (a URI, e.g. a file-path or website-adderess, with Image Content-Type).
 • ARTIST        — a `stringp' or `symbolp'.
-• RULINGS       — a `stringp'.
-• LEGALITY      — a `stringp'.
-• SCRYFALL      — a `stringp'.
 
 Output:
 
@@ -435,7 +447,8 @@ Links:
 
 Related:
 
-• `mtg-card-create'"
+• wraps `mtg-card-create'
+• calls `make-mtg-printing'"
 
   (let* ((NAME          (cl-typecase name
                           (symbol name)
@@ -466,57 +479,147 @@ Related:
          (RULINGS       rulings)
          (LEGALITY      legality)
          (SCRYFALL      scryfall)
-         )
 
-    (mtg-card-create :name          NAME
-                     :cost          COST
-                     :types         TYPES
-                     :subtypes      SUBTYPES
-                     :supertypes    SUPERTYPES
-                     :colors        COLORS
-                     :rules         RULES
-                     :power         POWER
-                     :toughness     TOUGHNESS
-                     :loyalty       LOYALTY
-                     :cmc           CMC
-                     :coloridentity COLORIDENTITY
-                     :image         IMAGE
-                     :flavor        FLAVOR
-                     :frame         FRAME
-                     :layout        LAYOUT
-                     :border        BORDER
-                     :rarity        RARITY
-                     :edition       EDITION
-                     :typeline      TYPELINE
-                     :language      LANGUAGE
-                     :artist        ARTIST
-                     :date          DATE
-                     :identifiers   IDENTIFIERS
-                     :rulings       RULINGS
-                     :legality      LEGALITY
-                     :scryfall      SCRYFALL)))
+         (PRINTING (mtg-printing-create :image         IMAGE
+                                        :flavor        FLAVOR
+                                        :frame         FRAME
+                                        :layout        LAYOUT
+                                        :border        BORDER
+                                        :rarity        RARITY
+                                        :edition       EDITION
+                                        :typeline      TYPELINE
+                                        :language      LANGUAGE
+                                        :artist        ARTIST))
 
-;;==============================================;;
+         (CARD     (mtg-card-create :name          NAME
+                                    :cost          COST
+                                    :types         TYPES
+                                    :subtypes      SUBTYPES
+                                    :supertypes    SUPERTYPES
+                                    :colors        COLORS
+                                    :rules         RULES
+                                    :power         POWER
+                                    :toughness     TOUGHNESS
+                                    :loyalty       LOYALTY
+                                    :cmc           CMC
+                                    :coloridentity COLORIDENTITY
+                                    :printings     (if PRINTING (list PRINTING) nil)
 
-(cl-defstruct (mtg-symbol
-               (:constructor mtg-symbol-create)
-               (:copier      nil))
+                                    :date          DATE
+                                    :identifiers   IDENTIFIERS
+                                    :rulings       RULINGS
+                                    :legality      LEGALITY
+                                    :scryfall      SCRYFALL)))
 
-  symbol abbreviation (image nil) (char nil))
-
-;; M-: (mtg-symbol-create :symbol 'tap :abbreviation 'T :image 'mtg-tap-symbol-svg-image :char 'mtg-tap-symbol-char)
-;;  ⇒ #s(mtg-symbol tap T mtg-tap-symbol-svg-image mtg-tap-symbol-char)
+    CARD))
 
 ;;==============================================;;
 
-(cl-defstruct (mtg-rarity
-               (:constructor mtg-rarity-create)
+(cl-defstruct (mtg-printing
+                (:constructor mtg-printing-create)
+                (:copier      nil))
+
+  "`mtg-printing' represents a single printing of a “Magic: The Gathering” card.
+
+Field Docs:
+
+• IMAGE         — .
+• FLAVOR        — .
+• FRAME         — .
+• LAYOUT        — .
+• RARITY        — .
+• EDITION       — .
+• TYPELINE      — .
+• LANGUAGE      — .
+• ARTIST        — .
+
+Field Types:
+
+• IMAGE         ∷ a `symbolp' (an Image Symbol, from ‘defimage’),
+                  or a `stringp' (a URI, e.g. a file-path or website-adderess, with Image Content-Type).
+• FLAVOR        ∷ a `stringp'.
+• FRAME         ∷ a `stringp' or `symbolp'.
+• LAYOUT        ∷ a `stringp' or `symbolp'.
+• RARITY        ∷ a `stringp' or `symbolp'.
+• EDITION       ∷ a `stringp' or `symbolp'.
+• TYPELINE      ∷ a `stringp' or `symbolp'.
+• LANGUAGE      ∷ a `stringp' or `symbolp'.
+• ARTIST        ∷ a `stringp' or `symbolp'.
+
+Related:
+
+• `make-mtg-printing' — Smart Constructor which further documents the type(s) of each field.
+
+• URL `https://mtgjson.com/files/all-cards/' — Documents the JSON Schema for an MTG Card Printing in MTGJSON."
+
+  ;; Non-Mechanical & Internal (i.e. present on the card itself):
+
+  (image         nil)
+  (flavor        nil)
+  (frame         nil)
+  (layout        nil)
+  (border        nil)
+  (rarity        nil)
+  (edition       nil)
+  (typeline      nil)
+  (language      nil)
+  (artist        nil))
+
+;; M-: (mtg--create :abbreviation ' :name "")
+;;  ⇒ #s(mtg- )
+
+;;----------------------------------------------;;
+
+(cl-defun make-mtg-printing (&key image flavor frame layout rarity edition typeline language artist date)
+
+  "Make an `mtg-printing', with validation & defaulting.
+
+Inputs:
+
+• IMAGE         — a `symbolp' (an Image Symbol, from ‘defimage’),
+                  or a `stringp' (a URI, e.g. a file-path or website-adderess, with Image Content-Type).
+• FLAVOR        — a `stringp'.
+• FRAME         — a `stringp' or `symbolp'.
+• LAYOUT        — a `stringp' or `symbolp'.
+• RARITY        — a `stringp' or `symbolp'.
+• EDITION       — a `stringp' or `symbolp'.
+• TYPELINE      — a `stringp' or `symbolp'.
+• LANGUAGE      — a `stringp' or `symbolp'.
+• ARTIST        — a `stringp' or `symbolp'.
+• RULINGS       — a `stringp'.
+• LEGALITY      — a `stringp'.
+• SCRYFALL      — a `stringp'.
+
+Output:
+
+• an `mtg-printing-p'.
+
+Example:
+
+• M-: (make-mtg-printing)
+    ⇒ (mtg-printing-create)
+    ⇒ #s(mtg-printing nil nil nil nil nil nil nil nil nil nil 0 ...)
+
+Links:
+
+• URL `'
+
+Related:
+
+• wraps `mtg-printing-create'"
+
+  )
+
+;;==============================================;;
+
+(cl-defstruct (mtg-translations
+               (:constructor mtg--create)
                (:copier      nil))
 
-  rarity abbreviation color)
+  abbreviation (name ""))
 
-;; M-: (mtg-rarity-create :rarity 'rare :abbreviation 'r)
-;;  ⇒ #s(mtg-rarity rare r nil)
+;; M-: (mtg--create :abbreviation ' :name "")
+;;  ⇒ #s(mtg- )
 
 ;;==============================================;;
 
@@ -553,47 +656,61 @@ Related:
 
 ;;==============================================;;
 
-(cl-defstruct (mtg-
-               (:constructor mtg--create)
+(cl-defstruct (mtg-card-ruling 
+               (:constructor mtg-card-ruling-create)
                (:copier      nil))
 
-  abbreviation (name ""))
+  text (date nil))
 
 ;; M-: (mtg--create :abbreviation ' :name "")
 ;;  ⇒ #s(mtg- )
 
 ;;==============================================;;
 
-(cl-defstruct (mtg-
-               (:constructor mtg--create)
+(cl-defstruct (mtg-card-legality
+               (:constructor mtg-card-legality-create)
                (:copier      nil))
 
-  abbreviation (name ""))
+  "
+
+Legal Statuses:
+
+legal
+restricted
+banned
+
+Formats:
+
+standard, modern, legacy, vintage, commander, future (future Standard), pauper, frontier, penny (Penny Dreadful), duel (Duel Commander), and oldschool (Old School 93/94).
+
+"
+
+   (legalities nil))
 
 ;; M-: (mtg--create :abbreviation ' :name "")
 ;;  ⇒ #s(mtg- )
 
 ;;==============================================;;
 
-(cl-defstruct (mtg-
-               (:constructor mtg--create)
+(cl-defstruct (mtg-symbol
+               (:constructor mtg-symbol-create)
                (:copier      nil))
 
-  abbreviation (name ""))
+  symbol abbreviation (image nil) (char nil))
 
-;; M-: (mtg--create :abbreviation ' :name "")
-;;  ⇒ #s(mtg- )
+;; M-: (mtg-symbol-create :symbol 'tap :abbreviation 'T :image 'mtg-tap-symbol-svg-image :char 'mtg-tap-symbol-char)
+;;  ⇒ #s(mtg-symbol tap T mtg-tap-symbol-svg-image mtg-tap-symbol-char)
 
 ;;==============================================;;
 
-(cl-defstruct (mtg-
-               (:constructor mtg--create)
+(cl-defstruct (mtg-rarity
+               (:constructor mtg-rarity-create)
                (:copier      nil))
 
-  abbreviation (name ""))
+  rarity abbreviation color)
 
-;; M-: (mtg--create :abbreviation ' :name "")
-;;  ⇒ #s(mtg- )
+;; M-: (mtg-rarity-create :rarity 'rare :abbreviation 'r)
+;;  ⇒ #s(mtg-rarity rare r nil)
 
 ;;----------------------------------------------;;
 ;;; Types: “Enums” -----------------------------;;
@@ -896,9 +1013,7 @@ White + blue + black + red = Yore (or Yore-Tiller), or Artifice, or Non-green
 
   '(basic
     legendary
-    snow
-    ongoing
-    world)
+    snow)
 
   "Known Super-Types.
 
@@ -1066,148 +1181,7 @@ an association `listp':
 
 ;;----------------------------------------------;;
 
-(defcustom mtg-rules-keywords-list
 
-  '(
-    absorb
-    affinity
-    afflict
-    aftermath
-    amplify
-    annihilator
-    ascend
-    aura-swap
-    awaken
-    banding
-    battle-cry
-    bestow
-    bloodthirst
-    bushido
-    buyback
-    cascade
-    champion
-    changeling
-    cipher
-    conspire
-    convoke
-    crew
-    cumulative-upkeep
-    cycling
-    dash
-    deathtouch
-    defender
-    delve
-    dethrone
-    devoid
-    devour
-    double-strike
-    dredge
-    echo
-    embalm
-    emerge
-    enchant
-    entwine
-    epic
-    equip
-    escalate
-    eternalize
-    evoke
-    evolve
-    exalted
-    exploit
-    extort
-    fabricate
-    fading
-    fear
-    first-strike
-    flanking
-    flash
-    flashback
-    flying
-    forecast
-    fortify
-    frenzy
-    fuse
-    graft
-    gravestorm
-    haste
-    haunt
-    hexproof
-    hidden-agenda
-    hideaway
-    horsemanship
-    improvise
-    indestructible
-    infect
-    ingest
-    intimidate
-    kicker
-    landwalk
-    level-up
-    lifelink
-    living-weapon
-    madness
-    melee
-    menace
-    miracle
-    modular
-    morph
-    myriad
-    ninjutsu
-    offering
-    outlast
-    overload
-    partner
-    persist
-    phasing
-    poisonous
-    protection
-    provoke
-    prowess
-    prowl
-    rampage
-    reach
-    rebound
-    recover
-    reinforce
-    renown
-    replicate
-    retrace
-    ripple
-    scavenge
-    shadow
-    shroud
-    skulk
-    soulbond
-    soulshift
-    splice
-    split-second
-    storm
-    sunburst
-    surge
-    suspend
-    totem-armor
-    trample
-    transfigure
-    transmute
-    tribute
-    undaunted
-    undying
-    unearth
-    unleash
-    vanishing
-    vigilance
-    wither
-    )
-
-  "Known Keywords (in rules text).
-
-A `symbolp' `listp'."
-
-  :type '(repeat (symbol :tag "Keyword"))
-
-  :safe #'listp
-  :group 'mtg)
 
 ;;----------------------------------------------;;
 
@@ -3324,8 +3298,28 @@ Effects:
 ;;----------------------------------------------;;
 
 ;;----------------------------------------------;;
-;;; Data ---------------------------------------;;
+;;;; Data --------------------------------------;;
 ;;----------------------------------------------;;
+
+;;; Data: Constants...
+
+(defconst mtg-json-version "4.4.2"
+
+  "Scheme/Data Version of ‘mtg.json’ (from which the builtin data is loaded).
+
+The ‘version.json’ which corresponds to ‘mtg.json’ data
+embedded in ‘mtg.el’ (i.e. this file) is:
+
+    {
+      \"date\": \"2019-06-26\",
+      \"version\": \"4.4.2\"
+    }
+
+URL `https://mtgjson.com/json/version.json'")
+
+;;==============================================;;
+
+;; MTG Card Names...
 
 (defconst mtg-data/card-names-vector
 
@@ -22656,6 +22650,833 @@ and/or are Vintage-legal and/or are black-brodered.")
 
 ;;==============================================;;
 
+;; MTG Types...
+
+(defconst mtg-known-cardtypes
+
+  '(instant sorcery artifact enchantment land creature planeswalker)
+
+  "Known Cardtypes.
+
+a ‘listp’ of ‘symbolp’s.
+
+URL ‘https://mtgjson.com/json/CardTypes.json’ (circa 2019-07).")
+
+;;----------------------------------------------;;
+
+(defconst mtg-known-supertypes
+
+  '(basic legendary ongoing snow world)
+
+  "Known Supertypes.
+
+a ‘listp’ of ‘symbolp’s.
+
+URL ‘https://mtgjson.com/json/CardTypes.json’ (circa 2019-07).")
+
+;;----------------------------------------------;;
+
+(defconst mtg-known-spell-subtypes
+
+  '(arcane trap)
+
+  "Known Spell (i.e. Instant/Sorcery) Subtypes.
+
+a ‘listp’ of ‘symbolp’s.
+
+Notes:
+
+• the set of Instant Subtypes and the set of Sorcery Subtypes are equivalent in the Comp Rules.
+
+URL ‘https://mtgjson.com/json/CardTypes.json’ (circa 2019-07).")
+
+(defvaralias 'mtg-known-instant-subtypes 'mtg-known-spell-subtypes)
+
+(defvaralias 'mtg-known-sorcery-subtypes 'mtg-known-spell-subtypes)
+
+;;----------------------------------------------;;
+
+(defconst mtg-known-artifact-subtypes
+
+  '(clue contraption equipment fortification treasure vehicle)
+
+  "Known Artifact Subtypes.
+
+a ‘listp’ of ‘symbolp’s.
+
+Notes:
+
+• Equipment is the most frequent Artifact Subtype.
+• Clue and Treasure are only on tokens (i.e. not on any card)
+• Fortification and Contraption are mentioned once on Futureshifted cards.
+
+URL ‘https://mtgjson.com/json/CardTypes.json’ (circa 2019-07).")
+
+;;                  
+
+(defconst mtg-known-enchantment-subtypes
+
+  '(aura cartouche curse saga shrine)
+
+  "Known Enchantment Subtypes.
+
+a ‘listp’ of ‘symbolp’s.
+
+Notes:
+
+• Aura is the most frequent Enchantment Subtype.
+
+URL ‘https://mtgjson.com/json/CardTypes.json’ (circa 2019-07).")
+
+;;----------------------------------------------;;
+
+(defconst mtg-known-land-subtypes
+
+  '(plains island swamp mountain forest
+    desert gate lair locust
+    tower mine power-plant urza\'s)
+
+  "Known Subtypes.
+
+a ‘listp’ of ‘symbolp’s.
+
+Notes:
+
+• plains island swamp mountain forest — are the Basic Land Types.
+• “urza's”, “tower”, “mine”, “power-plant” — come from an awkward Rules Update of the Urza Lands (a.k.a. Tron Lands).
+
+URL ‘https://mtgjson.com/json/CardTypes.json’ (circa 2019-07).")
+
+;;----------------------------------------------;;
+
+(defconst mtg-known-planeswalker-subtypes
+
+  '(
+    ajani
+    aminatou
+    angrath
+    arlinn
+    ashiok
+    bolas
+    chandra
+    dack
+    daretti
+    davriel
+    domri
+    dovin
+    elspeth
+    estrid
+    freyalise
+    garruk
+    gideon
+    huatli
+    jace
+    jaya
+    karn
+    kasmina
+    kaya
+    kiora
+    koth
+    liliana
+    nahiri
+    narset
+    nissa
+    nixilis
+    ral
+    rowan
+    saheeli
+    samut
+    sarkhan
+    sorin
+    tamiyo
+    teferi
+    teyo
+    tezzeret
+    tibalt
+    ugin
+    venser
+    vivien
+    vraska
+    will
+    windgrace
+    xenagos
+    yanggu
+    yanling
+    )
+
+  "Known Planeswalker Subtypes.
+
+a ‘listp’ of ‘symbolp’s.
+
+URL ‘https://mtgjson.com/json/CardTypes.json’ (circa 2019-07).")
+
+;;----------------------------------------------;;
+
+(defconst mtg-known-creature-subtypes
+
+  '(
+    advisor
+    aetherborn
+    ally
+    angel
+    antelope
+    ape
+    archer
+    archon
+    army
+    artificer
+    assassin
+    assembly-worker
+    atog
+    aurochs
+    avatar
+    azra
+    badger
+    barbarian
+    basilisk
+    bat
+    bear
+    beast
+    beeble
+    berserker
+    bird
+    blinkmoth
+    boar
+    bringer
+    brushwagg
+    camarid
+    camel
+    caribou
+    carrier
+    cat
+    centaur
+    cephalid
+    chimera
+    citizen
+    cleric
+    cockatrice
+    construct
+    coward
+    crab
+    crocodile
+    cyclops
+    dauthi
+    demon
+    deserter
+    devil
+    dinosaur
+    djinn
+    dragon
+    drake
+    dreadnought
+    drone
+    druid
+    dryad
+    dwarf
+    efreet
+    egg
+    elder
+    eldrazi
+    elemental
+    elephant
+    elf
+    elk
+    eye
+    faerie
+    ferret
+    fish
+    flagbearer
+    fox
+    frog
+    fungus
+    gargoyle
+    germ
+    giant
+    gnome
+    goat
+    goblin
+    god
+    golem
+    gorgon
+    graveborn
+    gremlin
+    griffin
+    hag
+    harpy
+    hellion
+    hippo
+    hippogriff
+    homarid
+    homunculus
+    horror
+    horse
+    hound
+    human
+    hydra
+    hyena
+    illusion
+    imp
+    incarnation
+    insect
+    jackal
+    jellyfish
+    juggernaut
+    kavu
+    kirin
+    kithkin
+    knight
+    kobold
+    kor
+    kraken
+    lamia
+    lammasu
+    leech
+    leviathan
+    lhurgoyf
+    licid
+    lizard
+    manticore
+    masticore
+    mercenary
+    merfolk
+    metathran
+    minion
+    minotaur
+    mole
+    monger
+    mongoose
+    monk
+    monkey
+    moonfolk
+    mutant
+    myr
+    mystic
+    naga
+    nautilus
+    nephilim
+    nightmare
+    nightstalker
+    ninja
+    noggle
+    nomad
+    nymph
+    octopus
+    ogre
+    ooze
+    orb
+    orc
+    orgg
+    ouphe
+    ox
+    oyster
+    pangolin
+    pegasus
+    pentavite
+    pest
+    phelddagrif
+    phoenix
+    pilot
+    pincher
+    pirate
+    plant
+    praetor
+    prism
+    processor
+    rabbit
+    rat
+    rebel
+    reflection
+    rhino
+    rigger
+    rogue
+    sable
+    salamander
+    samurai
+    sand
+    saproling
+    satyr
+    scarecrow
+    scion
+    scorpion
+    scout
+    serf
+    serpent
+    servo
+    shade
+    shaman
+    shapeshifter
+    sheep
+    siren
+    skeleton
+    slith
+    sliver
+    slug
+    snake
+    soldier
+    soltari
+    spawn
+    specter
+    spellshaper
+    sphinx
+    spider
+    spike
+    spirit
+    splinter
+    sponge
+    squid
+    squirrel
+    starfish
+    surrakar
+    survivor
+    tetravite
+    thalakos
+    thopter
+    thrull
+    treefolk
+    trilobite
+    triskelavite
+    troll
+    turtle
+    unicorn
+    vampire
+    vedalken
+    viashino
+    volver
+    wall
+    warrior
+    weird
+    werewolf
+    whale
+    wizard
+    wolf
+    wolverine
+    wombat
+    worm
+    wraith
+    wurm
+    yeti
+    zombie
+    zubera
+  )
+
+  "Known Creature Subtypes.
+
+a ‘listp’ of ‘symbolp’s.
+
+Notes:
+
+• « (length mtg-known-creature-subtypes) » is currently .
+
+URL ‘https://mtgjson.com/json/CardTypes.json’ (circa 2019-07).")
+
+;;----------------------------------------------;;
+
+(defconst mtg-known-subtypes
+
+  (append mtg-known-spell-subtypes
+          mtg-known-artifact-subtypes
+          mtg-known-enchantment-subtypes
+          mtg-known-land-subtypes
+          mtg-known-planeswalker-subtypes
+          mtg-known-creature-subtypes)
+
+  "Known Subtypes (of any known Cardtype).
+
+a ‘listp’ of ‘symbolp’s.
+
+Merges the ‘mtg-known-*-subtypes’ of all ‘mtg-known-cardtypes’.
+
+URL ‘https://mtgjson.com/json/CardTypes.json’ (circa 2019-07).")
+
+;;----------------------------------------------;;
+
+(defconst mtg-known-types
+
+  (append mtg-known-cardtypes
+          mtg-known-supertypes
+          mtg-known-subtypes)
+
+  "Known Card/Super/Sub Types.
+
+a ‘listp’ of ‘symbolp’s.
+
+Merges:
+
+• ‘mtg-known-cardtypes’
+• ‘mtg-known-supertypes’
+• ‘mtg-known-subtypes’
+
+URL ‘https://mtgjson.com/json/CardTypes.json’ (circa 2019-07).")
+
+;;==============================================;;
+
+;; MTG Keywords...
+
+(defconst mtg-known-keyword-abilities
+
+  '(
+    absorb
+    affinity
+    afflict
+    aftermath
+    amplify
+    annihilator
+    ascend
+    aura-swap
+    awaken
+    banding
+    battle-cry
+    bestow
+    bloodthirst
+    bushido
+    buyback
+    cascade
+    champion
+    changeling
+    cipher
+    conspire
+    convoke
+    crew
+    cumulative-upkeep
+    cycling
+    dash
+    deathtouch
+    defender
+    delve
+    dethrone
+    devoid
+    devour
+    double-strike
+    dredge
+    echo
+    embalm
+    emerge
+    enchant
+    entwine
+    epic
+    equip
+    escalate
+    eternalize
+    evoke
+    evolve
+    exalted
+    exploit
+    extort
+    fabricate
+    fading
+    fear
+    first-strike
+    flanking
+    flash
+    flashback
+    flying
+    forecast
+    fortify
+    frenzy
+    fuse
+    graft
+    gravestorm
+    haste
+    haunt
+    hexproof
+    hidden-agenda
+    hideaway
+    horsemanship
+    improvise
+    indestructible
+    infect
+    ingest
+    intimidate
+    kicker
+    landwalk
+    level-up
+    lifelink
+    living-weapon
+    madness
+    melee
+    menace
+    miracle
+    modular
+    morph
+    myriad
+    ninjutsu
+    offering
+    outlast
+    overload
+    partner
+    persist
+    phasing
+    poisonous
+    protection
+    provoke
+    prowess
+    prowl
+    rampage
+    reach
+    rebound
+    recover
+    reinforce
+    renown
+    replicate
+    retrace
+    ripple
+    scavenge
+    shadow
+    shroud
+    skulk
+    soulbond
+    soulshift
+    splice
+    split-second
+    storm
+    sunburst
+    surge
+    suspend
+    totem-armor
+    trample
+    transfigure
+    transmute
+    tribute
+    undaunted
+    undying
+    unearth
+    unleash
+    vanishing
+    vigilance
+    wither
+    )
+
+  "Known Keyword Abilities (in Rules Text).
+
+A `symbolp' `listp'.
+
+URL ‘https://mtgjson.com/json/Keywords.json’")
+
+;;----------------------------------------------;;
+
+(defconst mtg-known-keyword-actions
+
+  '(
+    abandon
+    activate
+    adapt
+    amass
+    assemble
+    attach
+    bolster
+    cast
+    clash
+    counter
+    create
+    destroy
+    detain
+    discard
+    double
+    exchange
+    exert
+    exile
+    explore
+    fateseal
+    fight
+    goad
+    investigate
+    manifest
+    meld
+    monstrosity
+    planeswalk
+    play
+    populate
+    proliferate
+    regenerate
+    reveal
+    sacrifice
+    scry
+    search
+    set-in-motion
+    shuffle
+    support
+    surveil
+    tap-and-untap
+    transform
+    vote
+    )
+
+  "Known Keyword Actions (in Rules Text).
+
+A `symbolp' `listp'.
+
+URL ‘https://mtgjson.com/json/Keywords.json’")
+
+;;----------------------------------------------;;
+
+(defconst mtg-known-ability-words
+
+  '(
+    absorb
+    affinity
+    afflict
+    afterlife
+    aftermath
+    amplify
+    annihilator
+    ascend
+    assist
+    aura-swap
+    awaken
+    banding
+    battle-cry
+    bestow
+    bloodthirst
+    bushido
+    buyback
+    cascade
+    champion
+    changeling
+    cipher
+    conspire
+    convoke
+    crew
+    cumulative-upkeep
+    cycling
+    dash
+    deathtouch
+    defender
+    delve
+    dethrone
+    devoid
+    devour
+    double-strike
+    dredge
+    echo
+    embalm
+    emerge
+    enchant
+    entwine
+    epic
+    equip
+    escalate
+    eternalize
+    evoke
+    evolve
+    exalted
+    exploit
+    extort
+    fabricate
+    fading
+    fear
+    first-strike
+    flanking
+    flash
+    flashback
+    flying
+    forecast
+    fortify
+    frenzy
+    fuse
+    graft
+    gravestorm
+    haste
+    haunt
+    hexproof
+    hidden agenda
+    hideaway
+    horsemanship
+    improvise
+    indestructible
+    infect
+    ingest
+    intimidate
+    jump-start
+    kicker
+    landwalk
+    level-up
+    lifelink
+    living weapon
+    madness
+    melee
+    menace
+    mentor
+    miracle
+    modular
+    morph
+    myriad
+    ninjutsu
+    offering
+    outlast
+    overload
+    partner
+    persist
+    phasing
+    poisonous
+    protection
+    provoke
+    prowess
+    prowl
+    rampage
+    reach
+    rebound
+    recover
+    reinforce
+    renown
+    replicate
+    retrace
+    riot
+    ripple
+    scavenge
+    shadow
+    shroud
+    skulk
+    soulbond
+    soulshift
+    spectacle
+    splice
+    split second
+    storm
+    sunburst
+    surge
+    suspend
+    totem armor
+    trample
+    transfigure
+    transmute
+    tribute
+    undaunted
+    undying
+    unearth
+    unleash
+    vanishing
+    vigilance
+    wither
+    )
+
+  "Known Ability Words.
+
+A `symbolp' `listp'.
+
+URL ‘https://mtgjson.com/json/Keywords.json’")
+
+;;----------------------------------------------;;
+
+(defconst mtg-known-keywords
+
+  (append mtg-known-keyword-abilities
+          mtg-known-keyword-actions)
+
+  "Known Keywords (Abilities and Actions).
+
+Merges:
+
+• ‘mtg-known-keyword-abilities’
+• ‘mtg-known-keyword-actions’
+
+A `symbolp' `listp'.
+
+URL ‘https://mtgjson.com/json/Keywords.json’")
+
+;;==============================================;;
+
+;;; Data: Functions...
+
 (defun mtg-data/card-names (&optional type)
 
   "Accessor for `mtg-data/card-names-vector'.
@@ -22688,8 +23509,6 @@ Compatibility:
       mtg-data/card-names-vector)))
 
 ;; ^ M-: (defconst sboo-mtg-card-name-list (mtg-data/card-names 'list))
-;;
-;;
 
 ;;----------------------------------------------;;
 
