@@ -3,13 +3,13 @@
 ;; Copyright © 2019 Spiros Boosalis
 
 ;; Version: 0.0.0
+;; Prefix: mtg-known-
 ;; Package-Requires: ((emacs "25"))
 ;; Author:  Spiros Boosalis <samboosalis@gmail.com>
 ;; Homepage: https://github.com/sboosali/.emacs.d
 ;; Keywords: local
 ;; Created: 10 Jul 2019
 ;; License: GPL-3.0-or-later
-;; Prefix: mtg-known-
 
 ;; This file is NOT part of GNU Emacs.
 ;;

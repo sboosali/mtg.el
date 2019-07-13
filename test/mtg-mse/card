@@ -1,0 +1,22 @@
+### -*- mode: conf-colon; -*-
+
+card:
+	has styling: false
+	notes: 
+	time created: 2019-01-07 01:29:36
+	time modified: 2019-01-10 09:53:07
+	name: © Appropriate Spell
+	casting cost: 3U
+	image: image24
+	super type: <word-list-type>Instant</word-list-type>
+	sub type: <word-list-spell>Counter</word-list-spell><soft> </soft><word-list-spell></word-list-spell>
+	rarity: rare
+	rule text: Counter target spell. If that spell is countered this way, appropriate it instead of putting it into its owner’s graveyard. <i-auto>(Exile it face-down. You may look at and cast it for as long as it remains exiled, and you may spend mana as though it were mana of any type to cast it.)</i-auto>
+	flavor text: <i-flavor></i-flavor>
+	illustrator: Wen Hsu
+	copyright: 
+	image 2: 
+	copyright 2: 
+	copyright 3: 
+	mainframe image: 
+	mainframe image 2: 

@@ -3,6 +3,7 @@
 ;; Copyright © 2019 Spiros Boosalis
 
 ;; Version: 0.0
+;; Prefix: mtg-
 ;; Package-Requires: ((emacs "25"))
 ;; Author:  Spiros Boosalis <samboosalis@gmail.com>
 ;; Homepage: https://github.com/sboosali/mtg.el
@@ -246,7 +247,6 @@
 (defconst mtg-version "0.0"
 
   "Package Version of ‘mtg.el’.")
-
 
 ;;----------------------------------------------;;
 
