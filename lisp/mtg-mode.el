@@ -158,15 +158,25 @@ a `regexpp's
 
   "Beleren"
 
-  "Name of a “Beleren” font.
+  "Name of the “Beleren” font.
 
 a ‘stringp’.
 
-Beleren fonts include:
+other Beleren fonts include:
 
 • “Beleren”
 • “JaceBeleren”
-• “SmallCapsBeleren”")
+• “BelerenSmallCaps”")
+
+;;----------------------------------------------;;
+
+(defconst mtg-belerensmallcaps-font-name
+
+  "Beleren Small Caps"
+
+  "Name of the “Beleren Small Caps” font.
+
+a ‘stringp’.")
 
 ;;----------------------------------------------;;
 ;;; Groups -------------------------------------;;
@@ -359,6 +369,81 @@ Output:
 
 ;;----------------------------------------------;;
 
+(defcustom mtg-white-color
+
+  "light yellow"                                ;TODO
+
+  "Emacs Color to display the MTG Color White as.
+
+a `stringp'."
+
+  :type '(color :tag "Color")
+
+  :safe #'stringp
+  :group 'mtg)
+
+;;----------------------------------------------;;
+
+(defcustom mtg-blue-color
+
+  "light blue"
+
+  "Emacs Color to display the MTG Color Blue as.
+
+a `stringp'."
+
+  :type '(color :tag "Color")
+
+  :safe #'stringp
+  :group 'mtg)
+
+;;----------------------------------------------;;
+
+(defcustom mtg-black-color
+
+  "light gray"                                ;TODO
+
+  "Emacs Color to display the MTG Color Black as.
+
+a `stringp'."
+
+  :type '(color :tag "Color")
+
+  :safe #'stringp
+  :group 'mtg)
+
+;;----------------------------------------------;;
+
+(defcustom mtg-red-color
+
+  "light red"
+
+  "Emacs Color to display the MTG Color Red as.
+
+a `stringp'."
+
+  :type '(color :tag "Color")
+
+  :safe #'stringp
+  :group 'mtg)
+
+;;----------------------------------------------;;
+
+(defcustom mtg-green-color
+
+  "light green"
+
+  "Emacs Color to display the MTG Color Green as.
+
+a `stringp'."
+
+  :type '(color :tag "Color")
+
+  :safe #'stringp
+  :group 'mtg)
+
+;;----------------------------------------------;;
+
 (defcustom mtg-keywords-list
 
   '(
@@ -399,7 +484,7 @@ Links:
 
 ;;----------------------------------------------;;
 
-(defcustom mtg-beleren-xfont
+(defcustom mtg-beleren-font
 
   (mtg--xfont-by-name mtg-beleren-font-name)
 
@@ -885,9 +970,14 @@ Customize the appearence of `mtg-mode'."
 
 ;;==============================================;;
 
-(defface mtg-card '((t))
-  "Base face for MTG Cards."
-  :group 'mtg-faces)
+(progn
+
+  (defface mtg-card `((t :family ,mtg-beleren-font-name))
+    "Base face for MTG Cards."
+    :group 'mtg-faces)
+
+  (when (bound-and-true-p mtg-beleren-font)
+    (set-face-font 'mtg-card mtg-beleren-font)))
 
 ;; ^ face ‘mtg-card’, being a Base-Face, specifies no Face-Attributes (in particularm ‘:inherit’s no faces);
 ;;   this prevents shadowing the ‘font-lock-*-face’s (e.g. in face ‘mtg-card-name’),
@@ -896,16 +986,21 @@ Customize the appearence of `mtg-mode'."
 
 ;;----------------------------------------------;;
 
-(defface mtg-card-name '((t :underline t :inherit (mtg-card font-lock-variable-name-face)))
-  "Face for MTG Card Names."
-  :group 'mtg-faces)
+(progn
+
+  (defface mtg-card-name `((t :underline t :family ,mtg-belerensmallcaps-font-name :inherit (mtg-card font-lock-variable-name-face)))
+    "Face for MTG Card Names."
+    :group 'mtg-faces)
+
+  (when (bound-and-true-p mtg-belerensmallcaps-font)
+    (set-face-font 'mtg-card-name mtg-belerensmallcaps-font)))
 
 ;;----------------------------------------------;;
 
 (progn
 
-  (defface mtg-color-white '((t :foreground white :inherit mtg-card))
-    "Face for white Mana Symbols and Plains."
+  (defface mtg-color-white `((t :foreground ,mtg-white-color :inherit mtg-card))
+    "Face for white (white cards, white mana symbols, and Plains)."
     :group 'mtg-faces)
 
   (put 'white 'mtg-face 'mtg-color-white))
@@ -914,8 +1009,8 @@ Customize the appearence of `mtg-mode'."
 
 (progn
 
-  (defface mtg-color-blue '((t :foreground blue :inherit mtg-card))
-    "Face for blue Mana Symbols and Islands"
+  (defface mtg-color-blue `((t :foreground ,mtg-blue-color :inherit mtg-card))
+    "Face for blue (blue cards, blue mana symbols, and Islands)."
     :group 'mtg-faces)
 
   (put 'blue 'mtg-face 'mtg-color-blue))
@@ -924,8 +1019,8 @@ Customize the appearence of `mtg-mode'."
 
 (progn
 
-  (defface mtg-color-black '((t :foreground black :inherit mtg-card))
-    "Face for black Mana Symbols and Swamps."
+  (defface mtg-color-black `((t :foreground ,mtg-black-color :inherit mtg-card))
+    "Face for black (black cards, black mana symbols, and Swamps)."
     :group 'mtg-faces)
 
   (put 'black 'mtg-face 'mtg-color-black))
@@ -934,8 +1029,8 @@ Customize the appearence of `mtg-mode'."
 
 (progn
 
-  (defface mtg-color-red '((t :foreground red :inherit mtg-card))
-    "Face for red Mana Symbols and Mountains."
+  (defface mtg-color-red `((t :foreground ,mtg-red-color :inherit mtg-card))
+    "Face for red (red cards, red mana symbols, and Mountains)."
     :group 'mtg-faces)
 
   (put 'red 'mtg-face 'mtg-color-red))
@@ -944,11 +1039,47 @@ Customize the appearence of `mtg-mode'."
 
 (progn
 
-  (defface mtg-color-green '((t :foreground green :inherit mtg-card))
-    "Face for green Mana Symbols and Forests."
+  (defface mtg-color-green `((t :foreground ,mtg-green-color :inherit mtg-card))
+    "Face for green (green cards, green mana symbols, and Forests)."
     :group 'mtg-faces)
 
   (put 'green 'mtg-face 'mtg-color-green))
+
+;;----------------------------------------------;;
+
+(defface mtg-symbol '((t :box t :inherit mtg-card))
+  "Face for MTG Symbols (including Mana Symbols)."
+  :group 'mtg-faces)
+
+;;----------------------------------------------;;
+
+(defface mtg-symbol-white '((t :inherit (mtg-symbol mtg-color-white)))
+  "Face for white Mana Symbols."
+  :group 'mtg-faces)
+
+;;----------------------------------------------;;
+
+(defface mtg-symbol-blue '((t :inherit (mtg-symbol mtg-color-blue)))
+  "Face for blue Mana Symbols and Islands"
+  :group 'mtg-faces)
+
+;;----------------------------------------------;;
+
+(defface mtg-symbol-black '((t :inherit (mtg-symbol mtg-color-black)))
+  "Face for black Mana Symbols and Swamps."
+  :group 'mtg-faces)
+
+;;----------------------------------------------;;
+
+(defface mtg-symbol-red '((t :inherit (mtg-symbol mtg-color-red)))
+  "Face for red Mana Symbols and Mountains."
+  :group 'mtg-faces)
+
+;;----------------------------------------------;;
+
+(defface mtg-symbol-green '((t :inherit (mtg-symbol mtg-color-green)))
+  "Face for green Mana Symbols and Forests."
+  :group 'mtg-faces)
 
 ;;----------------------------------------------;;
 
@@ -990,6 +1121,42 @@ Customize the appearence of `mtg-mode'."
 
 (defface mtg-super-type '((t :inherit mtg-typeline))
   "Base face for MTG Card Supertypes."
+  :group 'mtg-faces)
+
+;;----------------------------------------------;;
+
+(defface mtg-face '((t :inherit mtg-card))
+  "Face for an MTG Card Faces (i.e. the background of a card)."
+  :group 'mtg-faces)
+
+;;----------------------------------------------;;
+
+(defface mtg-face-white `((t :background ,mtg-white-color :inherit (mtg-face)))
+  "Face for the background of white cards."
+  :group 'mtg-faces)
+
+;;----------------------------------------------;;
+
+(defface mtg-face-blue `((t :background ,mtg-blue-color :inherit (mtg-face)))
+  "Face for the background of blue cards"
+  :group 'mtg-faces)
+
+;;----------------------------------------------;;
+
+(defface mtg-face-black `((t :background ,mtg-black-color :inherit (mtg-face)))
+  "Face for the background of black cards"
+  :group 'mtg-faces)
+
+;;----------------------------------------------;;
+
+(defface mtg-face-red `((t :background ,mtg-red-color :inherit (mtg-face)))
+  "Face for the background of red cards"
+  :group 'mtg-faces)
+
+;;----------------------------------------------;;
+
+(defface mtg-face-green `((t :background ,mtg-green-color :inherit (mtg-face)))
+  "Face for the background of green cards"
   :group 'mtg-faces)
 
 ;;----------------------------------------------;;
