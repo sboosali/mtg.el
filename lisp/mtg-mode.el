@@ -153,6 +153,22 @@ a `regexpp's
   "Regular expression for matching block boundaries.")
 
 ;;----------------------------------------------;;
+
+(defconst mtg-beleren-font-name
+
+  "Beleren"
+
+  "Name of a “Beleren” font.
+
+a ‘stringp’.
+
+Beleren fonts include:
+
+• “Beleren”
+• “JaceBeleren”
+• “SmallCapsBeleren”")
+
+;;----------------------------------------------;;
 ;;; Groups -------------------------------------;;
 ;;----------------------------------------------;;
 
@@ -286,7 +302,61 @@ Related:
 ;; 
 
 ;;----------------------------------------------;;
-;;; Variables ----------------------------------;;
+;;; Custom Variables ---------------------------;;
+;;----------------------------------------------;;
+
+;; Utilities...
+
+;;----------------------------------------------;;
+
+(defun mtg--xfont-by-name (font-name)
+
+  "Lookup an XFont which matches FONT-NAME.
+
+Inputs:
+
+• FONT-NAME — a `stringp'.
+
+Output:
+
+• a `stringp' or `fontp'.
+
+Examples:
+
+• M-: (mtg--xfont-by-name \"Beleren\")
+    ↪ \"-DELV-Beleren-bold-normal-normal-*-*-*-*-*-*-0-iso10646-1\"
+
+• M-: (mtg--xfont-by-name \"Not A Font Name\")
+    ↪ nil"
+
+  (let* ((FONTS (when (fboundp 'x-list-fonts)
+                  (condition-case e                  ; catch "Invalid font name" error.
+                      (x-list-fonts font-name)
+                    ((error) e))))
+         )
+    (car-safe FONTS)))
+
+;;----------------------------------------------;;
+
+(defun mtg--xfonts ()
+
+  "Return all XFonts.
+
+Output:
+
+• a `listp' of `stringp's."
+
+  (let* ((FONTS (when (fboundp 'x-list-fonts)
+                  (condition-case e                  ; catch "Invalid font name" error.
+                      (x-list-fonts "*")
+                    ((error) e))))
+         )
+    (seq-uniq FONTS)))
+
+;;==============================================;;
+
+;; Variables...
+
 ;;----------------------------------------------;;
 
 (defcustom mtg-keywords-list
@@ -305,7 +375,7 @@ Links:
   :type '(repeated (string :tag "Keyword"))
 
   :safe #'listp
-  :group 'mtg)
+  :group 'mtg-mode)
 
 ;;----------------------------------------------;;
 
@@ -325,7 +395,54 @@ Links:
   :type '(repeated (string :tag "Ability Word"))
 
   :safe #'listp
-  :group 'mtg)
+  :group 'mtg-mode)
+
+;;----------------------------------------------;;
+
+(defcustom mtg-beleren-xfont
+
+  (mtg--xfont-by-name mtg-beleren-font-name)
+
+  "XFont (if on Linux) for a “Beleren” font (if installed).
+
+a ‘fontp’ (i.e. a font-spec, or font-entity, or font-object),
+or nil.
+
+Defaults to using ‘mtg-beleren-xfont-name’ (if available).
+For example, for me, mtg-beleren-xfont defaults to:
+
+    “-DELV-Beleren-bold-normal-normal-*-*-*-*-*-*-0-iso10646-1”
+
+which represents these Face Attributes:
+
+    '((:family . \"JaceBeleren\") (:foundry . \"DELV\") (:width . normal) (:height . 102) (:weight . bold) (:slant . normal))"
+
+  :type '(string :tag "Font")
+  :options (mtg--xfonts)
+
+  :safe #'stringp
+  ;; :safe #'fontp
+  :group 'mtg-mode)
+
+;; ^ e.g. on Linux, I see these Beleren fonts, via ‘x-list-fonts’:
+;;
+;; •            “-DELV-Beleren-bold-normal-normal-*-*-*-*-*-*-0-iso10646-1”
+;; •        “-DELV-JaceBeleren-bold-normal-normal-*-*-*-*-*-*-0-iso10646-1”
+;; • “-DELV-Beleren Small Caps-bold-normal-normal-*-*-*-*-*-*-0-iso10646-1”
+;;
+;; M-: (x-list-fonts "Beleren")
+;;  ↪ '("-DELV-Beleren-bold-normal-normal-*-*-*-*-*-*-0-iso10646-1")
+;; 
+;; M-: (x-list-fonts "JaceBeleren")
+;;  ↪ '("-DELV-JaceBeleren-bold-normal-normal-*-*-*-*-*-*-0-iso10646-1")
+;; 
+;; M-: (x-list-fonts "Beleren Small Caps")
+;;  ↪ '("-DELV-Beleren Small Caps-bold-normal-normal-*-*-*-*-*-*-0-iso10646-1")
+;;
+;; M-: (x-list-fonts "*Beleren")
+;;  ↪ '()
+;; 
+;; 
 
 ;;----------------------------------------------;;
 ;; Accessors: `listp's -------------------------;;
