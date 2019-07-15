@@ -265,7 +265,7 @@ This variant of `rx' supports common mtg named REGEXPS."
 ;;; Utilities ----------------------------------;;
 ;;----------------------------------------------;;
 
-(defun mtg/regexp-opt (strings)
+(defun mtg--regexp-opt (strings)
 
   "Return a regular expression matching anything in STRINGS.
 
@@ -280,7 +280,7 @@ Output:
 
 Examples:
 
-• M-: (mtg/regexp-opt '(\"abc\" \"123\"))
+• M-: (mtg--regexp-opt '(\"abc\" \"123\"))
       \"\\_<\\(123\\|abc\\)\\_>\"
 
 Notes:
@@ -299,17 +299,19 @@ Related:
 
 ;; ^ e.g.:
 ;;
-;; • M-: (mtg/regexp-opt '("def" "123"))
+;; • M-: (mtg--regexp-opt '("def" "123"))
 ;;     → "\\_<\\(123\\|def\\)\\_>"
 ;;
-;; • M-: (if (string-match-p (mtg/regexp-opt '("def" "123")) "def") t nil)
+;; • M-: (if (string-match-p (mtg--regexp-opt '("def" "123")) "def") t nil)
 ;;     → t
-;; • M-: (if (string-match-p (mtg/regexp-opt '("def" "123")) "abcdef") t nil)
+;; • M-: (if (string-match-p (mtg--regexp-opt '("def" "123")) "abcdef") t nil)
 ;;     → nil
-;; • M-: (if (string-match-p (mtg/regexp-opt '("def" "123")) "defghi") t nil)
+;; • M-: (if (string-match-p (mtg--regexp-opt '("def" "123")) "defghi") t nil)
 ;;     → nil
 ;;
 ;; 
+
+(mtg--regexp-opt )
 
 ;;----------------------------------------------;;
 ;;; Custom Variables ---------------------------;;
@@ -827,9 +829,11 @@ These roles (punctuation and single-line comment and multi-line comment) are rep
 
 (defcustom mtg-paragraph-start
 
-  (concat " *{-\\| *-- |\\|" page-delimiter)
+  (rx (or "\f" (and (0+ (char blank)) eol)))
 
-  "`paragraph-start' for `mtg-mode'."
+  "`paragraph-start' for `mtg-mode'.
+
+a ‘stringp’ or nil."
 
   :type '(regexp)
   :safe #'stringp
@@ -839,9 +843,11 @@ These roles (punctuation and single-line comment and multi-line comment) are rep
 
 (defcustom mtg-paragraph-separate
 
-  (concat " *$\\| *\\({-\\|-}\\) *$\\|" page-delimiter)
+  (rx (and (0+ (char space))) eol)
 
-  "`paragraph-separate' for `mtg-mode'."
+  "`paragraph-separate' for `mtg-mode'.
+
+a ‘stringp’ or nil."
 
   :type '(regexp)
   :safe #'stringp
@@ -1195,7 +1201,7 @@ Customize:
 
 • Variable `mtg-keywords'"
 
-  (mtg/regexp-opt mtg-keywords))
+  (mtg--regexp-opt mtg-keywords))
 
 ;;----------------------------------------------;;
 
@@ -1207,7 +1213,7 @@ Customize:
 
 • Variable `mtg-builtins'"
 
-  (mtg/regexp-opt mtg-builtins))
+  (mtg--regexp-opt mtg-builtins))
 
 ;;----------------------------------------------;;
 
@@ -1219,7 +1225,7 @@ Customize:
 
 • Variable `mtg-types'"
 
-  (mtg/regexp-opt mtg-types))
+  (mtg--regexp-opt mtg-types))
 
 ;;----------------------------------------------;;
 ;; Images --------------------------------------;;

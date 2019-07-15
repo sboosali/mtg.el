@@ -29,15 +29,15 @@
 ;;; Commentary:
 
 ;; Datafile with MTG Metadata: card names, types, keywords, etc.
-;; 
+;;
 ;; Includes:
-;; 
+;;
 ;; • ‘mtg-known-card-names’ — card names.
 ;; • ‘mtg-known-types’      — sub/super/card types.
 ;; • ‘mtg-known-keyword’    — keyword abilities/actions.
-;; 
+;;
 ;; ‘read’able LISP Data, from JSON Data (URL ‘https://mtgjson.com/json/version.json’).
-;; 
+;;
 
 ;;; Code:
 
@@ -19466,7 +19466,7 @@ Notes:
 
 URL ‘https://mtgjson.com/json/CardTypes.json’ (circa 2019-07).")
 
-;;                  
+;;
 
 (defconst mtg-known-enchantment-subtypes
 
@@ -19864,9 +19864,276 @@ URL ‘https://mtgjson.com/json/CardTypes.json’ (circa 2019-07).")
 
 ;;==============================================;;
 
+;;----------------------------------------------;;
+
+;;----------------------------------------------;;
+
+(defconst mtg-known-keyword-abilities
+
+  '(
+    absorb
+    affinity
+    afflict
+    aftermath
+    amplify
+    annihilator
+    ascend
+    aura-swap
+    awaken
+    banding
+    battle-cry
+    bestow
+    bloodthirst
+    bushido
+    buyback
+    cascade
+    champion
+    changeling
+    cipher
+    conspire
+    convoke
+    crew
+    cumulative-upkeep
+    cycling
+    dash
+    deathtouch
+    defender
+    delve
+    dethrone
+    devoid
+    devour
+    double-strike
+    dredge
+    echo
+    embalm
+    emerge
+    enchant
+    entwine
+    epic
+    equip
+    escalate
+    eternalize
+    evoke
+    evolve
+    exalted
+    exploit
+    extort
+    fabricate
+    fading
+    fear
+    first-strike
+    flanking
+    flash
+    flashback
+    flying
+    forecast
+    fortify
+    frenzy
+    fuse
+    graft
+    gravestorm
+    haste
+    haunt
+    hexproof
+    hidden-agenda
+    hideaway
+    horsemanship
+    improvise
+    indestructible
+    infect
+    ingest
+    intimidate
+    kicker
+    landwalk
+    level-up
+    lifelink
+    living-weapon
+    madness
+    melee
+    menace
+    miracle
+    modular
+    morph
+    myriad
+    ninjutsu
+    offering
+    outlast
+    overload
+    partner
+    persist
+    phasing
+    poisonous
+    protection
+    provoke
+    prowess
+    prowl
+    rampage
+    reach
+    rebound
+    recover
+    reinforce
+    renown
+    replicate
+    retrace
+    ripple
+    scavenge
+    shadow
+    shroud
+    skulk
+    soulbond
+    soulshift
+    splice
+    split-second
+    storm
+    sunburst
+    surge
+    suspend
+    totem-armor
+    trample
+    transfigure
+    transmute
+    tribute
+    undaunted
+    undying
+    unearth
+    unleash
+    vanishing
+    vigilance
+    wither
+    )
+
+  "Known MTG Keyword Abilities.
+
+A `stringp' `listp'.")
+
+;;----------------------------------------------;;
+
+(defconst mtg-known-keyword-actions
+
+  '(
+    abandon
+    activate
+    adapt
+    amass
+    assemble
+    attach
+    bolster
+    cast
+    clash
+    counter
+    create
+    destroy
+    detain
+    discard
+    double
+    exchange
+    exert
+    exile
+    explore
+    fateseal
+    fight
+    goad
+    investigate
+    manifest
+    meld
+    monstrosity
+    planeswalk
+    play
+    populate
+    proliferate
+    regenerate
+    reveal
+    sacrifice
+    scry
+    search
+    set-in-motion
+    shuffle
+    support
+    surveil
+    tap-and-untap
+    transform
+    vote
+    )
+
+  "Known MTG Keyword Actions.
+
+A `stringp' `listp'.")
+
+;;----------------------------------------------;;
+
+(defconst mtg-known-ability-words
+
+  '(
+    addendum
+    battalion
+    bloodrush
+    channel
+    chroma
+    cohort
+    constellation
+    converge
+    councils-dilemma
+    delirium
+    domain
+    eminence
+    enrage
+    fateful hour
+    ferocious
+    formidable
+    grandeur
+    hellbent
+    heroic
+    imprint
+    inspired
+    join forces
+    kinship
+    landfall
+    lieutenant
+    metalcraft
+    morbid
+    parley
+    radiance
+    raid
+    rally
+    revolt
+    spell-mastery
+    strive
+    sweep
+    tempting offer
+    threshold
+    undergrowth
+    will-of-the-council
+    )
+
+  "Known MTG Ability-Words.
+
+a ‘listp’ of ‘symbolp’s.
+
+URL ‘https://mtgjson.com/json/Keywords.json’ (circa 2019-07).")
+
+;;----------------------------------------------;;
+
+(defconst mtg-known-keywords
+
+  (append mtg-known-keyword-abilities
+          mtg-known-keyword-actions)
+
+  "Known MTG Keywords.
+
+a ‘listp’ of ‘symbolp’s.
+
+Merges:
+
+• ‘mtg-known-keyword-abilities’
+• ‘mtg-known-keyword-actions’
+
+URL ‘https://mtgjson.com/json/Keywords.json’ (circa 2019-07).")
+
+;;==============================================;;
+
 ;;; Data: Statistics...
 
-(defconst mtg-known-card-names-count (length mtg-known-card-names)
+(defconst mtg--known-card-names-count (length mtg-known-card-names)
 
   "How many unique card names there are known to be.
 
@@ -19876,7 +20143,7 @@ a `natnump'..")
 
 ;;----------------------------------------------;;
 
-(defconst mtg-known-longest-card-name-length
+(defconst mtg--known-longest-card-name-length
 
   (seq-reduce (lambda (*LENGTH* *STRING*) (max *LENGTH* (length *STRING*)))
                 mtg-known-card-names
