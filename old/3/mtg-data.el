@@ -1,3 +1,59 @@
+;;; mtg-data.el --- Datafile with card names, types, keywords, etc. -*- coding: utf-8; lexical-binding: t -*-
+
+;; Copyright © 2019 Spiros Boosalis
+
+;; Version: 0.0.0
+;; Prefix: mtg-known-
+;; Package-Requires: ((emacs "25"))
+;; Author:  Spiros Boosalis <samboosalis@gmail.com>
+;; Homepage: https://github.com/sboosali/.emacs.d
+;; Keywords: local
+;; Created: 10 Jul 2019
+;; License: GPL-3.0-or-later
+
+;; This file is NOT part of GNU Emacs.
+;;
+;; This file is free software; you can redistribute it and/or modify
+;; it under the terms of the GNU General Public License as published by
+;; the Free Software Foundation; either version 3, or (at your option)
+;; any later version.
+;;
+;; This file is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; GNU General Public License for more details.
+;;
+;; You should have received a copy of the GNU General Public License
+;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+;;; Commentary:
+
+;; Datafile with MTG Metadata: card names, types, keywords, etc.
+;;
+;; Includes:
+;;
+;; • ‘mtg-known-card-names’ — card names.
+;; • ‘mtg-known-types’      — sub/super/card types.
+;; • ‘mtg-known-keyword’    — keyword abilities/actions.
+;;
+;; ‘read’able LISP Data, from JSON Data (URL ‘https://mtgjson.com/json/version.json’).
+;;
+
+;;; Code:
+
+;;----------------------------------------------;;
+;; Imports -------------------------------------;;
+;;----------------------------------------------;;
+
+;; builtins:
+
+(eval-when-compile
+  (require 'cl-lib))
+
+;;----------------------------------------------;;
+
+(progn
+  (require 'seq))
 
 ;;----------------------------------------------;;
 ;;;; Data --------------------------------------;;
@@ -17,11 +73,11 @@ embedded in ‘mtg.el’ (i.e. this file) is:
       \"version\": \"4.4.2\"
     }
 
-URL `https://mtgjson.com/json/version.json'")
+URL ‘https://mtgjson.com/json/version.json’")
 
 ;;----------------------------------------------;;
 
-(defconst mtg-data/card-names-vector
+(defconst mtg-known-card-names
 
   [
    "A Display of My Dark Power"
@@ -19345,7 +19401,7 @@ and/or are Vintage-legal and/or are black-brodered.")
 
 ;; ^ e.g.:
 ;;
-;; M-: (cl-loop for STRING in mtg-data/card-names-vector do (intern STRING))
+;; M-: (cl-loop for STRING in mtg-known-card-names do (intern STRING))
 ;;
 
 ;;==============================================;;
@@ -19410,7 +19466,7 @@ Notes:
 
 URL ‘https://mtgjson.com/json/CardTypes.json’ (circa 2019-07).")
 
-;;                  
+;;
 
 (defconst mtg-known-enchantment-subtypes
 
@@ -19808,141 +19864,296 @@ URL ‘https://mtgjson.com/json/CardTypes.json’ (circa 2019-07).")
 
 ;;==============================================;;
 
-;;; Data: Functions...
-
-(defun mtg-data/card-names (&optional type)
-
-  "Accessor for `mtg-data/card-names-vector'.
-
-Inputs:
-
-• TYPE — a `symbolp', one of:
-
-    • symbol ‘list’.
-    • symbol ‘vector’.
-    • symbol ‘string’.
-
-Output:
-
-• a `sequencep'.
-  If TYPE is non-nil, returns that `type-of' sequence.
-
-Compatibility:
-
-• For future-compatibility, consumers should either:
-
-    • ❶ consume the output only as a `sequencep'
-        (i.e. not as a `vectorp').
-    • ❷ specify TYPE."
-
-  (let* ()
-
-    (if (and type (symbolp type))
-        (seq-into mtg-data/card-names-vector type)
-      mtg-data/card-names-vector)))
-
-;; ^ M-: (defconst sboo-mtg-card-name-list (mtg-data/card-names 'list))
+;;----------------------------------------------;;
 
 ;;----------------------------------------------;;
 
-(defun mtg-data/get-card-names-count ()
+(defconst mtg-known-keyword-abilities
 
-  "Derive the `length' of `mtg-data/card-names'.
+  '(
+    absorb
+    affinity
+    afflict
+    aftermath
+    amplify
+    annihilator
+    ascend
+    aura-swap
+    awaken
+    banding
+    battle-cry
+    bestow
+    bloodthirst
+    bushido
+    buyback
+    cascade
+    champion
+    changeling
+    cipher
+    conspire
+    convoke
+    crew
+    cumulative-upkeep
+    cycling
+    dash
+    deathtouch
+    defender
+    delve
+    dethrone
+    devoid
+    devour
+    double-strike
+    dredge
+    echo
+    embalm
+    emerge
+    enchant
+    entwine
+    epic
+    equip
+    escalate
+    eternalize
+    evoke
+    evolve
+    exalted
+    exploit
+    extort
+    fabricate
+    fading
+    fear
+    first-strike
+    flanking
+    flash
+    flashback
+    flying
+    forecast
+    fortify
+    frenzy
+    fuse
+    graft
+    gravestorm
+    haste
+    haunt
+    hexproof
+    hidden-agenda
+    hideaway
+    horsemanship
+    improvise
+    indestructible
+    infect
+    ingest
+    intimidate
+    kicker
+    landwalk
+    level-up
+    lifelink
+    living-weapon
+    madness
+    melee
+    menace
+    miracle
+    modular
+    morph
+    myriad
+    ninjutsu
+    offering
+    outlast
+    overload
+    partner
+    persist
+    phasing
+    poisonous
+    protection
+    provoke
+    prowess
+    prowl
+    rampage
+    reach
+    rebound
+    recover
+    reinforce
+    renown
+    replicate
+    retrace
+    ripple
+    scavenge
+    shadow
+    shroud
+    skulk
+    soulbond
+    soulshift
+    splice
+    split-second
+    storm
+    sunburst
+    surge
+    suspend
+    totem-armor
+    trample
+    transfigure
+    transmute
+    tribute
+    undaunted
+    undying
+    unearth
+    unleash
+    vanishing
+    vigilance
+    wither
+    )
 
-Output:
+  "Known MTG Keyword Abilities.
 
-• a `natnump'.
-  Currently, ~20,000"
-
-  (let* ((CARD-NAMES (mtg-data/card-names))
-         )
-
-    (length CARD-NAMES)))
+A `stringp' `listp'.")
 
 ;;----------------------------------------------;;
 
-(defun mtg-data/get-longest-card-name-length ()
+(defconst mtg-known-keyword-actions
 
-  "Derive the longest among `mtg-data/card-names'.
+  '(
+    abandon
+    activate
+    adapt
+    amass
+    assemble
+    attach
+    bolster
+    cast
+    clash
+    counter
+    create
+    destroy
+    detain
+    discard
+    double
+    exchange
+    exert
+    exile
+    explore
+    fateseal
+    fight
+    goad
+    investigate
+    manifest
+    meld
+    monstrosity
+    planeswalk
+    play
+    populate
+    proliferate
+    regenerate
+    reveal
+    sacrifice
+    scry
+    search
+    set-in-motion
+    shuffle
+    support
+    surveil
+    tap-and-untap
+    transform
+    vote
+    )
 
-Output:
+  "Known MTG Keyword Actions.
 
-• a `natnump'.
-  Currently, 33."
-
-  (let* ((CARD-NAMES (mtg-data/card-names))
-         )
-
-    (seq-reduce (lambda (*LENGTH* *STRING*) (max *LENGTH* (length *STRING*)))
-                CARD-NAMES
-                0)))
-
-;;----------------------------------------------;;
-
-(defun mtg-data/get-card-name-articles-list ()
-
-  ""
-
-  (let* ((CARD-NAMES         (mtg-data/card-names 'list))
-
-         (CARD-NAME-WORDS    (cl-loop for s in CARD-NAMES
-                                collect (split-string s "[-/ ]+" :omit-nulls)
-                                  into STRINGS
-                                finally
-                                  return (delete-dups (apply #'append STRINGS))))
-
-         (CARD-NAME-ARTICLES (cl-loop for s in CARD-NAME-WORDS
-                                if (mtg-data/word-is-alphabetic-and-is-not-capitalized-p s)
-                                collect (intern s)
-                                  into SYMBOLS
-                                finally
-                                  return (cl-sort SYMBOLS 'string< :key #'symbol-name)))
-         )
-
-    CARD-NAME-ARTICLES))
-
-;;----------------------------------------------;;
-
-(defun mtg-data/word-is-alphabetic-and-is-not-capitalized-p (s)
-
-  ""
-
-  (let* ((CHAR             (string-to-char s))
-         (CHAR-LOWERCASE?  (= CHAR (downcase CHAR)))
-         (CHAR-ALPHABETIC? (eq 'Ll (get-char-code-property CHAR 'general-category)))
-         )
-
-    (and CHAR-ALPHABETIC? CHAR-LOWERCASE?)))
+A `stringp' `listp'.")
 
 ;;----------------------------------------------;;
 
+(defconst mtg-known-ability-words
 
+  '(
+    addendum
+    battalion
+    bloodrush
+    channel
+    chroma
+    cohort
+    constellation
+    converge
+    councils-dilemma
+    delirium
+    domain
+    eminence
+    enrage
+    fateful hour
+    ferocious
+    formidable
+    grandeur
+    hellbent
+    heroic
+    imprint
+    inspired
+    join forces
+    kinship
+    landfall
+    lieutenant
+    metalcraft
+    morbid
+    parley
+    radiance
+    raid
+    rally
+    revolt
+    spell-mastery
+    strive
+    sweep
+    tempting offer
+    threshold
+    undergrowth
+    will-of-the-council
+    )
+
+  "Known MTG Ability-Words.
+
+a ‘listp’ of ‘symbolp’s.
+
+URL ‘https://mtgjson.com/json/Keywords.json’ (circa 2019-07).")
+
+;;----------------------------------------------;;
+
+(defconst mtg-known-keywords
+
+  (append mtg-known-keyword-abilities
+          mtg-known-keyword-actions)
+
+  "Known MTG Keywords.
+
+a ‘listp’ of ‘symbolp’s.
+
+Merges:
+
+• ‘mtg-known-keyword-abilities’
+• ‘mtg-known-keyword-actions’
+
+URL ‘https://mtgjson.com/json/Keywords.json’ (circa 2019-07).")
 
 ;;==============================================;;
 
-(defconst mtg-data/default-card-names-count (mtg-data/get-card-names-count)
+;;; Data: Statistics...
 
-  "Default `mtg-data/get-card-names-count'.")
+(defconst mtg--known-card-names-count (length mtg-known-card-names)
+
+  "How many unique card names there are known to be.
+
+a `natnump'..")
 
 ;; ^ 19,310
 
 ;;----------------------------------------------;;
 
-(defconst mtg-data/default-longest-card-name-length (mtg-data/get-longest-card-name-length)
+(defconst mtg--known-longest-card-name-length
 
-  "Default `mtg-data/get-longest-card-name-length'.")
+  (seq-reduce (lambda (*LENGTH* *STRING*) (max *LENGTH* (length *STRING*)))
+                mtg-known-card-names
+                0)
+
+  "How long is the longest known card name (in English).
+
+a `natnump'.")
 
 ;; ^ 33
-
-;;----------------------------------------------;;
-
-(defconst mtg-data/default-card-name-articles-list (mtg-data/get-card-name-articles-list)
-
-  "Default `mtg-data/get-card-name-articles-list'.")
-
-;; ^ (a abara\'s an and as at but by en for from il in into le legged o\' of on or the to upon with)
-
-;; ^ (a an and as at but by en for from il in into le of on or the to upon with)
 
 ;;----------------------------------------------;;
 ;;; EOF ----------------------------------------;;
