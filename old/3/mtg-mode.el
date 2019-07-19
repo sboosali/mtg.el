@@ -90,7 +90,7 @@
 ;;
 ;;     • [✓] a webpage — as a ‹.html› file (a.k.a. a Web Page), that's beautifully styled and completely standalone.
 ;;
-;;         • HTML Styling    — via SVG mana symbols, the “Beleren” font, and appropriate Bold/Italic (e.g. italics for flavor/remdinder text).
+;;         • HTML Styling    — via SVG mana symbols, the “Belern” font, and appropriate Bold/Italic (e.g. italics for flavor/remdinder text).
 ;;         • Standalone HTML — all assets (e.g. artwork PNGs, CSS symbols) are embedded (via “Data URIs” and inline <style>s).
 ;;           Thus, no
 ;;
@@ -152,52 +152,29 @@ a `regexpp's
 
   "Regular expression for matching block boundaries.")
 
-;;==============================================;;
-;; Font Names...
+;;----------------------------------------------;;
 
-(defconst mtg-fonts/beleren "Beleren"
+(defconst mtg-beleren-font-name
+
+  "Beleren"
 
   "Name of the “Beleren” font.
 
-a ‘stringp’.")
+a ‘stringp’.
+
+other Beleren fonts include:
+
+• “Beleren”
+• “JaceBeleren”
+• “BelerenSmallCaps”")
 
 ;;----------------------------------------------;;
 
-(defconst mtg-fonts/jace-beleren "JaceBeleren"
+(defconst mtg-belerensmallcaps-font-name
 
-  "Name of the “Jace Beleren” font.
-
-a ‘stringp’.")
-
-;;----------------------------------------------;;
-
-(defconst mtg-fonts/beleren-small-caps "Beleren Small Caps"
+  "Beleren Small Caps"
 
   "Name of the “Beleren Small Caps” font.
-
-a ‘stringp’.")
-
-;;----------------------------------------------;;
-
-(defconst mtg-fonts/mplantin "MPlantin"
-
-  "Name of the “MPlantin” font.
-
-a ‘stringp’.")
-
-;;----------------------------------------------;;
-
-(defconst mtg-fonts/mplantin-bold "MPlantin-Bold"
-
-  "Name of the emboldened “MPlantin” font.
-
-a ‘stringp’.")
-
-;;----------------------------------------------;;
-
-(defconst mtg-fonts/mplantin-italic "MPlantin-Italic"
-
-  "Name of the italicized “MPlantin” font.
 
 a ‘stringp’.")
 
@@ -344,13 +321,15 @@ Related:
 
 (defun mtg--xfont-by-name (font-name)
 
-  "Lookup an XFont which matches FONT-NAME (wraps ‘set-face-font’).
+  "Lookup an XFont which matches FONT-NAME.
 
 Inputs:
 
 • FONT-NAME — a `stringp'.
 
-Output: a `stringp' or `fontp'.
+Output:
+
+• a `stringp' or `fontp'.
 
 Examples:
 
@@ -366,32 +345,6 @@ Examples:
                     ((error) e))))
          )
     (car-safe FONTS)))
-
-;;----------------------------------------------;;
-
-(defun mtg--set-face-font (face font)
-
-  "Modify the Font-Attributes of FACE to those of FONT (wraps ‘set-face-font’).
-
-Inputs:
-
-• FACE — a `facep'.
-• FONT — a `stringp'.
-
-Output: a ‘booleanp’.
-Whether FACE and FONT both exist (and whether the setting happened).
-
-Examples:
-
-• M-: (mtg--set-face-font 'mtg-beleren \"-DELV-Beleren-bold-normal-normal-*-*-*-*-*-*-0-iso10646-1\")"
-
-  (condition-case e                  ; catch "Invalid font name" error.
-
-      (prog1 t
-        (set-face-font face font))
-
-    ((error)
-     nil)))
 
 ;;----------------------------------------------;;
 
@@ -529,159 +482,52 @@ Links:
   :safe #'listp
   :group 'mtg-mode)
 
-;;==============================================;;
-;; Font Objects...
+;;----------------------------------------------;;
 
-(defcustom mtg-beleren-font (mtg--xfont-by-name mtg-fonts/beleren)
+(defcustom mtg-beleren-font
 
-  "The “Beleren” font.
+  (mtg--xfont-by-name mtg-beleren-font-name)
 
-Types (either):
+  "XFont (if on Linux) for a “Beleren” font (if installed).
 
-• a ‘stringp’.
-• a ‘fontp’ (i.e. a font-spec, or font-entity, or font-object).
-• nil.
+a ‘fontp’ (i.e. a font-spec, or font-entity, or font-object),
+or nil.
 
-Defaults to the font named by ‘mtg-fonts/beleren’ (if available/installed).
-For example:
+Defaults to using ‘mtg-beleren-xfont-name’ (if available).
+For example, for me, mtg-beleren-xfont defaults to:
 
     “-DELV-Beleren-bold-normal-normal-*-*-*-*-*-*-0-iso10646-1”
 
 which represents these Face Attributes:
 
-    '((:family . \"Beleren\") (:foundry . \"DELV\") (:width . normal) (:height . 102) (:weight . bold) (:slant . normal))"
+    '((:family . \"JaceBeleren\") (:foundry . \"DELV\") (:width . normal) (:height . 102) (:weight . bold) (:slant . normal))"
 
   :type '(string :tag "Font")
-  ;; :options (mtg--xfonts)
+  :options (mtg--xfonts)
 
   :safe #'stringp
   ;; :safe #'fontp
   :group 'mtg-mode)
 
-;;----------------------------------------------;;
-
-(defcustom mtg-mplantin-font (mtg--xfont-by-name mtg-fonts/mplantin)
-
-  "The “MPlantin” font.
-
-Types (either):
-
-• a ‘stringp’.
-• a ‘fontp’ (i.e. a font-spec, or font-entity, or font-object).
-• nil.
-
-Defaults to the font named by ‘mtg-fonts/mplantin’ (if available/installed).
-For example:
-
-    “-unknown-MPlantin-normal-normal-normal-*-*-*-*-*-*-0-iso10646-1”
-
-which represents these Face Attributes:
-
-    '((:family . \"MPlantin\") (:foundry . \"unknown\") (:height . 102) (:width . normal) (:weight . normal) (:slant . normal))"
-
-  :type '(string :tag "Font")
-  ;; :options (mtg--xfonts)
-
-  :safe #'stringp
-  ;; :safe #'fontp
-  :group 'mtg-mode)
-
-;;----------------------------------------------;;
-
-(defcustom mtg-mplantin-bold-font (mtg--xfont-by-name mtg-fonts/mplantin-bold)
-
-  "The emboldened “MPlantin” font.
-
-Types (either):
-
-• a ‘stringp’.
-• a ‘fontp’ (i.e. a font-spec, or font-entity, or font-object).
-• nil.
-
-Defaults to the font named by ‘mtg-fonts/mplantin-bold’ (if available/installed).
-For example:
-
-    “-unknown-MPlantin-Bold-normal-normal-normal-*-*-*-*-*-*-0-iso10646-1”
-
-which represents these Face Attributes:
-
-    '((:family . \"MPlantin-Bold\") (:foundry . \"unknown\") (:height . 102) (:width . normal) (:weight . normal) (:slant . normal))"
-
-  :type '(string :tag "Font")
-  ;; :options (mtg--xfonts)
-
-  :safe #'stringp
-  ;; :safe #'fontp
-  :group 'mtg-mode)
-
-;;----------------------------------------------;;
-
-(defcustom mtg-mplantin-italic-font (mtg--xfont-by-name mtg-fonts/mplantin-italic)
-
-  "The italicized “MPlantin” font.
-
-Types (either):
-
-• a ‘stringp’.
-• a ‘fontp’ (i.e. a font-spec, or font-entity, or font-object).
-• nil.
-
-Defaults to the font named by ‘mtg-fonts/mplantin-italic’ (if available/installed).
-For example:
-
-    “-unknown-MPlantin-Italic-normal-normal-normal-*-*-*-*-*-*-0-iso10646-1”
-
-which represents these Face Attributes:
-
-    '((:family . \"MPlantin-Italic\") (:foundry . \"unknown\") (:height . 102) (:width . normal) (:weight . normal) (:slant . normal))"
-
-  :type '(string :tag "Font")
-  ;; :options (mtg--xfonts)
-
-  :safe #'stringp
-  ;; :safe #'fontp
-  :group 'mtg-mode)
-
-;;----------------------------------------------;;
-
-;; ^ e.g. on Linux (via ‘x-list-fonts’), I see these Beleren fonts:
+;; ^ e.g. on Linux, I see these Beleren fonts, via ‘x-list-fonts’:
 ;;
-;;   •            “-DELV-Beleren-bold-normal-normal-*-*-*-*-*-*-0-iso10646-1”
-;;   •        “-DELV-JaceBeleren-bold-normal-normal-*-*-*-*-*-*-0-iso10646-1”
-;;   • “-DELV-Beleren Small Caps-bold-normal-normal-*-*-*-*-*-*-0-iso10646-1”
+;; •            “-DELV-Beleren-bold-normal-normal-*-*-*-*-*-*-0-iso10646-1”
+;; •        “-DELV-JaceBeleren-bold-normal-normal-*-*-*-*-*-*-0-iso10646-1”
+;; • “-DELV-Beleren Small Caps-bold-normal-normal-*-*-*-*-*-*-0-iso10646-1”
 ;;
-;;   and these MPlantin fonts:
+;; M-: (x-list-fonts "Beleren")
+;;  ↪ '("-DELV-Beleren-bold-normal-normal-*-*-*-*-*-*-0-iso10646-1")
 ;;
-;;   •        “-unknown-MPlantin-normal-normal-normal-*-*-*-*-*-*-0-iso10646-1”
-;;   • “-unknown-MPlantin-Italic-normal-normal-normal-*-*-*-*-*-*-0-iso10646-1”
-;;   •   “-unknown-MPlantin-Bold-normal-normal-normal-*-*-*-*-*-*-0-iso10646-1”
+;; M-: (x-list-fonts "JaceBeleren")
+;;  ↪ '("-DELV-JaceBeleren-bold-normal-normal-*-*-*-*-*-*-0-iso10646-1")
 ;;
-;;   M-: (mtg--xfont-by-name "Beleren")
-;;    ↪ "-DELV-Beleren-bold-normal-normal-*-*-*-*-*-*-0-iso10646-1"
+;; M-: (x-list-fonts "Beleren Small Caps")
+;;  ↪ '("-DELV-Beleren Small Caps-bold-normal-normal-*-*-*-*-*-*-0-iso10646-1")
 ;;
-;;   M-: (mtg--xfont-by-name "JaceBeleren")
-;;    ↪ "-DELV-JaceBeleren-bold-normal-normal-*-*-*-*-*-*-0-iso10646-1"
-;;
-;;   M-: (mtg--xfont-by-name "Beleren Small Caps")
-;;    ↪ "-DELV-Beleren Small Caps-bold-normal-normal-*-*-*-*-*-*-0-iso10646-1"
-;;
-;;   M-: (x-list-fonts "*Beleren")
-;;    ↪ '()
-;;
-;;   M-: (mtg--xfont-by-name "MPlantin")
-;;    ↪ "-unknown-MPlantin-normal-normal-normal-*-*-*-*-*-*-0-iso10646-1"
-;;
-;;   M-: (mtg--xfont-by-name "MPlantin-Bold")
-;;    ↪ "-unknown-MPlantin-Bold-normal-normal-normal-*-*-*-*-*-*-0-iso10646-1"
-;;
-;;   M-: (mtg--xfont-by-name "MPlantin-Italic")
-;;    ↪ "-unknown-MPlantin-Italic-normal-normal-normal-*-*-*-*-*-*-0-iso10646-1"
-;;
-;;   M-: (x-list-fonts "-*-MPlantin-*")
-;;    ↪ '()
+;; M-: (x-list-fonts "*Beleren")
+;;  ↪ '()
 ;;
 ;;
-
 
 ;;----------------------------------------------;;
 ;; Accessors: `listp's -------------------------;;
@@ -825,378 +671,6 @@ a `regexpp'.")
   "Match a word/symbol associated with the color green.
 
 a `regexpp'.")
-
-;;----------------------------------------------;;
-;;; Faces --------------------------------------;;
-;;----------------------------------------------;;
-
-(defgroup mtg-faces nil
-
-  "Fonts and colors for Mtg Mode.
-
-Customize the appearence of `mtg-mode'."
-
-  :prefix "mtg-"
-  :group  'mtg)
-
-;;==============================================;;
-;; Base faces...
-
-(defface mtg-card '((t))
-  "Base face for MTG Cards."
-  :group 'mtg-faces)
-
-;; ^ face ‘mtg-card’, being a Base-Face, specifies no Face-Attributes (in particularm ‘:inherit’s no faces);
-;;   this prevents shadowing other faces (e.g. the ‘font-lock-*-face’s in face ‘mtg-*type’),
-;;   unless explicitly/intentionally specified.
-;;
-
-;;==============================================;;
-;; Font faces...
-
-(progn
-
-  (defface mtg-beleren `((t :family ,mtg-fonts/beleren :inherit mtg-card))
-    "Face for MTG Text in the Beleren font.
-
-Generally, the top of the card:
-i.e. the name and typeline.
-
-Inherits face ‘mtg-card’."
-    :group 'mtg-faces)
-
-  (when (bound-and-true-p mtg-beleren-font)
-    (mtg--set-face-font 'mtg-beleren mtg-beleren-font)))
-
-;;----------------------------------------------;;
-
-(progn
-
-  (defface mtg-mplantin `((t :family ,mtg-fonts/mplantin :inherit mtg-card))
-    "Face for MTG Text in the MPlantin font.
-
-Generally, the bottom of the card:
-i.e. the textbox (including most Rules Text and some Flavor Text) and the metadata
-(including the illustrator's name, Card Collector's Number, copyright, etc).
-
-Inherits face ‘mtg-card’.
-
-See variable ‘mtg-mplantin-font’."
-    :group 'mtg-faces)
-
-  (when (bound-and-true-p mtg-mplantin-font)
-    (mtg--set-face-font 'mtg-mplantin mtg-mplantin-font)))
-
-;;----------------------------------------------;;
-
-(progn
-
-  (defface mtg-mplantin-italic `((t :family ,mtg-fonts/mplantin :slant italic :inherit mtg-card))
-    "Face for MTG Text in the italicized MPlantin font.
-
-Generally, the bottom of the card:
-i.e. the textbox (including Reminder Text, and emphasized Flavor Text or quotation-attributions).
-
-Inherits face ‘mtg-card’.
-
-See variable ‘mtg-mplantin-italic-font’."
-    :group 'mtg-faces)
-
-  (when (bound-and-true-p mtg-mplantin-italic-font)
-    (unless (mtg--set-face-font 'mtg-mplantin-italic mtg-mplantin-italic-font)
-      ())))
-
-;; TODO (set-face-font 'mtg-mplantin-italic mtg-mplantin-italic-font)
-
-;;----------------------------------------------;;
-
-(progn
-
-  (defface mtg-mplantin-bold `((t :family ,mtg-fonts/mplantin :weight bold :inherit mtg-card))
-    "Face for MTG Text in the emboldened MPlantin font.
-
-Inherits face ‘mtg-card’.
-
-See variable ‘mtg-mplantin-bold-font’."
-    :group 'mtg-faces)
-
-  (when (bound-and-true-p mtg-mplantin-bold-font)
-    (unless (mtg--set-face-font 'mtg-mplantin-bold mtg-mplantin-bold-font)
-      ())))
-
-;;==============================================;;
-;; Non-text...
-
-(defface mtg-symbol '((t :box t :inherit mtg-card))
-  "Face for MTG Symbols (including Mana Symbols).
-
-Inherits face ‘mtg-card’."
-  :group 'mtg-faces)
-
-;;----------------------------------------------;;
-
-(defface mtg-face '((t :inherit mtg-card))
-  "Face for an MTG Card Faces (i.e. the background of a card).
-
-Inherits face ‘mtg-card’."
-  :group 'mtg-faces)
-
-;;==============================================;;
-;; Beleren text...
-
-(defface mtg-card-name `((t :underline t :inherit mtg-beleren))
-  "Face for MTG Card Names.
-
-Inherits face ‘mtg-beleren’."
-  :group 'mtg-faces)
-
-;;----------------------------------------------;;
-
-(defface mtg-typeline '((t :inherit mtg-beleren)) ; '((t :slant italic :inherit (mtg-card font-lock-type-face)))
-  "Base face for MTG Card/Sub/Super Types.
-
-Inherits face ‘mtg-beleren’."
-  :group 'mtg-faces)
-
-;;==============================================;;
-;; MPlantin text...
-
-(defface mtg-rules-text '((t :inherit mtg-mplantin))
-  "Face for MTG Rules Text.
-
-Inherits face ‘mtg-mplantin’."
-  :group 'mtg-faces)
-
-;;----------------------------------------------;;
-
-(defface mtg-reminder-text '((t :inherit mtg-mplantin-italic))
-  "Face for MTG Reminder Text.
-
-Inherits face ‘mtg-mplantin-italic’."
-  :group 'mtg-faces)
-
-;;----------------------------------------------;;
-
-(defface mtg-flavor-text '((t :inherit mtg-mplantin-italic))
-  "Face for MTG Flavor Text.
-
-Inherits face ‘mtg-mplantin-italic’."
-  :group 'mtg-faces)
-
-;;==============================================;;
-;; “Rules text”...
-
-(defface mtg-keyword '((t :weight bold :inherit mtg-rules-text))
-  "Face for keywords (within Rules Text).
-
-Inherits face ‘mtg-rules-text’."
-  :group 'mtg-faces)
-
-;;----------------------------------------------;;
-
-(defface mtg-keyword-abilities '((t :inherit mtg-keyword))
-  "Face for keyword abilities (within Rules Text).
-
-Inherits face ‘mtg-keyword’."
-  :group 'mtg-faces)
-
-;;----------------------------------------------;;
-
-(defface mtg-keyword-actions '((t :inherit mtg-keyword))
-  "Face for keyword actions (within Rules Text).
-
-Inherits face ‘mtg-keyword’."
-  :group 'mtg-faces)
-
-;;----------------------------------------------;;
-
-(defface mtg-ability-word '((t :inherit mtg-reminder-text))
-  "Face for ability-words (within Rules Text).
-
-Inherits face ‘mtg-reminder-text’."
-  :group 'mtg-faces)
-
-;;==============================================;;
-;; “Type text”...
-
-(defface mtg-card-type '((t :slant normal :inherit mtg-typeline)) ; '((t :inherit (mtg-typeline font-lock-builtin-face)))
-  "Base face for MTG Card Types.
-
-Inherits face ‘mtg-typeline’."
-  :group 'mtg-faces)
-
-;;----------------------------------------------;;
-
-(defface mtg-sub-type '((t :slant italic :inherit mtg-typeline))
-  "Base face for MTG Card Subtypes.
-
-Inherits face ‘mtg-typeline’."
-  :group 'mtg-faces)
-
-;;----------------------------------------------;;
-
-(defface mtg-super-type '((t :slant italic :inherit mtg-typeline))
-  "Base face for MTG Card Supertypes.
-
-Inherits face ‘mtg-typeline’."
-  :group 'mtg-faces)
-
-;;==============================================;;
-;; Colored text...
-
-(progn
-
-  (defface mtg-color-white `((t :foreground ,mtg-white-color :inherit mtg-card))
-    "Face for white (white cards, white mana symbols, and Plains)."
-    :group 'mtg-faces)
-
-  (put 'white 'mtg-face 'mtg-color-white))
-
-;;----------------------------------------------;;
-
-(progn
-
-  (defface mtg-color-blue `((t :foreground ,mtg-blue-color :inherit mtg-card))
-    "Face for blue (blue cards, blue mana symbols, and Islands)."
-    :group 'mtg-faces)
-
-  (put 'blue 'mtg-face 'mtg-color-blue))
-
-;;----------------------------------------------;;
-
-(progn
-
-  (defface mtg-color-black `((t :foreground ,mtg-black-color :inherit mtg-card))
-    "Face for black (black cards, black mana symbols, and Swamps)."
-    :group 'mtg-faces)
-
-  (put 'black 'mtg-face 'mtg-color-black))
-
-;;----------------------------------------------;;
-
-(progn
-
-  (defface mtg-color-red `((t :foreground ,mtg-red-color :inherit mtg-card))
-    "Face for red (red cards, red mana symbols, and Mountains)."
-    :group 'mtg-faces)
-
-  (put 'red 'mtg-face 'mtg-color-red))
-
-;;----------------------------------------------;;
-
-(progn
-
-  (defface mtg-color-green `((t :foreground ,mtg-green-color :inherit mtg-card))
-    "Face for green (green cards, green mana symbols, and Forests)."
-    :group 'mtg-faces)
-
-  (put 'green 'mtg-face 'mtg-color-green))
-
-;;==============================================;;
-
-(defface mtg-symbol-white '((t :inherit (mtg-symbol mtg-color-white)))
-  "Face for white Mana Symbols.
-
-Inherits face ‘mtg-symbol’."
-  :group 'mtg-symbols)
-
-;;----------------------------------------------;;
-
-(defface mtg-symbol-blue '((t :inherit (mtg-symbol mtg-color-blue)))
-  "Face for blue Mana Symbols and Islands.
-
-Inherits face ‘mtg-symbol’."
-  :group 'mtg-symbols)
-
-;;----------------------------------------------;;
-
-(defface mtg-symbol-black '((t :inherit (mtg-symbol mtg-color-black)))
-  "Face for black Mana Symbols and Swamps.
-
-Inherits face ‘mtg-symbol’."
-  :group 'mtg-symbols)
-
-;;----------------------------------------------;;
-
-(defface mtg-symbol-red '((t :inherit (mtg-symbol mtg-color-red)))
-  "Face for red Mana Symbols and Mountains..
-
-Inherits face ‘mtg-symbol’."
-  :group 'mtg-symbols)
-
-;;----------------------------------------------;;
-
-(defface mtg-symbol-green '((t :inherit (mtg-symbol mtg-color-green)))
-  "Face for green Mana Symbols and Forests.
-
-Inherits face ‘mtg-face’."
-  :group 'mtg-faces)
-
-;;==============================================;;
-
-(defface mtg-face-white `((t :background ,mtg-white-color :inherit (mtg-face)))
-  "Face for the background of white cards.
-
-Inherits face ‘mtg-face’."
-  :group 'mtg-faces)
-
-;;----------------------------------------------;;
-
-(defface mtg-face-blue `((t :background ,mtg-blue-color :inherit (mtg-face)))
-  "Face for the background of blue cards.
-
-Inherits face ‘mtg-face’."
-  :group 'mtg-faces)
-
-;;----------------------------------------------;;
-
-(defface mtg-face-black `((t :background ,mtg-black-color :inherit (mtg-face)))
-  "Face for the background of black cards.
-
-Inherits face ‘mtg-face’."
-  :group 'mtg-faces)
-
-;;----------------------------------------------;;
-
-(defface mtg-face-red `((t :background ,mtg-red-color :inherit (mtg-face)))
-  "Face for the background of red cards.
-
-Inherits face ‘mtg-face’."
-  :group 'mtg-faces)
-
-;;----------------------------------------------;;
-
-(defface mtg-face-green `((t :background ,mtg-green-color :inherit (mtg-face)))
-  "Face for the background of green cards.
-
-Inherits face ‘mtg-face’."
-  :group 'mtg-faces)
-
-;;==============================================;;
-
-(defface mtg-comment '((t :inherit font-lock-comment-face))
-
-  "Face for comments (beneath MTG Cards)."
-
-  :group 'mtg-faces)
-
-;;----------------------------------------------;;
-
-(defface mtg-string '((t :inherit (mtg-card font-lock-string-face)))
-
-  "Face for strings (within MTG Cards)."
-
-  :group 'mtg-faces)
-
-;;----------------------------------------------;;
-
-(defface mtg-preprocessor '((t :inherit (mtg-card font-lock-preprocessor-face)))
-
-  "Face for preprocessor directives (within MTG Cards)."
-
-  :group 'mtg-faces)
-
-;;==============================================;;
 
 ;;----------------------------------------------;;
 ;;; Syntax -------------------------------------;;
@@ -1532,9 +1006,257 @@ run at the same time."
   :type 'hook
   :group 'mtg-mode)
 
+;;----------------------------------------------;;
+;;; Faces --------------------------------------;;
+;;----------------------------------------------;;
+
+(defgroup mtg-faces nil
+
+  "Fonts and colors for Mtg Mode.
+
+Customize the appearence of `mtg-mode'."
+
+  :prefix "mtg-"
+  :group  'mtg)
+
 ;;==============================================;;
 
-;;; Accessors...
+(progn
+
+  (defface mtg-card `((t :family ,mtg-beleren-font-name))
+    "Base face for MTG Cards."
+    :group 'mtg-faces)
+
+  (when (bound-and-true-p mtg-beleren-font)
+    (set-face-font 'mtg-card mtg-beleren-font)))
+
+;; ^ face ‘mtg-card’, being a Base-Face, specifies no Face-Attributes (in particularm ‘:inherit’s no faces);
+;;   this prevents shadowing the ‘font-lock-*-face’s (e.g. in face ‘mtg-card-name’),
+;;   unless explicitly/intentionally specified.
+;;
+
+;;----------------------------------------------;;
+
+(progn
+
+  (defface mtg-card-name `((t :underline t :family ,mtg-belerensmallcaps-font-name :inherit (mtg-card font-lock-variable-name-face)))
+    "Face for MTG Card Names."
+    :group 'mtg-faces)
+
+  (when (bound-and-true-p mtg-belerensmallcaps-font)
+    (set-face-font 'mtg-card-name mtg-belerensmallcaps-font)))
+
+;;----------------------------------------------;;
+
+(defface mtg-rules-text '((t :inherit mtg-card))
+  "Face for MTG Rules Text."
+  :group 'mtg-faces)
+
+;;----------------------------------------------;;
+
+(defface mtg-keyword '((t :weight bold :inherit (mtg-rules-text)))
+  "Face for keywords (within Rules Text)."
+  :group 'mtg-faces)
+
+;;----------------------------------------------;;
+
+(defface mtg-keyword-abilities '((t :inherit (mtg-keyword)))
+  "Face for keyword abilities (within Rules Text)."
+  :group 'mtg-faces)
+
+;;----------------------------------------------;;
+
+(defface mtg-keyword-actions '((t :inherit (mtg-keyword)))
+  "Face for keyword actions (within Rules Text)."
+  :group 'mtg-faces)
+
+;;----------------------------------------------;;
+
+(defface mtg-reminder-text '((t :slant italic :inherit (mtg-rules-text)))
+  "Face for MTG Reminder Text."
+  :group 'mtg-faces)
+
+;;----------------------------------------------;;
+
+(defface mtg-ability-word '((t :inherit (mtg-reminder-text)))
+  "Face for ability-words (within Rules Text)."
+  :group 'mtg-faces)
+
+;;----------------------------------------------;;
+
+(defface mtg-flavor-text '((t :slant italic :inherit mtg-card))
+  "Face for MTG Flavor Text."
+  :group 'mtg-faces)
+
+;;----------------------------------------------;;
+
+(defface mtg-typeline-text '((t :slant italic :inherit (mtg-card font-lock-type-face)))
+  "Base face for MTG Card/Sub/Super Types."
+  :group 'mtg-faces)
+
+;;----------------------------------------------;;
+
+(defface mtg-card-type '((t :inherit (mtg-typeline-text font-lock-builtin-face)))
+  "Base face for MTG Card Types."
+  :group 'mtg-faces)
+
+;;----------------------------------------------;;
+
+(defface mtg-sub-type '((t :inherit mtg-typeline-text))
+  "Base face for MTG Card Subtypes."
+  :group 'mtg-faces)
+
+;;----------------------------------------------;;
+
+(defface mtg-super-type '((t :inherit mtg-typeline-text))
+  "Base face for MTG Card Supertypes."
+  :group 'mtg-faces)
+
+;;----------------------------------------------;;
+
+(progn
+
+  (defface mtg-color-white `((t :foreground ,mtg-white-color :inherit mtg-card))
+    "Face for white (white cards, white mana symbols, and Plains)."
+    :group 'mtg-faces)
+
+  (put 'white 'mtg-face 'mtg-color-white))
+
+;;----------------------------------------------;;
+
+(progn
+
+  (defface mtg-color-blue `((t :foreground ,mtg-blue-color :inherit mtg-card))
+    "Face for blue (blue cards, blue mana symbols, and Islands)."
+    :group 'mtg-faces)
+
+  (put 'blue 'mtg-face 'mtg-color-blue))
+
+;;----------------------------------------------;;
+
+(progn
+
+  (defface mtg-color-black `((t :foreground ,mtg-black-color :inherit mtg-card))
+    "Face for black (black cards, black mana symbols, and Swamps)."
+    :group 'mtg-faces)
+
+  (put 'black 'mtg-face 'mtg-color-black))
+
+;;----------------------------------------------;;
+
+(progn
+
+  (defface mtg-color-red `((t :foreground ,mtg-red-color :inherit mtg-card))
+    "Face for red (red cards, red mana symbols, and Mountains)."
+    :group 'mtg-faces)
+
+  (put 'red 'mtg-face 'mtg-color-red))
+
+;;----------------------------------------------;;
+
+(progn
+
+  (defface mtg-color-green `((t :foreground ,mtg-green-color :inherit mtg-card))
+    "Face for green (green cards, green mana symbols, and Forests)."
+    :group 'mtg-faces)
+
+  (put 'green 'mtg-face 'mtg-color-green))
+
+;;----------------------------------------------;;
+
+(defface mtg-symbol '((t :box t :inherit mtg-card))
+  "Face for MTG Symbols (including Mana Symbols)."
+  :group 'mtg-faces)
+
+;;----------------------------------------------;;
+
+(defface mtg-symbol-white '((t :inherit (mtg-symbol mtg-color-white)))
+  "Face for white Mana Symbols."
+  :group 'mtg-faces)
+
+;;----------------------------------------------;;
+
+(defface mtg-symbol-blue '((t :inherit (mtg-symbol mtg-color-blue)))
+  "Face for blue Mana Symbols and Islands"
+  :group 'mtg-faces)
+
+;;----------------------------------------------;;
+
+(defface mtg-symbol-black '((t :inherit (mtg-symbol mtg-color-black)))
+  "Face for black Mana Symbols and Swamps."
+  :group 'mtg-faces)
+
+;;----------------------------------------------;;
+
+(defface mtg-symbol-red '((t :inherit (mtg-symbol mtg-color-red)))
+  "Face for red Mana Symbols and Mountains."
+  :group 'mtg-faces)
+
+;;----------------------------------------------;;
+
+(defface mtg-symbol-green '((t :inherit (mtg-symbol mtg-color-green)))
+  "Face for green Mana Symbols and Forests."
+  :group 'mtg-faces)
+
+;;----------------------------------------------;;
+
+(defface mtg-face '((t :inherit mtg-card))
+  "Face for an MTG Card Faces (i.e. the background of a card)."
+  :group 'mtg-faces)
+
+;;----------------------------------------------;;
+
+(defface mtg-face-white `((t :background ,mtg-white-color :inherit (mtg-face)))
+  "Face for the background of white cards."
+  :group 'mtg-faces)
+
+;;----------------------------------------------;;
+
+(defface mtg-face-blue `((t :background ,mtg-blue-color :inherit (mtg-face)))
+  "Face for the background of blue cards"
+  :group 'mtg-faces)
+
+;;----------------------------------------------;;
+
+(defface mtg-face-black `((t :background ,mtg-black-color :inherit (mtg-face)))
+  "Face for the background of black cards"
+  :group 'mtg-faces)
+
+;;----------------------------------------------;;
+
+(defface mtg-face-red `((t :background ,mtg-red-color :inherit (mtg-face)))
+  "Face for the background of red cards"
+  :group 'mtg-faces)
+
+;;----------------------------------------------;;
+
+(defface mtg-face-green `((t :background ,mtg-green-color :inherit (mtg-face)))
+  "Face for the background of green cards"
+  :group 'mtg-faces)
+
+;;----------------------------------------------;;
+
+(defface mtg-comment '((t :inherit font-lock-comment-face))
+
+  "Face for comments (beneath MTG Cards)."
+
+  :group 'mtg-faces)
+
+;;----------------------------------------------;;
+
+(defface mtg-string '((t :inherit (mtg-card font-lock-string-face)))
+
+  "Face for strings (within MTG Cards)."
+
+  :group 'mtg-faces)
+
+;;----------------------------------------------;;
+
+(defface mtg-preprocessor '((t :inherit (mtg-card font-lock-preprocessor-face)))
+
+  "Face for preprocessor directives (within MTG Cards)."
+
+  :group 'mtg-faces)
 
 ;;----------------------------------------------;;
 ;; Accessors: Regexps --------------------------;;
