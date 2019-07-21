@@ -1598,6 +1598,63 @@ run at the same time."
   :type 'hook
   :group 'mtg-mode)
 
+;;----------------------------------------------;;
+;;; ‘prettify-symbols-mode’ --------------------;;
+;;----------------------------------------------;;
+
+(defconst mtg-default-prettify-symbols-alist
+
+  '(("--"   . ?—)
+    ("*"    . ?•)
+
+    ("{T}"  . ?⟳) ; Ⓣ ⟳ ↻ ↷
+    ("{C}"  . ?◇) ; Ⓒ ◇ ♢ ♦
+    ("{W}"  . ?☀) ; Ⓦ ☀ 🌞 ☼
+    ("{U}"  . ?💧) ; Ⓤ 💧 🌊 🏝
+    ("{B}"  . ?💀) ; Ⓑ 💀 ☠️
+    ("{R}"  . ?🔥) ; Ⓡ 🔥 🌋 🏔 ⛰️ ⛰
+    ("{G}"  . ?🌳) ; Ⓖ 🌳 🌲 🌴
+    ("{Q}"  . ?⤻) ; Ⓠ ⤻ ⤿
+    ("{S}"  . ?❄) ; Ⓢ ❄ ❅ ❆ 
+    ("{E}"  . ?⚡) ; Ⓔ ⚡ ↯
+    ("{X}"  . ?Ⓧ)
+    ("{Y}"  . ?Ⓨ)
+    ("{Z}"  . ?Ⓩ)
+
+    ("{0}"  . ?⓪)
+    ;;TODO ...
+    ("{50}" . ?㊿)
+
+    (""  . ? ))
+
+  "Default ‘mtg-prettify-symbols-alist’.
+
+URL ‘https://api.scryfall.com/symbology’
+URL ‘https://emojipedia.org/’
+URL ‘http://xahlee.info/comp/unicode_circled_numbers.html’")
+
+;;----------------------------------------------;;
+
+(defcustom mtg-prettify-symbols-alist
+
+  (when (bound-and-true-p mtg-default-prettify-symbols-alist) mtg-default-prettify-symbols-alist)
+
+  "‘prettify-symbols-alist’ for ‘mtg-mode’.
+
+Associates ‘stringp’s with ‘symbolp’s."
+
+  :type '(alist :key-type   (string :tag "key")
+                :value-type (choice (const nil)
+                                    (string :tag "value")))
+
+  :safe #'listp
+  :group 'mtg)
+
+;; ^ notes:
+;;
+;; (?a . ?Ⓐ)
+;; ... Ⓑ Ⓒ Ⓓ Ⓔ Ⓕ Ⓖ Ⓗ Ⓘ Ⓙ Ⓚ Ⓛ Ⓜ Ⓝ Ⓞ Ⓟ Ⓠ Ⓡ Ⓢ Ⓣ Ⓤ Ⓥ Ⓦ Ⓧ Ⓨ Ⓩ
+
 ;;==============================================;;
 
 ;;; Accessors...
