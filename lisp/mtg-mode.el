@@ -128,6 +128,7 @@
 
 (progn
 ;;TODO  (require 'mtg)
+  (require 'mtg-data nil :no-error)
   (require 'mtg-image nil :no-error))
 
 ;;----------------------------------------------;;
@@ -151,6 +152,9 @@ a `regexpp's
   (rx "\n" (0+ (any " \t\n\f")) "\n")  ; "\n[\n\t\f ]*\n"
 
   "Regular expression for matching block boundaries.")
+
+;;==============================================;;
+;; Data for Rules Text...
 
 ;;==============================================;;
 ;; Font Names...
@@ -224,41 +228,101 @@ a ‘stringp’.")
 
   (defconst mtg-rx-constituents
 
-    `((block-start          . ,(rx symbol-start
-                                   (or "def" "class" "if" "elif" "else" "try"
-                                       "except" "finally" "for" "while" "with")
-                                   symbol-end))
-      (decorator            . ,(rx line-start (* space) ?@ (any letter ?_)
-                                   (* (any word ?_))))
-      (defun                . ,(rx symbol-start (or "def" "class") symbol-end))
-      (if-name-main         . ,(rx line-start "if" (+ space) "__name__"
-                                   (+ space) "==" (+ space)
-                                   (any ?' ?\") "__main__" (any ?' ?\")
-                                   (* space) ?:))
-      (symbol-name          . ,(rx (any letter ?_) (* (any word ?_))))
-      (open-paren           . ,(rx (or "{" "[" "(")))
-      (close-paren          . ,(rx (or "}" "]" ")")))
-      (simple-operator      . ,(rx (any ?+ ?- ?/ ?& ?^ ?~ ?| ?* ?< ?> ?= ?%)))
-      ;; FIXME: rx should support (not simple-operator).
-      (not-simple-operator  . ,(rx
-                                (not
-                                 (any ?+ ?- ?/ ?& ?^ ?~ ?| ?* ?< ?> ?= ?%))))
-      ;; FIXME: Use regexp-opt.
-      (operator             . ,(rx (or "+" "-" "/" "&" "^" "~" "|" "*" "<" ">"
-                                       "=" "%" "**" "//" "<<" ">>" "<=" "!="
-                                       "==" ">=" "is" "not")))
-      ;; FIXME: Use regexp-opt.
-      (assignment-operator  . ,(rx (or "=" "+=" "-=" "*=" "/=" "//=" "%=" "**="
-                                       ">>=" "<<=" "&=" "^=" "|=")))
-      (string-delimiter . ,(rx (and
-                                ;; Match even number of backslashes.
-                                (or (not (any ?\\ ?\' ?\")) point
-                                    ;; Quotes might be preceded by a escaped quote.
-                                    (and (or (not (any ?\\)) point) ?\\
-                                         (* ?\\ ?\\) (any ?\' ?\")))
-                                (* ?\\ ?\\)
-                                ;; Match single or triple quotes of any kind.
-                                (group (or  "\"" "\"\"\"" "'" "'''"))))))
+    `(
+      ;;----------------------;;
+
+      (mtg-symbol             . (: "{" (1+ (any alpha digit ?/ )) "}"))
+
+      (mtg-capitalized-word   . (: word-start () word-end))
+
+      (mtg-downcased-word     . (: word-start () word-end))
+
+      (mtg-type               . (: word-start (1+ (syntax word)) word-end)) 
+
+      ;; ^ e.g.. “Urza's” is a valid subtype.
+      ;; Sub/Card/Super Types are syntactically identical, they're single words.
+
+      (mtg-keyword            . (: word-start mtg-capitalized-word word-end (1+ mtg-downcased-word)))
+
+      ;; ^ e.g. ‹Flying›, ‹First strike›.
+
+      (mtg-rarity             . (: "(" (any alpha) ")"))
+
+      (mtg-edition            . (: "(" (1+ (any upper digit)) ")"))
+
+      (mtg-card-name-word     . (: word-start (or (or ,@mtg-known-english-card-name-downcased-words) (: (char upper) (0+ (char alpha digit)))) word-end))
+
+      (mtg-rules-line         . (char "?" "\n"))
+
+      ;; ^ in Rules Text, newlines and semicolons are equivalent.
+      ;;
+      ;; (c.f. ‹Cryptic Command›'s original printing versus its recent printings).
+      ;;
+
+      ;;----------------------;;
+
+      (mtg-rules-keywords     . (mtg-keyword))
+
+      ;;
+
+      (mtg-card-name          . (: word-start (1+ mtg-card-name-word) word-end))
+
+      (mtg-card-names         . (: word-start mtg-card-name (? (: symbol-start "//" symbol-end) (? mtg-card-name)) word-end))
+
+      (mtg-mana-cost          . (: symbol-start (1+ mtg-symbol) symbol-end))
+
+      (mtg-typeline           . (: word-start (1+ mtg-type) (? (: symbol-start "—" symbol-end) (? (0+ mtg-type))) word-end)) 
+      ;; ^ One-or-More Cardtypes/Supertypes, then (optionally) a long-dash, then (optionally) Zero-or-More Subtypes.
+
+      (mtg-rules-text         . (: ))
+
+      ;;----------------------;;
+
+      ;; (mtg-known-color        . (: word-start (or ,@mtg-known-colors) word-end))
+      ;; (mtg-known-symbol       . (: "{" (or ,@mtg-known-symbols) "}"))
+      ;; ;;(mtg-known-symbol     . (: "{" (1+ (any upper digit ?/)) "}"))
+      ;; (mtg-known-mana-symbol  . (: "{" (or ,@mtg-known-mana-symbols) "}"))
+      ;; (mtg-known-rarity       . (: "(" (or ,@mtg-known-rarities) ")"))
+      ;; (mtg-known-edition      . (: "(" (or ,@mtg-known-editions) ")"))
+
+      ;;
+      )
+
+    ;; `((block-start          . ,(rx symbol-start
+    ;;                                (or "def" "class" "if" "elif" "else" "try"
+    ;;                                    "except" "finally" "for" "while" "with")
+    ;;                                symbol-end))
+    ;;   (decorator            . ,(rx line-start (* space) ?@ (any letter ?_)
+    ;;                                (* (any word ?_))))
+    ;;   (defun                . ,(rx symbol-start (or "def" "class") symbol-end))
+    ;;   (if-name-main         . ,(rx line-start "if" (+ space) "__name__"
+    ;;                                (+ space) "==" (+ space)
+    ;;                                (any ?' ?\") "__main__" (any ?' ?\")
+    ;;                                (* space) ?:))
+    ;;   (symbol-name          . ,(rx (any letter ?_) (* (any word ?_))))
+    ;;   (open-paren           . ,(rx (or "{" "[" "(")))
+    ;;   (close-paren          . ,(rx (or "}" "]" ")")))
+    ;;   (simple-operator      . ,(rx (any ?+ ?- ?/ ?& ?^ ?~ ?| ?* ?< ?> ?= ?%)))
+    ;;   ;; FIXME: rx should support (not simple-operator).
+    ;;   (not-simple-operator  . ,(rx
+    ;;                             (not
+    ;;                              (any ?+ ?- ?/ ?& ?^ ?~ ?| ?* ?< ?> ?= ?%))))
+    ;;   ;; FIXME: Use regexp-opt.
+    ;;   (operator             . ,(rx (or "+" "-" "/" "&" "^" "~" "|" "*" "<" ">"
+    ;;                                    "=" "%" "**" "//" "<<" ">>" "<=" "!="
+    ;;                                    "==" ">=" "is" "not")))
+    ;;   ;; FIXME: Use regexp-opt.
+    ;;   (assignment-operator  . ,(rx (or "=" "+=" "-=" "*=" "/=" "//=" "%=" "**="
+    ;;                                    ">>=" "<<=" "&=" "^=" "|=")))
+    ;;   (string-delimiter . ,(rx (and
+    ;;                             ;; Match even number of backslashes.
+    ;;                             (or (not (any ?\\ ?\' ?\")) point
+    ;;                                 ;; Quotes might be preceded by a escaped quote.
+    ;;                                 (and (or (not (any ?\\)) point) ?\\
+    ;;                                      (* ?\\ ?\\) (any ?\' ?\")))
+    ;;                             (* ?\\ ?\\)
+    ;;                             ;; Match single or triple quotes of any kind.
+    ;;                             (group (or  "\"" "\"\"\"" "'" "'''"))))))
 
     "Additional Mtg specific sexps for `mtg-rx'")
 
@@ -711,7 +775,9 @@ Links:
 
 (defconst mtg-quotation-regexp
 
-  (rx (or ?“ ?\") (not (or ?“ ?” ?\")) (or ?” ?\"))
+  (rx (any ?“ ?\")
+      (not (any ?“ ?” ?\"))
+      (any ?” ?\"))
 
   "Match
 
@@ -1220,8 +1286,8 @@ Inherits face ‘mtg-face’."
 
     ;; Comments...
 
-    (modify-syntax-entry ?\# "<" table)     ; C-style single-line comments.
-    (modify-syntax-entry ?\n ">" table)     ; C-style single-line comments.
+    (modify-syntax-entry ?\# "<" TABLE)     ; C-style single-line comments.
+    (modify-syntax-entry ?\n ">" TABLE)     ; C-style single-line comments.
 
     (modify-syntax-entry ?/  ". 14"  TABLE) ; C-style multi-line comments.
     (modify-syntax-entry ?*  ". 23b" TABLE) ; C-style multi-line comments.
@@ -1336,7 +1402,7 @@ See:
   (let* ((BEG (point-min))
          (END (point-max)))
 
-    (let* ((SYNTAX-REGEXP      (rx "" (group-n 1 ()) ""))
+    (let* ((SYNTAX-REGEXP      (rx "x" (group-n 1 "y") "z"))
            (SYNTAX-DESCRIPTION (string-to-syntax "")))
 
       (save-excursion
@@ -1572,7 +1638,11 @@ Customize:
 
 • Variable `mtg-types'"
 
-  (mtg--regexp-opt mtg-known-types))
+  (let* ((STRINGS
+          (cl-loop for SYMBOL in mtg-known-types
+             collect (symbol-name SYMBOL))))
+
+    (mtg--regexp-opt STRINGS)))
 
 ;;----------------------------------------------;;
 ;; Images --------------------------------------;;
@@ -1621,7 +1691,7 @@ Effects:
 
 (defconst mtg-font-lock-keywords-keyword
 
-  `(,(mtg-keyword-regexp) . mtg-keyword )
+  `(,(mtg-keyword-regexp) . mtg-keyword)
 
   "Highlighting MTG Keywords.")
 

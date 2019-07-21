@@ -20131,6 +20131,30 @@ URL ‘https://mtgjson.com/json/Keywords.json’ (circa 2019-07).")
 
 ;;==============================================;;
 
+;;; Data: Words...
+
+(defconst mtg-known-english-card-name-downcased-words
+
+  '("a" "an" "and" "as" "at" "but" "by" "for" "from" "in" "into" "of" "on" "or" "the" "to" "upon" "with"
+    "en" "il"                 ; e.g. “en-Vec”, “il-Kor”.
+    "le" "o'"                 ; e.g. “Jacques le Vert”, “Man-o'-War”.
+    )
+
+  "Words which are ‘downcase’d in a Card Name (unless they start it).
+
+Exceptions to English Titlecasing (which ‘capitalize’s most words), including:
+
+• Articles     — e,g, “the”, “a”, “an”.
+• Prepositions — e,g, “to”, “of”, “by”.
+• Conjunctives — e,g, “and”, “or”.
+• MTG-specific modifiers — e.g. “en-Vec” and “il-Kor”.
+
+a `listp' of `stringp's.")
+
+;; ^ (a an and as at but by en for from il in into le o\' of on or the to upon with)
+
+;;==============================================;;
+
 ;;; Data: Statistics...
 
 (defconst mtg--known-card-names-count (length mtg-known-card-names)

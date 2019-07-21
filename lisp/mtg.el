@@ -169,7 +169,7 @@
 ;;        • Keywords    — are annotated with their Reminder Text.
 ;;        • Set Codes   — are annotated with their full names (e.g. « AN “Arabian Nights” »).
 ;;
-];;   Completion was is helpful for
+;;   Completion was is helpful for
 ;;   Disambiguating between:
 ;;
 ;;        • Different Legends — e.g. ‹Borborygmus› vs ‹Borborygmus Enraged›. e.g. ‹Yagmoth's Bargain› vs ‹Yagmoth's Will›.
@@ -562,7 +562,7 @@ Related:
   (language      nil)
   (artist        nil))
 
-;; M-: (mtg--create :abbreviation ' :name "")
+;; M-: (mtg--create :abbr ' :name "")
 ;;  ⇒ #s(mtg- )
 
 ;;----------------------------------------------;;
@@ -613,9 +613,9 @@ Related:
                (:constructor mtg--create)
                (:copier      nil))
 
-  abbreviation (name ""))
+  abbr (name ""))
 
-;; M-: (mtg--create :abbreviation ' :name "")
+;; M-: (mtg--create :abbr ' :name "")
 ;;  ⇒ #s(mtg- )
 
 ;;==============================================;;
@@ -624,9 +624,9 @@ Related:
                (:constructor mtg-language-create)
                (:copier      nil))
 
-  language abbreviation endonym (flag nil))
+  name abbr endonym (flag nil))
 
-;; M-: (mtg-language-create :language 'spanish :abbreviation 'es :endonym "Español")
+;; M-: (mtg-language-create :name 'spanish :abbr 'es :endonym "Español")
 ;;  ⇒ #s(mtg-language spanish es "Español" nil)
 
 ;;==============================================;;
@@ -635,9 +635,9 @@ Related:
                (:constructor mtg-edition-create)
                (:copier      nil))
 
-  abbreviation name (type 'expansion) (image nil))
+  abbr name (type 'expansion) (image nil))
 
-;; M-: (mtg-edition-create :abbreviation 'abu :name "Alpha Beta Unlimited")
+;; M-: (mtg-edition-create :abbr 'abu :name "Alpha Beta Unlimited")
 ;;  ⇒ #s(mtg-edition abu "Alpha Beta Unlimited" nil)
 
 ;;==============================================;;
@@ -646,9 +646,9 @@ Related:
                (:constructor mtg-block-create)
                (:copier      nil))
 
-  abbreviation (name "") (editions '()))
+  abbr (name "") (editions '()))
 
-;; M-: (mtg-block-create :abbreviation 'ia :name "Ice Age Block" :editions '())
+;; M-: (mtg-block-create :abbr 'ia :name "Ice Age Block" :editions '())
 ;;  ⇒ #s(mtg-block ia "Ice Age Block" ())
 
 ;;==============================================;;
@@ -659,7 +659,7 @@ Related:
 
   text (date nil))
 
-;; M-: (mtg--create :abbreviation ' :name "")
+;; M-: (mtg--create :abbr ' :name "")
 ;;  ⇒ #s(mtg- )
 
 ;;==============================================;;
@@ -684,7 +684,7 @@ standard, modern, legacy, vintage, commander, future (future Standard), pauper, 
 
    (legalities nil))
 
-;; M-: (mtg--create :abbreviation ' :name "")
+;; M-: (mtg--create :abbr ' :name "")
 ;;  ⇒ #s(mtg- )
 
 ;;==============================================;;
@@ -693,9 +693,9 @@ standard, modern, legacy, vintage, commander, future (future Standard), pauper, 
                (:constructor mtg-symbol-create)
                (:copier      nil))
 
-  symbol abbreviation (image nil) (char nil))
+  name abbr (image nil) (char nil))
 
-;; M-: (mtg-symbol-create :symbol 'tap :abbreviation 'T :image 'mtg-tap-symbol-svg-image :char 'mtg-tap-symbol-char)
+;; M-: (mtg-symbol-create :name 'tap :abbr 'T :image 'mtg-tap-symbol-svg-image :char 'mtg-tap-symbol-char)
 ;;  ⇒ #s(mtg-symbol tap T mtg-tap-symbol-svg-image mtg-tap-symbol-char)
 
 ;;==============================================;;
@@ -704,9 +704,9 @@ standard, modern, legacy, vintage, commander, future (future Standard), pauper, 
                (:constructor mtg-rarity-create)
                (:copier      nil))
 
-  rarity abbreviation color)
+  name abbr color)
 
-;; M-: (mtg-rarity-create :rarity 'rare :abbreviation 'r)
+;; M-: (mtg-rarity-create :name 'rare :abbr 'r)
 ;;  ⇒ #s(mtg-rarity rare r nil)
 
 ;;----------------------------------------------;;
@@ -868,8 +868,7 @@ Related:
     (u . blue)
     (b . black)
     (r . red)
-    (g . green)
-   )
+    (g . green))
 
   "Any abbreviations/knicknames of the `mtg-colors'.
 
@@ -1004,13 +1003,11 @@ So the four colour identities' names are:
  Green + white + blue + black = Witch (or Witch-Maw), or Growth, or Non-red
 White + blue + black + red = Yore (or Yore-Tiller), or Artifice, or Non-green
 
-;;----------------------------------------------;;
+;;==============================================;;
 
 (defcustom mtg-super-types-list
 
-  '(basic
-    legendary
-    snow)
+  '(basic legendary snow)
 
   "Known Super-Types.
 
@@ -1025,14 +1022,15 @@ White + blue + black + red = Yore (or Yore-Tiller), or Artifice, or Non-green
 
 (defcustom mtg-card-types-list
 
-  '(instant        ; ?🗲
-    sorcery
-    land
-    artifact
-    enchantment
-    creature
-    planeswalker
-    conspiracy)
+  '(instant                             ; ?🗲
+    sorcery                             ; ?
+    land                                ; ?
+    artifact                            ; ?
+    enchantment                         ; ?
+    creature                            ; ?
+    planeswalker                        ; ?
+    conspiracy                          ; ?
+    )
 
   "Known Card-Types.
 
@@ -1043,7 +1041,7 @@ White + blue + black + red = Yore (or Yore-Tiller), or Artifice, or Non-green
   :safe #'listp
   :group 'mtg)
 
-;;----------------------------------------------;;
+;;==============================================;;
 
 (defcustom mtg-spell-subtypes-list
 
@@ -1149,8 +1147,7 @@ a `listp' of `symbolp's."
 
 (defcustom mtg-subtypes-alist
 
-  '(
-    (spell        . mtg-spell-subtypes-list)
+  `((spell        . mtg-spell-subtypes-list)
     (land         . mtg-land-subtypes-list)
     (artifact     . mtg-artifact-subtypes-list)
     (enchantment  . mtg-enchantment-subtypes-list)
@@ -1176,13 +1173,9 @@ an association `listp':
   :safe #'listp
   :group 'mtg)
 
-;;----------------------------------------------;;
+;;==============================================;;
 
-
-
-;;----------------------------------------------;;
-
-(defcustom mtg-symbol-list
+(defcustom mtg-symbols
 
   '(
    )
@@ -1200,17 +1193,56 @@ an association `listp':
 
 (defcustom mtg-symbol-alist
 
-  `(
-    (tap . ,(mtg-symbol-create :symbol 'tap :abbreviation 'T :image 'mtg-tap-symbol-svg-image :char 'mtg-tap-symbol-char))
-   )
+  `((tap                    . ,(make-mtg-symbol :name 'tap                    :abbr 'T   :char ?Ⓣ))
+    (untap                  . ,(make-mtg-symbol :name 'untap                  :abbr 'Q   :char ?🅤))
+
+    ;; Mana...
+
+    (white-mana             . ,(make-mtg-symbol :name 'white-mana             :abbr 'W   :char ?🌞))
+    (blue-mana              . ,(make-mtg-symbol :name 'blue-mana              :abbr 'U   :char ?🌢))
+    (black-mana             . ,(make-mtg-symbol :name 'black-mana             :abbr 'B   :char ?💀))
+    (red-mana               . ,(make-mtg-symbol :name 'red-mana               :abbr 'R   :char ?⛰))
+    (green-mana             . ,(make-mtg-symbol :name 'green-mana             :abbr 'G   :char ?🌲))
+
+    (colorless-mana         . ,(make-mtg-symbol :name 'colorless-mana         :abbr 'C   :char ?◇))
+    (snow-mana              . ,(make-mtg-symbol :name 'snow-mana              :abbr 'S   :char ?❄))
+    (energy-mana            . ,(make-mtg-symbol :name 'energy-mana            :abbr 'E   :char ?⚡))
+    (variable-X-mana        . ,(make-mtg-symbol :name 'variable-X-mana        :abbr 'X   :char ?X))
+    (variable-Y-mana        . ,(make-mtg-symbol :name 'variable-Y-mana        :abbr 'Y   :char ?Y))
+    (variable-Z-mana        . ,(make-mtg-symbol :name 'variable-Z-mana        :abbr 'Z   :char ?Z))
+
+    (phyrexian-white-mana   . ,(make-mtg-symbol :name 'phyrexian-white-mana   :abbr 'P/W :char ?ϕ))
+    (phyrexian-blue-mana    . ,(make-mtg-symbol :name 'phyrexian-blue-mana    :abbr 'P/U :char ?ϕ))
+    (phyrexian-black-mana   . ,(make-mtg-symbol :name 'phyrexian-black-mana   :abbr 'P/B :char ?ϕ))
+    (phyrexian-red-mana     . ,(make-mtg-symbol :name 'phyrexian-red-mana     :abbr 'P/R :char ?ϕ))
+    (phyrexian-green-mana   . ,(make-mtg-symbol :name 'phyrexian-green-mana   :abbr 'P/G :char ?ϕ))
+
+    (monohybrid-white-mana  . ,(make-mtg-symbol :name 'monohybrid-white-mana  :abbr '2/W :char ?🌞))
+    (monohybrid-blue-mana   . ,(make-mtg-symbol :name 'monohybrid-blue-mana   :abbr '2/U :char ?🌢))
+    (monohybrid-black-mana  . ,(make-mtg-symbol :name 'monohybrid-black-mana  :abbr '2/B :char ?💀))
+    (monohybrid-red-mana    . ,(make-mtg-symbol :name 'monohybrid-red-mana    :abbr '2/R :char ?⛰))
+    (monohybrid-green-mana  . ,(make-mtg-symbol :name 'monohybrid-green-mana  :abbr '2/G :char ?🌲))
+
+    (zero-generic-mana      . ,(make-mtg-symbol :name 'zero-generic-mana      :abbr '0   :char ?⓪))
+    (one-generic-mana       . ,(make-mtg-symbol :name 'one-generic-mana       :abbr '1   :char ?⓵))
+    (two-generic-mana       . ,(make-mtg-symbol :name 'two-generic-mana       :abbr '2   :char ?⓶))
+    (three-generic-mana     . ,(make-mtg-symbol :name 'three-generic-mana     :abbr '3   :char ?⓷))
+    (four-generic-mana      . ,(make-mtg-symbol :name 'four-generic-mana      :abbr '4   :char ?⓸))
+    (five-generic-mana      . ,(make-mtg-symbol :name 'five-generic-mana      :abbr '5   :char ?⓹))
+    (six-generic-mana       . ,(make-mtg-symbol :name 'six-generic-mana       :abbr '6   :char ?⓺))
+    (seven-generic-mana     . ,(make-mtg-symbol :name 'seven-generic-mana     :abbr '7   :char ?⓻))
+    (eight-generic-mana     . ,(make-mtg-symbol :name 'eight-generic-mana     :abbr '8   :char ?⓼))
+    (nine-generic-mana      . ,(make-mtg-symbol :name 'nine-generic-mana      :abbr '9   :char ?⓽))
+    )
 
   "Symbol metadata (abbreviations and endonyms).
 
 `listp' of `mtg-symbol-p's:
 
-• each ‘:symbol’ should be in `mtg-symbol-list'."
+• each `mtg-symbol-name’ should be in `mtg-symbols'."
 
-  :type '(repeat (symbol :tag "Symbol Info"))
+  :type '(alist :key-type   (symbol     :tag "Symbol")
+                :value-type (mtg-symbol :tag "Symbol Info"))
 
   :safe #'listp
   :group 'mtg)
@@ -1219,13 +1251,11 @@ an association `listp':
 
 (defcustom mtg-card-border-color-list
 
-  '(black
-    white
-    silver)
+  '(black white silver)
 
   "Known Border Colors.
 
-`listp' of `symbolp's."
+a `listp' of `symbolp's."
 
   :type '(repeat (symbol :tag "Border Color"))
 
@@ -1236,10 +1266,7 @@ an association `listp':
 
 (defcustom mtg-card-frame-list
 
-  '(old
-    new
-    timeshifted
-    future)
+  '(old new timeshifted future)
 
   "Known Card Frames.
 
@@ -1280,7 +1307,7 @@ an association `listp':
 
 ;;----------------------------------------------;;
 
-(defcustom mtg-language-list
+(defcustom mtg-languages
 
   '(english
     german
@@ -1292,8 +1319,7 @@ an association `listp':
     chinese
     russian
     taiwanese
-    korean
-    )
+    korean)
 
   "Language names.
 
@@ -1310,70 +1336,26 @@ Languages into which cards have been translated."
 
 (defcustom mtg-language-alist
 
-  `(
-    (english    . ,(mtg-language-create :language 'english    :abbreviation 'en :endonym "English"   :flag "🇺🇸"))
-    (german     . ,(mtg-language-create :language 'german     :abbreviation 'de :endonym "Deutsch"   :flag ""))
-    (french     . ,(mtg-language-create :language 'french     :abbreviation 'fr :endonym "Français"  :flag ""))
-    (italian    . ,(mtg-language-create :language 'italian    :abbreviation 'it :endonym "Italiano"  :flag ""))
-    (spanish    . ,(mtg-language-create :language 'spanish    :abbreviation 'es :endonym "Español"   :flag ""))
-    (portuguese . ,(mtg-language-create :language 'portuguese :abbreviation 'pt :endonym "Português" :flag ""))
-    (japanese   . ,(mtg-language-create :language 'japanese   :abbreviation 'jp :endonym "日本語"    :flag ""))
-    (chinese    . ,(mtg-language-create :language 'chinese    :abbreviation 'cn :endonym "简体中文"  :flag ""))
-    (russian    . ,(mtg-language-create :language 'russian    :abbreviation 'ru :endonym "Русский"   :flag ""))
-    (taiwanese  . ,(mtg-language-create :language 'taiwanese  :abbreviation 'tw :endonym "繁體中文"  :flag ""))
-    (korean     . ,(mtg-language-create :language 'korean     :abbreviation 'ko :endonym "한국어"    :flag ""))
+  `((english    . ,(mtg-language-create :name 'english    :abbr 'en :endonym "English"   :flag "🇺🇸"))
+    (german     . ,(mtg-language-create :name 'german     :abbr 'de :endonym "Deutsch"   :flag "🇩🇪"))
+    (french     . ,(mtg-language-create :name 'french     :abbr 'fr :endonym "Français"  :flag "🇫🇷"))
+    (italian    . ,(mtg-language-create :name 'italian    :abbr 'it :endonym "Italiano"  :flag "🇮🇹"))
+    (spanish    . ,(mtg-language-create :name 'spanish    :abbr 'es :endonym "Español"   :flag "🇲🇽")) ; by population.
+    (portuguese . ,(mtg-language-create :name 'portuguese :abbr 'pt :endonym "Português" :flag "🇧🇷")) ; by population.
+    (japanese   . ,(mtg-language-create :name 'japanese   :abbr 'jp :endonym "日本語"    :flag "🇯🇵"))
+    (chinese    . ,(mtg-language-create :name 'chinese    :abbr 'cn :endonym "简体中文"  :flag "🇨🇳"))
+    (russian    . ,(mtg-language-create :name 'russian    :abbr 'ru :endonym "Русский"   :flag "🇷🇺"))
+    (taiwanese  . ,(mtg-language-create :name 'taiwanese  :abbr 'tw :endonym "繁體中文"  :flag "🇹🇼"))
+    (korean     . ,(mtg-language-create :name 'korean     :abbr 'ko :endonym "한국어"    :flag "🇰🇷")) ; by population.
     )
 
   "Language metadata (abbreviations and endonyms).
 
 `listp' of `mtg-language-p's:
 
-• each ‘:language’ should be in `mtg-language-list'."
+• each ‘mtg-language-name’ should be in `mtg-languages'."
 
   :type '(repeat (symbol :tag "Language Info"))
-
-  :safe #'listp
-  :group 'mtg)
-
-;;----------------------------------------------;;
-
-(defcustom mtg-rarity-list
-
-  '(common
-    uncommon
-    rare
-    mythic)
-
-  "Rarity names.
-
-`listp' of `symbolp's.
-
-Raritys into which cards have been translated."
-
-  :type '(repeat (symbol :tag "Rarity Name"))
-
-  :safe #'listp
-  :group 'mtg)
-
-;;----------------------------------------------;;
-
-(defcustom mtg-rarity-alist
-
-  `(
-    (common   . ,(mtg-rarity-create :rarity 'common   :abbreviation 'C :color "black"))
-    (uncommon . ,(mtg-rarity-create :rarity 'uncommon :abbreviation 'U :color "silver"))
-    (rare     . ,(mtg-rarity-create :rarity 'rare     :abbreviation 'R :color "gold"))
-    (mythic   . ,(mtg-rarity-create :rarity 'mythic   :abbreviation 'M :color "bronze"))
-    )
-
-  "Rarity metadata (abbreviations and endonyms).
-
-`listp' of `mtg-rarity-p's:
-
-• each ‘:rarity’ should be in `mtg-rarity-list'."
-
-  :type '(alist :key-type   (symbol     :tag "Rarity")
-                :value-type (mtg-rarity :tag "Rarity Info"))
 
   :safe #'listp
   :group 'mtg)
@@ -1408,20 +1390,16 @@ Customization:
   :safe #'listp
   :group 'mtg)
 
-;;----------------------------------------------;;
+;;==============================================;;
 
 (defcustom mtg-rarities
 
-  '(common
-    uncommon
-    rare
-    mythic)
+  '(common uncommon rare mythic
+    timeshifted land)
 
   "Known MTG Rarities.
 
-`listp' of `symbolp's.
-
-Symbols into which cards have been translated."
+`listp' of `symbolp's.."
 
   :type '(repeat (symbol :tag "Symbol Name"))
 
@@ -1430,117 +1408,32 @@ Symbols into which cards have been translated."
 
 ;;----------------------------------------------;;
 
-(defcustom mtg-symbol-alist
+(defcustom mtg-rarity-alist
 
-  `(
+  `((common      . ,(mtg-rarity-create :name 'common      :abbr 'C :color "black"))
+    (uncommon    . ,(mtg-rarity-create :name 'uncommon    :abbr 'U :color "silver"))
+    (rare        . ,(mtg-rarity-create :name 'rare        :abbr 'R :color "gold"))
+    (mythic      . ,(mtg-rarity-create :name 'mythic      :abbr 'M :color "bronze"))
+    ;;
+    (timeshifted . ,(mtg-rarity-create :name 'timeshifted :abbr 'T :color "purple")))
 
-    (tap                    . ,(make-mtg-symbol :symbol 'tap                    :abbreviation 'T   :char ?Ⓣ))
-    (untap                  . ,(make-mtg-symbol :symbol 'untap                  :abbreviation 'Q   :char ?🅤))
+  "Rarity metadata (abbreviations and endonyms).
 
-    (white-mana             . ,(make-mtg-symbol :symbol 'white-mana             :abbreviation 'W   :char ?🌞))
-    (blue-mana              . ,(make-mtg-symbol :symbol 'blue-mana              :abbreviation 'U   :char ?🌢))
-    (black-mana             . ,(make-mtg-symbol :symbol 'black-mana             :abbreviation 'B   :char ?💀))
-    (red-mana               . ,(make-mtg-symbol :symbol 'red-mana               :abbreviation 'R   :char ?⛰))
-    (green-mana             . ,(make-mtg-symbol :symbol 'green-mana             :abbreviation 'G   :char ?🌲))
+`listp' of ‘consps’ (from ‘symbolp’ `mtg-rarity-p'):
 
-    (colorless-mana         . ,(make-mtg-symbol :symbol 'colorless-mana         :abbreviation 'C   :char ?◇))
-    (snow-mana              . ,(make-mtg-symbol :symbol 'snow-mana              :abbreviation 'S   :char ?❄))
-    (energy-mana            . ,(make-mtg-symbol :symbol 'energy-mana            :abbreviation 'E   :char ?⚡))
-    (variable-X-mana        . ,(make-mtg-symbol :symbol 'variable-X-mana        :abbreviation 'X   :char ?X))
-    (variable-Y-mana        . ,(make-mtg-symbol :symbol 'variable-Y-mana        :abbreviation 'Y   :char ?Y))
-    (variable-Z-mana        . ,(make-mtg-symbol :symbol 'variable-Z-mana        :abbreviation 'Z   :char ?Z))
+• each ‘mtg-rarity-name’ should be in `mtg-rarity-list'."
 
-    (phyrexian-white-mana   . ,(make-mtg-symbol :symbol 'phyrexian-white-mana   :abbreviation 'P/W :char ?ϕ))
-    (phyrexian-blue-mana    . ,(make-mtg-symbol :symbol 'phyrexian-blue-mana    :abbreviation 'P/U :char ?ϕ))
-    (phyrexian-black-mana   . ,(make-mtg-symbol :symbol 'phyrexian-black-mana   :abbreviation 'P/B :char ?ϕ))
-    (phyrexian-red-mana     . ,(make-mtg-symbol :symbol 'phyrexian-red-mana     :abbreviation 'P/R :char ?ϕ))
-    (phyrexian-green-mana   . ,(make-mtg-symbol :symbol 'phyrexian-green-mana   :abbreviation 'P/G :char ?ϕ))
-
-    (monohybrid-white-mana  . ,(make-mtg-symbol :symbol 'monohybrid-white-mana  :abbreviation '2/W :char ?🌞))
-    (monohybrid-blue-mana   . ,(make-mtg-symbol :symbol 'monohybrid-blue-mana   :abbreviation '2/U :char ?🌢))
-    (monohybrid-black-mana  . ,(make-mtg-symbol :symbol 'monohybrid-black-mana  :abbreviation '2/B :char ?💀))
-    (monohybrid-red-mana    . ,(make-mtg-symbol :symbol 'monohybrid-red-mana    :abbreviation '2/R :char ?⛰))
-    (monohybrid-green-mana  . ,(make-mtg-symbol :symbol 'monohybrid-green-mana  :abbreviation '2/G :char ?🌲))
-
-    (zero-generic-mana      . ,(make-mtg-symbol :symbol 'zero-generic-mana      :abbreviation '0   :char ?⓪))
-    (one-generic-mana       . ,(make-mtg-symbol :symbol 'one-generic-mana       :abbreviation '1   :char ?⓵))
-    (two-generic-mana       . ,(make-mtg-symbol :symbol 'two-generic-mana       :abbreviation '2   :char ?⓶))
-    (three-generic-mana     . ,(make-mtg-symbol :symbol 'three-generic-mana     :abbreviation '3   :char ?⓷))
-    (four-generic-mana      . ,(make-mtg-symbol :symbol 'four-generic-mana      :abbreviation '4   :char ?⓸))
-    (five-generic-mana      . ,(make-mtg-symbol :symbol 'five-generic-mana      :abbreviation '5   :char ?⓹))
-    (six-generic-mana       . ,(make-mtg-symbol :symbol 'six-generic-mana       :abbreviation '6   :char ?⓺))
-    (seven-generic-mana     . ,(make-mtg-symbol :symbol 'seven-generic-mana     :abbreviation '7   :char ?⓻))
-    (eight-generic-mana     . ,(make-mtg-symbol :symbol 'eight-generic-mana     :abbreviation '8   :char ?⓼))
-    (nine-generic-mana      . ,(make-mtg-symbol :symbol 'nine-generic-mana      :abbreviation '9   :char ?⓽))
-
-    )
-
-  "Symbol metadata (abbreviations and endonyms).
-
-`listp' of `mtg-symbol-p's:
-
-• each ‘:symbol’ should be in `mtg-symbol-list'."
-
-  :type '(alist :key-type   (symbol     :tag "Symbol")
-                :value-type (mtg-symbol :tag "Symbol Info"))
+  :type '(alist :key-type   (symbol     :tag "Rarity")
+                :value-type (mtg-rarity :tag "Rarity Info"))
 
   :safe #'listp
   :group 'mtg)
 
-;;----------------------------------------------;;
-
-(defcustom mtg-edition-kind-list
-
-  '(expansion
-    core
-    reprint
-    box
-    un
-    from the vault
-    premium deck
-    duel deck
-    starter
-    commander
-    planechase
-    archenemy
-    promo
-    vanguard
-    masters
-    conspiracy
-    masterpiece)
-
-  "Kinds of MTG Editions.
-
-a `listp' of `symbolp's."
-
-  :type '(repeat (symbol :tag "Edition Type"))
-
-  :safe #'listp
-  :group 'mtg)
-
-;;----------------------------------------------;;
-
-(defcustom mtg-edition-alist
-
-  `(
-
-   )
-
-  "Known MTG Editions.
-
-a `listp' of `mtg-edition-p's."
-
-  :type '(repeat (mtg-edition :tag "Edition"))
-
-  :safe #'listp
-  :group 'mtg)
-
-;;----------------------------------------------;;
+;;==============================================;;
 
 (defcustom mtg-edition-name-list
 
-  '(
-    al
+  '(al
     be
     un
     rv
@@ -1599,9 +1492,9 @@ a `listp' of `mtg-edition-p's."
     ai
     cs
     tsts
-    ts
-    pc
-    fut
+    ts                                  ; ?⌛
+    pc                                  ; ?꩜
+    fut                                 ; ?👁
     lw
     mt
     shm
@@ -1647,7 +1540,7 @@ a `listp' of `mtg-edition-p's."
     mh1
     m20
     c19
-   )
+    )
 
   "Known MTG Editions.
 
@@ -1662,39 +1555,55 @@ URL `https://mtg.gamepedia.com/Template:List_of_Magic_sets'"
 
 ;;----------------------------------------------;;
 
+(defcustom mtg-edition-kind-list
+
+  '(expansion core reprint
+    un box from-the-vault premium-deck duel-deck starter commander planechase archenemy promo vanguard masters conspiracy masterpiece)
+
+  "Kinds of MTG Editions.
+
+a `listp' of `symbolp's."
+
+  :type '(repeat (symbol :tag "Edition Type"))
+
+  :safe #'listp
+  :group 'mtg)
+
+;;==============================================;;
+
 (defcustom mtg-block-list
 
-  (list (mtg-block-create :abbreviation 'antediluvian   :name "Antediluvian Sets"      :editions '())
-        (mtg-block-create :abbreviation 'ordinal        :name "Ordinal Core Sets"      :editions '())
-        (mtg-block-create :abbreviation 'cardinal       :name "Cardinal Core Sets"     :editions '())
-        (mtg-block-create :abbreviation 'mirage         :name "Mirage"                 :editions '())
-        (mtg-block-create :abbreviation 'rath           :name "The Rath Cycle"         :editions '())
-        (mtg-block-create :abbreviation 'urza           :name "The Urza Cycle"         :editions '())
-        (mtg-block-create :abbreviation 'masques        :name "Masques"                :editions '())
-        (mtg-block-create :abbreviation 'invasion       :name "Invasion"               :editions '())
-        (mtg-block-create :abbreviation 'odyssey        :name "Odyssey"                :editions '())
-        (mtg-block-create :abbreviation 'onslaught      :name "Onslaught"              :editions '())
-        (mtg-block-create :abbreviation 'mirrodin       :name "Mirrodin"               :editions '())
-        (mtg-block-create :abbreviation 'kamigawa       :name "Kamigawa"               :editions '())
-        (mtg-block-create :abbreviation 'ravnica        :name "Ravnica"                :editions '())
-        (mtg-block-create :abbreviation 'iceage         :name "Ice Age"                :editions '())
-        (mtg-block-create :abbreviation 'timespiral     :name "Time Spiral"            :editions '())
-        (mtg-block-create :abbreviation 'lorwyn         :name "Lorwyn"                 :editions '())
-        (mtg-block-create :abbreviation 'shadowmoor     :name "Shadowmoor"             :editions '())
-        (mtg-block-create :abbreviation 'alara          :name "Shards Of Alara"        :editions '())
-        (mtg-block-create :abbreviation 'zendikar       :name "Zendikar"               :editions '())
-        (mtg-block-create :abbreviation 'scars          :name "Scars Of Mirrodin"      :editions '())
-        (mtg-block-create :abbreviation 'innistrad      :name "Innistrad"              :editions '())
-        (mtg-block-create :abbreviation 'ravnica2       :name "Return To Ravnica"      :editions '())
-        (mtg-block-create :abbreviation 'theros         :name "Theros"                 :editions '())
-        (mtg-block-create :abbreviation 'khans          :name "Khans Of Tarkir"        :editions '())
-        (mtg-block-create :abbreviation 'zendikar2      :name "Battle For Zendikar"    :editions '())
-        (mtg-block-create :abbreviation 'shadows        :name "Shadows Over Innistrad" :editions '())
-        (mtg-block-create :abbreviation 'kaladesh       :name "Kaladesh"               :editions '())
-        (mtg-block-create :abbreviation 'amonkhet       :name "Amonkhet"               :editions '())
-        (mtg-block-create :abbreviation 'ixalan         :name "Ixalan"                 :editions '())
-        (mtg-block-create :abbreviation 'ravnica3       :name "Guilds of Ravnica"      :editions '())
-        (mtg-block-create :abbreviation 'war            :name "War of the Spark"       :editions '())
+  (list (mtg-block-create :abbr 'antediluvian   :name "Antediluvian Sets"      :editions '())
+        (mtg-block-create :abbr 'ordinal        :name "Ordinal Core Sets"      :editions '())
+        (mtg-block-create :abbr 'cardinal       :name "Cardinal Core Sets"     :editions '())
+        (mtg-block-create :abbr 'mirage         :name "Mirage"                 :editions '())
+        (mtg-block-create :abbr 'rath           :name "The Rath Cycle"         :editions '())
+        (mtg-block-create :abbr 'urza           :name "The Urza Cycle"         :editions '())
+        (mtg-block-create :abbr 'masques        :name "Masques"                :editions '())
+        (mtg-block-create :abbr 'invasion       :name "Invasion"               :editions '())
+        (mtg-block-create :abbr 'odyssey        :name "Odyssey"                :editions '())
+        (mtg-block-create :abbr 'onslaught      :name "Onslaught"              :editions '())
+        (mtg-block-create :abbr 'mirrodin       :name "Mirrodin"               :editions '())
+        (mtg-block-create :abbr 'kamigawa       :name "Kamigawa"               :editions '())
+        (mtg-block-create :abbr 'ravnica        :name "Ravnica"                :editions '())
+        (mtg-block-create :abbr 'iceage         :name "Ice Age"                :editions '())
+        (mtg-block-create :abbr 'timespiral     :name "Time Spiral"            :editions '(ts pc fut))
+        (mtg-block-create :abbr 'lorwyn         :name "Lorwyn"                 :editions '())
+        (mtg-block-create :abbr 'shadowmoor     :name "Shadowmoor"             :editions '())
+        (mtg-block-create :abbr 'alara          :name "Shards Of Alara"        :editions '())
+        (mtg-block-create :abbr 'zendikar       :name "Zendikar"               :editions '())
+        (mtg-block-create :abbr 'scars          :name "Scars Of Mirrodin"      :editions '())
+        (mtg-block-create :abbr 'innistrad      :name "Innistrad"              :editions '())
+        (mtg-block-create :abbr 'ravnica2       :name "Return To Ravnica"      :editions '())
+        (mtg-block-create :abbr 'theros         :name "Theros"                 :editions '())
+        (mtg-block-create :abbr 'khans          :name "Khans Of Tarkir"        :editions '())
+        (mtg-block-create :abbr 'zendikar2      :name "Battle For Zendikar"    :editions '())
+        (mtg-block-create :abbr 'shadows        :name "Shadows Over Innistrad" :editions '())
+        (mtg-block-create :abbr 'kaladesh       :name "Kaladesh"               :editions '())
+        (mtg-block-create :abbr 'amonkhet       :name "Amonkhet"               :editions '())
+        (mtg-block-create :abbr 'ixalan         :name "Ixalan"                 :editions '())
+        (mtg-block-create :abbr 'ravnica3       :name "Guilds of Ravnica"      :editions '())
+        (mtg-block-create :abbr 'war            :name "War of the Spark"       :editions '())
         )
 
   "Known MTG Blocks (of MTG Editions).
@@ -1705,6 +1614,10 @@ a `listp' of `mtg-block-p's."
 
   :safe #'listp
   :group 'mtg)
+
+;;==============================================;;
+
+
 
 ;;----------------------------------------------;;
 ;;; Variables (‘mtg-json’) ---------------------;;
@@ -1763,11 +1676,17 @@ have such punctuation characters:
 
 ;;----------------------------------------------;;
 
-(defcustom mtg-card-name-article-strings-list
+(defcustom mtg-english-card-name-downcased-words
 
-  '("a" "an" "and" "as" "at" "but" "by" "en" "for" "from" "il" "in" "into" "le" "o'" "of" "on" "or" "the" "to" "upon" "with")
+  (when (bound-and-true-p mtg-known-english-card-name-downcased-words)
+    mtg-known-english-card-name-downcased-words)
 
-  "Articles in Card Names.
+  "Words which are ‘downcase’d in Card Names.
+
+Exceptions to English Titlecasing (which ‘capitalize’s most words), including:
+
+• Prepositions
+• MTG-specific modifiers — e.g. “en-Vec” and “il-Kor”.
 
 a `listp' of `stringp's."
 
@@ -1775,8 +1694,6 @@ a `listp' of `stringp's."
 
   :safe #'listp
   :group 'mtg)
-
-;; ^ (a an and as at but by en for from il in into le o\' of on or the to upon with)
 
 ;;----------------------------------------------;;
 ;;; Accessors ----------------------------------;;
@@ -2130,7 +2047,7 @@ For example, this command matches these ‘mtg-card-name’s:
           (rx-to-string `(char alpha digit ,@mtg-card-name-punctuation-characters-list) t))
 
          (ARTICLE-REGEXP
-          (regexp-opt mtg-card-name-article-strings-list 'symbols))
+          (regexp-opt mtg-english-card-name-downcased-words 'symbols))
 
          (WORD-REGEXP
           (rx-to-string `(or (regexp ,ARTICLE-REGEXP)
