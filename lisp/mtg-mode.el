@@ -205,6 +205,186 @@ a ‘stringp’.")
 
 a ‘stringp’.")
 
+;;==============================================;;
+;; Regular Expressions...
+
+;;----------------------------------------------;;
+
+(defconst mtg-rx/newline (rx (any "\n;")))
+
+(defconst mtg-rx/not-newline (rx (not (any "\n;"))))
+
+(defconst mtg-rx/dash (rx (: symbol-start (or "--" "—") symbol-end)))
+
+(defconst mtg-rx/bullet (rx (: symbol-start (any "*•") symbol-end)))
+
+;;
+
+(defconst mtg-rx/numeral (rx (1+ (any digit "0-9" "-+*" "÷×√"))))
+
+(defconst mtg-rx/power-toughness (rx-to-string `(: symbol-start ,mtg-rx/numeral "/" ,mtg-rx/numeral symbol-end)))
+
+;;
+
+(defconst mtg-rx/symbolic-char
+  (rx-to-string `(any "/" alpha digit "-!@#$%^∗_+="))
+  "Match a character within an MTG Symbol.")
+
+(defconst mtg-rx/symbol
+  (rx-to-string `(: symbol-start "{" (or (1+ ,mtg-rx/symbolic-char)) "}" symbol-end))
+  "Match an MTG Symbol.")
+
+;; ^ e.g. official mana symbols: {U} {u} {2} {15} {U/G} {UG} {ug} {P/U} {pU} {2/U} {2u}.
+;; ^ e.g. official symbols: {+}, "an Energy Counter"; 
+;; ^ e.g. custom symbols: {U/G/R}, "Temur Mana"; {hU}, "Thran Blue Mana"; {+}, "a +1/+1 Counter".
+;;
+
+;;
+
+(defconst mtg-rx/zero-or-more-oracle-words (rx-to-string `(0+ (any alpha blank "-'/,"))) "")
+
+;(defconst mtg-rx/one-or-more-oracle-words (rx-to-string `(1+ )) "")
+
+(defconst mtg-rx/oracle-choice
+  (rx-to-string `(: (: bow (: (any "cC") "hoose") eow)
+                    ,mtg-rx/zero-or-more-oracle-words
+                    (: ,mtg-rx/dash)))
+  "")
+
+;;
+
+(defconst mtg-rx/cost
+  (rx-to-string `(1+ (or ,mtg-rx/symbol (1+ (not (any ",:" "\n;" control))))))
+  "Match a single MTG Cost.
+
+Includes both Symbolic Costs (e.g. “{1}”, “{T}”),
+and Textual Costs (e.g. “Pay 1 life”, “Remove a +1/+1 counter from ~”).")
+
+(defconst mtg-rx/activation-cost
+  (rx-to-string `(: ,mtg-rx/cost (0+ (: "," (0+ blank) ,mtg-rx/cost))))
+  "Match an MTG Activation Cost (multiple MTG Costs).")
+
+;;----------------------------------------------;;
+
+(defconst mtg-quotation-regexp
+
+  (rx (any ?“ ?\")
+      (not (any ?“ ?” ?\"))
+      (any ?” ?\"))
+
+  "Match
+
+a `regexpp'.
+
+Examples:
+
+• Llanowar Mentor includes the following sentence in its rules text —
+  « Create a 1/1 green Elf Druid creature token named Llanowar Elves. It has “{T}: Add {G}.” ».")
+
+;;----------------------------------------------;;
+
+(defconst mtg-card-namesake-regexp
+
+  (rx (or (and word-start "~" word-end))
+          (and word-start (any "tT") "his creature" word-end))
+
+  "Match namesakes of the current card.
+
+a `regexpp'.")
+
+;;----------------------------------------------;;
+
+(defconst mtg-card-name-reference-regexp
+
+  (rx word-start "named" word-end (1+ blank) (group (1+ (syntax word))))
+  ;; (mtg-rx word-start "named" word-end (1+ blank) mtg-card-name)
+
+  "Match-Maximally a reference to a known card name.
+
+a `regexpp'.")
+
+;;----------------------------------------------;;
+
+(defconst mtg-symbol-regexp
+
+  (rx "{" (group-n 1 (1+ (any "-" "@#$_&+/*:;!?" alnum))) "}")
+
+  "Match
+
+a `regexpp'.
+
+See URL `https://mtg.gamepedia.com/Numbers_and_symbol'.")
+
+;;----------------------------------------------;;
+
+(defconst mtg-color-white-regexp
+
+  (rx word-start
+      (or (and (any "wW") "hite")
+          (and "{" (any "wW") "}")
+          "Plains")
+      word-end)
+
+  "Match a word/symbol associated with the color white.
+
+a `regexpp'.")
+
+;;----------------------------------------------;;
+
+(defconst mtg-color-blue-regexp
+
+  (rx word-start
+      (or (and (any "Uu") "blue")
+          (and "{" (any  "Uu") "}")
+          "Island")
+      word-end)
+
+  "Match a word/symbol associated with the color ue.
+
+a `regexpp'.")
+
+;;----------------------------------------------;;
+
+(defconst mtg-color-black-regexp
+
+  (rx word-start
+      (or (and (any "Bb") "black")
+          (and "{" (any  "Bb") "}")
+          "Swamp")
+      word-end)
+
+  "Match a word/symbol associated with the color black.
+
+a `regexpp'.")
+
+;;----------------------------------------------;;
+
+(defconst mtg-color-red-regexp
+
+  (rx word-start
+      (or (and (any "Rr") "red")
+          (and "{" (any  "Rr") "}")
+          "Mountain")
+      word-end)
+
+  "Match a word/symbol associated with the color red.
+
+a `regexpp'.")
+
+;;----------------------------------------------;;
+
+(defconst mtg-color-green-regexp
+
+  (rx word-start
+      (or (and (any "Gg") "green")
+          (and "{" (any  "Gg") "}")
+          "Forest")
+      word-end)
+
+  "Match a word/symbol associated with the color green.
+
+a `regexpp'.")
+
 ;;----------------------------------------------;;
 ;;; Groups -------------------------------------;;
 ;;----------------------------------------------;;
@@ -222,152 +402,152 @@ a ‘stringp’.")
 ;;; Macros: `rx' -------------------------------;;
 ;;----------------------------------------------;;
 
-(eval-and-compile
+;; (eval-and-compile
 
-  ;;--------------------------;;
+;;   ;;--------------------------;;
 
-  (defconst mtg-name-char-regexp (rx (any alpha digit "-'"))
-    "Matches a ‘characterp’ that's valid in an MTG Card Name.")
+;;   (defconst mtg-name-char-regexp (rx (any alpha digit "-'"))
+;;     "Matches a ‘characterp’ that's valid in an MTG Card Name.")
 
-  (defconst mtg-type-char-regexp (rx (any alpha "-'"))
-    "Matches a ‘characterp’ that's valid in an MTG Tupe.")
+;;   (defconst mtg-type-char-regexp (rx (any alpha "-'"))
+;;     "Matches a ‘characterp’ that's valid in an MTG Tupe.")
 
-  (defconst mtg-rules-char-regexp (rx (any alpha digit "-'/{}()" "—•" " \n"))
-    "Matches a ‘characterp’ that's valid within MTG Rules Text.")
+;;   (defconst mtg-rules-char-regexp (rx (any alpha digit "-'/{}()" "—•" " \n"))
+;;     "Matches a ‘characterp’ that's valid within MTG Rules Text.")
 
-  ;;--------------------------;;
+;;   ;;--------------------------;;
 
-  (let ((DOWNCASED (if (bound-and-true-p mtg-known-english-card-name-downcased-words)
-                       mtg-known-english-card-name-downcased-words
-                     '("a" "an" "and" "as" "at" "but" "by" "for" "from" "in" "into" "of" "on" "or" "the" "to" "upon" "with" "en" "il" "le" "o'"))))
+;;   (let ((DOWNCASED (if (bound-and-true-p mtg-known-english-card-name-downcased-words)
+;;                        mtg-known-english-card-name-downcased-words
+;;                      '("a" "an" "and" "as" "at" "but" "by" "for" "from" "in" "into" "of" "on" "or" "the" "to" "upon" "with" "en" "il" "le" "o'"))))
 
-    (defconst mtg-rx-constituents
+;;     (defconst mtg-rx-constituents
 
-      `(
-        ;;----------------------;;
+;;       `(
+;;         ;;----------------------;;
 
-        (mtg-name-char          . ,mtg-name-char-regexp)
-        (mtg-type-char          . ,mtg-type-char-regexp)
-        (mtg-rules-char         . ,mtg-rules-char-regexp)
+;;         (mtg-name-char          . ,mtg-name-char-regexp)
+;;         (mtg-type-char          . ,mtg-type-char-regexp)
+;;         (mtg-rules-char         . ,mtg-rules-char-regexp)
 
-        (mtg-capitalized-word   . ,(rx word-start (1+ (any alpha "- ")) word-end))
+;;         (mtg-capitalized-word   . ,(rx word-start (1+ (any alpha "- ")) word-end))
 
-        (mtg-downcased-word     . ,(rx word-start (1+ (any lower "- ")) word-end))
+;;         (mtg-downcased-word     . ,(rx word-start (1+ (any lower "- ")) word-end))
 
-        ;;----------------------;;
+;;         ;;----------------------;;
 
-        (mtg-symbol             . ,(rx "{" (1+ (any alpha digit ?/ )) "}"))
+;;         (mtg-symbol             . ,(rx "{" (1+ (any alpha digit ?/ )) "}"))
 
-        (mtg-type               . ,(rx word-start (1+ (syntax word)) word-end)) 
+;;         (mtg-type               . ,(rx word-start (1+ (syntax word)) word-end)) 
 
-        ;; ^ e.g.. “Urza's” is a valid subtype.
-        ;; Sub/Card/Super Types are syntactically identical, they're single words.
+;;         ;; ^ e.g.. “Urza's” is a valid subtype.
+;;         ;; Sub/Card/Super Types are syntactically identical, they're single words.
 
-        ;; (mtg-keyword            . ,(rx word-start mtg-capitalized-word word-end (1+ mtg-downcased-word)))
+;;         ;; (mtg-keyword            . ,(rx word-start mtg-capitalized-word word-end (1+ mtg-downcased-word)))
 
-        ;; ^ e.g. ‹Flying›, ‹First strike›.
+;;         ;; ^ e.g. ‹Flying›, ‹First strike›.
 
-        (mtg-rarity             . ,(rx "(" (any alpha) ")"))
+;;         (mtg-rarity             . ,(rx "(" (any alpha) ")"))
 
-        (mtg-edition            . ,(rx "(" (1+ (any upper digit)) ")"))
+;;         (mtg-edition            . ,(rx "(" (1+ (any upper digit)) ")"))
 
-        (mtg-card-name-word     . ,(rx word-start (or (or ,@DOWNCASED) (: (char upper) (0+ (char alpha digit)))) word-end))
+;;         (mtg-card-name-word     . ,(rx word-start (or (or ,@DOWNCASED) (: (char upper) (0+ (char alpha digit)))) word-end))
 
-        (mtg-rules-line         . (char "?" "\n"))
+;;         (mtg-rules-line         . (char "?" "\n"))
 
-        ;; ^ in Rules Text, newlines and semicolons are equivalent.
-        ;;
-        ;; (c.f. ‹Cryptic Command›'s original printing versus its recent printings).
-        ;;
+;;         ;; ^ in Rules Text, newlines and semicolons are equivalent.
+;;         ;;
+;;         ;; (c.f. ‹Cryptic Command›'s original printing versus its recent printings).
+;;         ;;
 
-        ;;----------------------;;
+;;         ;;----------------------;;
 
-        (mtg-rules-keywords     . ,(rx (1+ (any alpha "- ")))) ; (mtg-keyword))
+;;         (mtg-rules-keywords     . ,(rx (1+ (any alpha "- ")))) ; (mtg-keyword))
 
-        ;;
+;;         ;;
 
-        (mtg-card-name          . ,(rx word-start (1+ mtg-card-name-word) word-end))
+;;         (mtg-card-name          . ,(rx word-start (1+ mtg-card-name-word) word-end))
 
-        (mtg-card-names         . ,(rx word-start mtg-card-name (? (: symbol-start "//" symbol-end) (? mtg-card-name)) word-end))
+;;         (mtg-card-names         . ,(rx word-start mtg-card-name (? (: symbol-start "//" symbol-end) (? mtg-card-name)) word-end))
 
-        (mtg-mana-cost          . ,(rx symbol-start (1+ mtg-symbol) symbol-end))
+;;         (mtg-mana-cost          . ,(rx symbol-start (1+ mtg-symbol) symbol-end))
 
-        (mtg-typeline           . ,(rx word-start (1+ mtg-type) (? (: symbol-start "—" symbol-end) (? (0+ mtg-type))) word-end)) 
-        ;; ^ One-or-More Cardtypes/Supertypes, then (optionally) a long-dash, then (optionally) Zero-or-More Subtypes.
+;;         (mtg-typeline           . ,(rx word-start (1+ mtg-type) (? (: symbol-start "—" symbol-end) (? (0+ mtg-type))) word-end)) 
+;;         ;; ^ One-or-More Cardtypes/Supertypes, then (optionally) a long-dash, then (optionally) Zero-or-More Subtypes.
 
-        (mtg-rules-text         . ,(rx word))
+;;         (mtg-rules-text         . ,(rx word))
 
-        ;;----------------------;;
+;;         ;;----------------------;;
 
-        ;; (mtg-known-color        . ,(rx word-start (or ,@mtg-known-colors) word-end))
-        ;; (mtg-known-symbol       . ,(rx "{" (or ,@mtg-known-symbols) "}"))
-        ;; ;;(mtg-known-symbol     . ,(rx "{" (1+ (any upper digit ?/)) "}"))
-        ;; (mtg-known-mana-symbol  . ,(rx "{" (or ,@mtg-known-mana-symbols) "}"))
-        ;; (mtg-known-rarity       . ,(rx "(" (or ,@mtg-known-rarities) ")"))
-        ;; (mtg-known-edition      . ,(rx "(" (or ,@mtg-known-editions) ")"))
+;;         ;; (mtg-known-color        . ,(rx word-start (or ,@mtg-known-colors) word-end))
+;;         ;; (mtg-known-symbol       . ,(rx "{" (or ,@mtg-known-symbols) "}"))
+;;         ;; ;;(mtg-known-symbol     . ,(rx "{" (1+ (any upper digit ?/)) "}"))
+;;         ;; (mtg-known-mana-symbol  . ,(rx "{" (or ,@mtg-known-mana-symbols) "}"))
+;;         ;; (mtg-known-rarity       . ,(rx "(" (or ,@mtg-known-rarities) ")"))
+;;         ;; (mtg-known-edition      . ,(rx "(" (or ,@mtg-known-editions) ")"))
 
-        ;;
-        ))
+;;         ;;
+;;         ))
 
-    ;; `((block-start          . ,(rx symbol-start
-    ;;                                (or "def" "class" "if" "elif" "else" "try"
-    ;;                                    "except" "finally" "for" "while" "with")
-    ;;                                symbol-end))
-    ;;   (decorator            . ,(rx line-start (* space) ?@ (any letter ?_)
-    ;;                                (* (any word ?_))))
-    ;;   (defun                . ,(rx symbol-start (or "def" "class") symbol-end))
-    ;;   (if-name-main         . ,(rx line-start "if" (+ space) "__name__"
-    ;;                                (+ space) "==" (+ space)
-    ;;                                (any ?' ?\") "__main__" (any ?' ?\")
-    ;;                                (* space) ?:))
-    ;;   (symbol-name          . ,(rx (any letter ?_) (* (any word ?_))))
-    ;;   (open-paren           . ,(rx (or "{" "[" "(")))
-    ;;   (close-paren          . ,(rx (or "}" "]" ")")))
-    ;;   (simple-operator      . ,(rx (any ?+ ?- ?/ ?& ?^ ?~ ?| ?* ?< ?> ?= ?%)))
-    ;;   ;; FIXME: rx should support (not simple-operator).
-    ;;   (not-simple-operator  . ,(rx
-    ;;                             (not
-    ;;                              (any ?+ ?- ?/ ?& ?^ ?~ ?| ?* ?< ?> ?= ?%))))
-    ;;   ;; FIXME: Use regexp-opt.
-    ;;   (operator             . ,(rx (or "+" "-" "/" "&" "^" "~" "|" "*" "<" ">"
-    ;;                                    "=" "%" "**" "//" "<<" ">>" "<=" "!="
-    ;;                                    "==" ">=" "is" "not")))
-    ;;   ;; FIXME: Use regexp-opt.
-    ;;   (assignment-operator  . ,(rx (or "=" "+=" "-=" "*=" "/=" "//=" "%=" "**="
-    ;;                                    ">>=" "<<=" "&=" "^=" "|=")))
-    ;;   (string-delimiter . ,(rx (and
-    ;;                             ;; Match even number of backslashes.
-    ;;                             (or (not (any ?\\ ?\' ?\")) point
-    ;;                                 ;; Quotes might be preceded by a escaped quote.
-    ;;                                 (and (or (not (any ?\\)) point) ?\\
-    ;;                                      (* ?\\ ?\\) (any ?\' ?\")))
-    ;;                             (* ?\\ ?\\)
-    ;;                             ;; Match single or triple quotes of any kind.
-    ;;                             (group (or  "\"" "\"\"\"" "'" "'''"))))))
+;;     ;; `((block-start          . ,(rx symbol-start
+;;     ;;                                (or "def" "class" "if" "elif" "else" "try"
+;;     ;;                                    "except" "finally" "for" "while" "with")
+;;     ;;                                symbol-end))
+;;     ;;   (decorator            . ,(rx line-start (* space) ?@ (any letter ?_)
+;;     ;;                                (* (any word ?_))))
+;;     ;;   (defun                . ,(rx symbol-start (or "def" "class") symbol-end))
+;;     ;;   (if-name-main         . ,(rx line-start "if" (+ space) "__name__"
+;;     ;;                                (+ space) "==" (+ space)
+;;     ;;                                (any ?' ?\") "__main__" (any ?' ?\")
+;;     ;;                                (* space) ?:))
+;;     ;;   (symbol-name          . ,(rx (any letter ?_) (* (any word ?_))))
+;;     ;;   (open-paren           . ,(rx (or "{" "[" "(")))
+;;     ;;   (close-paren          . ,(rx (or "}" "]" ")")))
+;;     ;;   (simple-operator      . ,(rx (any ?+ ?- ?/ ?& ?^ ?~ ?| ?* ?< ?> ?= ?%)))
+;;     ;;   ;; FIXME: rx should support (not simple-operator).
+;;     ;;   (not-simple-operator  . ,(rx
+;;     ;;                             (not
+;;     ;;                              (any ?+ ?- ?/ ?& ?^ ?~ ?| ?* ?< ?> ?= ?%))))
+;;     ;;   ;; FIXME: Use regexp-opt.
+;;     ;;   (operator             . ,(rx (or "+" "-" "/" "&" "^" "~" "|" "*" "<" ">"
+;;     ;;                                    "=" "%" "**" "//" "<<" ">>" "<=" "!="
+;;     ;;                                    "==" ">=" "is" "not")))
+;;     ;;   ;; FIXME: Use regexp-opt.
+;;     ;;   (assignment-operator  . ,(rx (or "=" "+=" "-=" "*=" "/=" "//=" "%=" "**="
+;;     ;;                                    ">>=" "<<=" "&=" "^=" "|=")))
+;;     ;;   (string-delimiter . ,(rx (and
+;;     ;;                             ;; Match even number of backslashes.
+;;     ;;                             (or (not (any ?\\ ?\' ?\")) point
+;;     ;;                                 ;; Quotes might be preceded by a escaped quote.
+;;     ;;                                 (and (or (not (any ?\\)) point) ?\\
+;;     ;;                                      (* ?\\ ?\\) (any ?\' ?\")))
+;;     ;;                             (* ?\\ ?\\)
+;;     ;;                             ;; Match single or triple quotes of any kind.
+;;     ;;                             (group (or  "\"" "\"\"\"" "'" "'''"))))))
 
-    "Additional Mtg specific sexps for `mtg-rx'")
+;;     "Additional Mtg specific sexps for `mtg-rx'")
 
-  ;;--------------------------;;
+;;   ;;--------------------------;;
 
-  (defmacro mtg-rx (&rest regexps)
+;;   (defmacro mtg-rx (&rest regexps)
 
-    "`rx' extended with `mtg'-specific regexps.
+;;     "`rx' extended with `mtg'-specific regexps.
 
-This variant of `rx' supports common mtg named REGEXPS."
+;; This variant of `rx' supports common mtg named REGEXPS."
 
-    ;; (declare (indent 1))
+;;     ;; (declare (indent 1))
 
-    (let ((rx-constituents (append mtg-rx-constituents rx-constituents))
-          )
+;;     (let ((rx-constituents (append mtg-rx-constituents rx-constituents))
+;;           )
 
-      (cond ((null regexps)
-             (error "‘mtg-rx’: No regexp"))
+;;       (cond ((null regexps)
+;;              (error "‘mtg-rx’: No regexp"))
 
-            ((cdr regexps)
-             (rx-to-string `(and ,@regexps) t))
+;;             ((cdr regexps)
+;;              (rx-to-string `(and ,@regexps) t))
 
-            (t
-             (rx-to-string (car regexps) t))))))
+;;             (t
+;;              (rx-to-string (car regexps) t))))))
 
 ;;----------------------------------------------;;
 ;;; Utilities ----------------------------------;;
@@ -793,125 +973,6 @@ Links:
 ;;----------------------------------------------;;
 ;; Accessors: `regexpp's -----------------------;;
 ;;----------------------------------------------;;
-
-(defconst mtg-quotation-regexp
-
-  (rx (any ?“ ?\")
-      (not (any ?“ ?” ?\"))
-      (any ?” ?\"))
-
-  "Match
-
-a `regexpp'.
-
-Examples:
-
-• Llanowar Mentor includes the following sentence in its rules text —
-  « Create a 1/1 green Elf Druid creature token named Llanowar Elves. It has “{T}: Add {G}.” ».")
-
-;;----------------------------------------------;;
-
-(defconst mtg-card-namesake-regexp
-
-  (rx (or (and word-start "~" word-end))
-          (and word-start (or ?t ?T) "his creature" word-end))
-
-  "Match namesakes of the current card.
-
-a `regexpp'.")
-
-;;----------------------------------------------;;
-
-(defconst mtg-card-name-reference-regexp
-
-  (mtg-rx word-start "named" word-end
-          mtg-card-name)
-
-  "Match-Maximally a reference to a known card name.
-
-a `regexpp'.")
-
-;;----------------------------------------------;;
-
-(defconst mtg-symbol-regexp
-
-  (rx "{" (group-n 1 (1+ (any "-" "@#$_&+/*:;!?" alnum))) "}")
-
-  "Match
-
-a `regexpp'.
-
-See URL `https://mtg.gamepedia.com/Numbers_and_symbol'.")
-
-;;----------------------------------------------;;
-
-(defconst mtg-color-white-regexp
-
-  (rx word-start
-      (or (and (any "wW") "hite")
-          (and "{" (any "wW") "}")
-          "Plains")
-      word-end)
-
-  "Match a word/symbol associated with the color white.
-
-a `regexpp'.")
-
-;;----------------------------------------------;;
-
-(defconst mtg-color-blue-regexp
-
-  (rx word-start
-      (or (and (any "Uu") "blue")
-          (and "{" (any  "Uu") "}")
-          "Island")
-      word-end)
-
-  "Match a word/symbol associated with the color ue.
-
-a `regexpp'.")
-
-;;----------------------------------------------;;
-
-(defconst mtg-color-black-regexp
-
-  (rx word-start
-      (or (and (any "Bb") "black")
-          (and "{" (any  "Bb") "}")
-          "Swamp")
-      word-end)
-
-  "Match a word/symbol associated with the color black.
-
-a `regexpp'.")
-
-;;----------------------------------------------;;
-
-(defconst mtg-color-red-regexp
-
-  (rx word-start
-      (or (and (any "Rr") "red")
-          (and "{" (any  "Rr") "}")
-          "Mountain")
-      word-end)
-
-  "Match a word/symbol associated with the color red.
-
-a `regexpp'.")
-
-;;----------------------------------------------;;
-
-(defconst mtg-color-green-regexp
-
-  (rx word-start
-      (or (and (any "Gg") "green")
-          (and "{" (any  "Gg") "}")
-          "Forest")
-      word-end)
-
-  "Match a word/symbol associated with the color green.
-
-a `regexpp'.")
 
 ;;----------------------------------------------;;
 ;;; Faces --------------------------------------;;
@@ -1339,6 +1400,17 @@ Inherits face ‘mtg-face’."
     ;;   So that ‹M-c› on « ▮'hello' » results in « 'Hello▮' » (rather than « 'hello▮' »),
     ;;   where ‹▮› is the ‘point’.
 
+    ;; Strings...
+
+    (modify-syntax-entry ?\" "$\"" TABLE)
+
+    ;; ^ Rules Text has quotations, not strings. (e.g. ‹Llanowar Mentor›).
+    ;;
+    ;;  But, the quoted Rules Text is still valid Rules Text. Thus, QUOTATION MARK (i.e. the ‹"› character) is a Paired Delimiter (i.e. Syntax Code ‹$›) not a String Opener (i.e. Syntax Code ‹"›).
+    ;;
+    ;;   (‘mtg-rules-text-mode’ is a ‘text-mode’ not than a ‘prog-mode’).
+    ;;
+
     ;; Words...
 
     (modify-syntax-entry ?~ "." TABLE) ; the tilde is a placeholder for an MTG Card Name.
@@ -1369,17 +1441,6 @@ Inherits face ‘mtg-face’."
     (modify-syntax-entry ?|  "." TABLE)
 
     ;; Symbols...
-
-    ;; Strings...
-
-    (modify-syntax-entry ?\" "$" TABLE)
-
-    ;; ^ Rules Text has quotations, not strings. (e.g. ‹Llanowar Mentor›).
-    ;;
-    ;;  But, the quoted Rules Text is still valid Rules Text. Thus, QUOTATION MARK (i.e. the ‹"› character) is a Paired Delimiter (i.e. Syntax Code ‹$›) not a String Opener (i.e. Syntax Code ‹"›).
-    ;;
-    ;;   (‘mtg-rules-text-mode’ is a ‘text-mode’ not than a ‘prog-mode’).
-    ;;
 
     ;; Unicode...
 
