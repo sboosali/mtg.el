@@ -269,6 +269,76 @@ Land cards with colorless identity
 * Prettify symbols — e.g. `{2}{U}` as *②💧* (via `prettify-symbols-mode`).
 * Docs (via `eldoc-mode`).
 
+### Syntax Highlighting
+
+e.g. ‹Dark Ritual›:
+
+``` mtg
+Dark Ritual {B}
+Instant (c) (A)
+Add {B}{B}{B}.
+(Illustrated by Clint Langley.)
+(Designed by Richard Garfield.)
+```
+
+Syntactically, what distinguishes the name line with its mana cost (i.e. « Dark Ritual {B} ») from a text line with mana symbols (i.e. « Add {B}{B}{B}. »)? (1) the trailing period in (non-KeywordList) Rules Text, or (2) being the first line.
+
+Given this printing of « Dark Ritual »:
+
+``` mtg
+Dark Ritual
+{B}
+Instant
+(c)
+(A)
+Add {B}{B}{B}.
+(Illustrated by Clint Langley.)
+(Designed by Richard Garfield.)
+```
+
+Parse into these fields:
+
+* `Dark Ritual` — card name.
+* `{B}` — mana cost, i.e. `'(b)` (one Black Mana).
+* `Instant` — card type(s), i.e. `'(instant)`.
+* `Add {B}{B}{B}.` — rules text, i.e. `"Add {B}{B}{B}."`.
+* `(c)` — rarity (common).
+* `(A)` — edition (alpha).
+* `(Illustrated by Clint Langley.)` — card-printing metadata.
+* `(Designed by Richard Garfield.)` — card metadata.
+* `` — 
+
+then derive and/or default these fields:
+
+* `1` — the cmc, via `(mtg-convert-mana-cost ('b))`
+* `'black` — the color, via `(mtg-convert-mana-cost ('b))`
+* `'()` — i.e. no supertypes nor subtypes.
+
+Card Color is primarily derived from the Mana Cost, but ultimately can be overridden by the Rules Text.
+
+For example:
+
+``` mtg
+Transguild Courier {4}
+Transguild Courier is all colors.
+```
+
+`Transguild Courier`'s Mana Cost implies colorlessness (i.e. `nil`), but its Rules Text declares it's "all colors" (i.e. `t`).
+
+For example:
+
+``` mtg
+Pact of Negation {0}
+Pact of Negation is blue.
+```
+
+`Pact of Negation`'s Mana Cost implies colorlessness (i.e. `nil`), but its Rules Text declares it's "blue" (i.e. `'(u)`).
+
+Generally, the first line of Rules Text which explicitly characterizes Card Color looks like either
+
+* `~ is COLOR.` — where `COLOR` is a color, by default: `white`, `blue`, `black`, `red`, `green`.
+* `~ is all colors.`
+
 ### Prettify Symbols
 
 Render symbols either:

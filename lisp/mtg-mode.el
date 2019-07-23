@@ -222,71 +222,92 @@ a ‘stringp’.")
 ;;; Macros: `rx' -------------------------------;;
 ;;----------------------------------------------;;
 
-(eval-when-compile
+(eval-and-compile
 
   ;;--------------------------;;
 
-  (defconst mtg-rx-constituents
+  (defconst mtg-name-char-regexp (rx (any alpha digit "-'"))
+    "Matches a ‘characterp’ that's valid in an MTG Card Name.")
 
-    `(
-      ;;----------------------;;
+  (defconst mtg-type-char-regexp (rx (any alpha "-'"))
+    "Matches a ‘characterp’ that's valid in an MTG Tupe.")
 
-      (mtg-symbol             . (: "{" (1+ (any alpha digit ?/ )) "}"))
+  (defconst mtg-rules-char-regexp (rx (any alpha digit "-'/{}()" "—•" " \n"))
+    "Matches a ‘characterp’ that's valid within MTG Rules Text.")
 
-      (mtg-capitalized-word   . (: word-start () word-end))
+  ;;--------------------------;;
 
-      (mtg-downcased-word     . (: word-start () word-end))
+  (let ((DOWNCASED (if (bound-and-true-p mtg-known-english-card-name-downcased-words)
+                       mtg-known-english-card-name-downcased-words
+                     '("a" "an" "and" "as" "at" "but" "by" "for" "from" "in" "into" "of" "on" "or" "the" "to" "upon" "with" "en" "il" "le" "o'"))))
 
-      (mtg-type               . (: word-start (1+ (syntax word)) word-end)) 
+    (defconst mtg-rx-constituents
 
-      ;; ^ e.g.. “Urza's” is a valid subtype.
-      ;; Sub/Card/Super Types are syntactically identical, they're single words.
+      `(
+        ;;----------------------;;
 
-      (mtg-keyword            . (: word-start mtg-capitalized-word word-end (1+ mtg-downcased-word)))
+        (mtg-name-char          . ,mtg-name-char-regexp)
+        (mtg-type-char          . ,mtg-type-char-regexp)
+        (mtg-rules-char         . ,mtg-rules-char-regexp)
 
-      ;; ^ e.g. ‹Flying›, ‹First strike›.
+        (mtg-capitalized-word   . ,(rx word-start (1+ (any alpha "- ")) word-end))
 
-      (mtg-rarity             . (: "(" (any alpha) ")"))
+        (mtg-downcased-word     . ,(rx word-start (1+ (any lower "- ")) word-end))
 
-      (mtg-edition            . (: "(" (1+ (any upper digit)) ")"))
+        ;;----------------------;;
 
-      (mtg-card-name-word     . (: word-start (or (or ,@mtg-known-english-card-name-downcased-words) (: (char upper) (0+ (char alpha digit)))) word-end))
+        (mtg-symbol             . ,(rx "{" (1+ (any alpha digit ?/ )) "}"))
 
-      (mtg-rules-line         . (char "?" "\n"))
+        (mtg-type               . ,(rx word-start (1+ (syntax word)) word-end)) 
 
-      ;; ^ in Rules Text, newlines and semicolons are equivalent.
-      ;;
-      ;; (c.f. ‹Cryptic Command›'s original printing versus its recent printings).
-      ;;
+        ;; ^ e.g.. “Urza's” is a valid subtype.
+        ;; Sub/Card/Super Types are syntactically identical, they're single words.
 
-      ;;----------------------;;
+        ;; (mtg-keyword            . ,(rx word-start mtg-capitalized-word word-end (1+ mtg-downcased-word)))
 
-      (mtg-rules-keywords     . (mtg-keyword))
+        ;; ^ e.g. ‹Flying›, ‹First strike›.
 
-      ;;
+        (mtg-rarity             . ,(rx "(" (any alpha) ")"))
 
-      (mtg-card-name          . (: word-start (1+ mtg-card-name-word) word-end))
+        (mtg-edition            . ,(rx "(" (1+ (any upper digit)) ")"))
 
-      (mtg-card-names         . (: word-start mtg-card-name (? (: symbol-start "//" symbol-end) (? mtg-card-name)) word-end))
+        (mtg-card-name-word     . ,(rx word-start (or (or ,@DOWNCASED) (: (char upper) (0+ (char alpha digit)))) word-end))
 
-      (mtg-mana-cost          . (: symbol-start (1+ mtg-symbol) symbol-end))
+        (mtg-rules-line         . (char "?" "\n"))
 
-      (mtg-typeline           . (: word-start (1+ mtg-type) (? (: symbol-start "—" symbol-end) (? (0+ mtg-type))) word-end)) 
-      ;; ^ One-or-More Cardtypes/Supertypes, then (optionally) a long-dash, then (optionally) Zero-or-More Subtypes.
+        ;; ^ in Rules Text, newlines and semicolons are equivalent.
+        ;;
+        ;; (c.f. ‹Cryptic Command›'s original printing versus its recent printings).
+        ;;
 
-      (mtg-rules-text         . (: ))
+        ;;----------------------;;
 
-      ;;----------------------;;
+        (mtg-rules-keywords     . ,(rx (1+ (any alpha "- ")))) ; (mtg-keyword))
 
-      ;; (mtg-known-color        . (: word-start (or ,@mtg-known-colors) word-end))
-      ;; (mtg-known-symbol       . (: "{" (or ,@mtg-known-symbols) "}"))
-      ;; ;;(mtg-known-symbol     . (: "{" (1+ (any upper digit ?/)) "}"))
-      ;; (mtg-known-mana-symbol  . (: "{" (or ,@mtg-known-mana-symbols) "}"))
-      ;; (mtg-known-rarity       . (: "(" (or ,@mtg-known-rarities) ")"))
-      ;; (mtg-known-edition      . (: "(" (or ,@mtg-known-editions) ")"))
+        ;;
 
-      ;;
-      )
+        (mtg-card-name          . ,(rx word-start (1+ mtg-card-name-word) word-end))
+
+        (mtg-card-names         . ,(rx word-start mtg-card-name (? (: symbol-start "//" symbol-end) (? mtg-card-name)) word-end))
+
+        (mtg-mana-cost          . ,(rx symbol-start (1+ mtg-symbol) symbol-end))
+
+        (mtg-typeline           . ,(rx word-start (1+ mtg-type) (? (: symbol-start "—" symbol-end) (? (0+ mtg-type))) word-end)) 
+        ;; ^ One-or-More Cardtypes/Supertypes, then (optionally) a long-dash, then (optionally) Zero-or-More Subtypes.
+
+        (mtg-rules-text         . ,(rx word))
+
+        ;;----------------------;;
+
+        ;; (mtg-known-color        . ,(rx word-start (or ,@mtg-known-colors) word-end))
+        ;; (mtg-known-symbol       . ,(rx "{" (or ,@mtg-known-symbols) "}"))
+        ;; ;;(mtg-known-symbol     . ,(rx "{" (1+ (any upper digit ?/)) "}"))
+        ;; (mtg-known-mana-symbol  . ,(rx "{" (or ,@mtg-known-mana-symbols) "}"))
+        ;; (mtg-known-rarity       . ,(rx "(" (or ,@mtg-known-rarities) ")"))
+        ;; (mtg-known-edition      . ,(rx "(" (or ,@mtg-known-editions) ")"))
+
+        ;;
+        ))
 
     ;; `((block-start          . ,(rx symbol-start
     ;;                                (or "def" "class" "if" "elif" "else" "try"
@@ -330,7 +351,7 @@ a ‘stringp’.")
 
   (defmacro mtg-rx (&rest regexps)
 
-    "`rx' extended with `mtg-mode' regexps.
+    "`rx' extended with `mtg'-specific regexps.
 
 This variant of `rx' supports common mtg named REGEXPS."
 
@@ -340,7 +361,7 @@ This variant of `rx' supports common mtg named REGEXPS."
           )
 
       (cond ((null regexps)
-             (error "No regexp"))
+             (error "‘mtg-rx’: No regexp"))
 
             ((cdr regexps)
              (rx-to-string `(and ,@regexps) t))
@@ -1351,7 +1372,14 @@ Inherits face ‘mtg-face’."
 
     ;; Strings...
 
-    (modify-syntax-entry ?\" "\"" TABLE)
+    (modify-syntax-entry ?\" "$" TABLE)
+
+    ;; ^ Rules Text has quotations, not strings. (e.g. ‹Llanowar Mentor›).
+    ;;
+    ;;  But, the quoted Rules Text is still valid Rules Text. Thus, QUOTATION MARK (i.e. the ‹"› character) is a Paired Delimiter (i.e. Syntax Code ‹$›) not a String Opener (i.e. Syntax Code ‹"›).
+    ;;
+    ;;   (‘mtg-rules-text-mode’ is a ‘text-mode’ not than a ‘prog-mode’).
+    ;;
 
     ;; Unicode...
 
@@ -1382,7 +1410,7 @@ Related:
 ;; 
 
 ;;==============================================;;
-;; ‘syntax-propertize-function’ (sybmol ‘syntax-table’):
+;; ‘syntax-propertize-function’:
 
 (defun mtg-mode-syntax-propertize (&optional beg end)
 
@@ -1457,6 +1485,35 @@ Inputs:
   Defaults to `point'."
 
   (nth 4 (syntax-ppss position)))
+
+;;----------------------------------------------;;
+;;; Utilities: Syntax --------------------------;;
+;;----------------------------------------------;;
+
+(defsubst mtg--sexp-innermost-char (state)
+  "Return the innermost bracket-character prior to (‘parse-partial-state’'s) STATE."
+  (nth 1 state))
+
+(defsubst mtg--start-of-prior-sexp (state)
+  "Return the starting position of the sexp prior to (‘parse-partial-state’'s) STATE"
+  (nth 2 state))                                       
+                                                       
+(defsubst mtg--inside-string? (state)                  
+  "Whether (‘parse-partial-state’'s) STATE is currently inside a string."
+  (nth 3 state))                                       
+                                                       
+(defsubst mtg--after-prefix-char? (state)              
+  "Whether (‘parse-partial-state’'s) STATE is currently after a Prefix Character (a.k.a Quote)."
+  (nth 5 state))                                       
+;; ^ “t if the end point is just after a quote character.”
+                                                       
+(defsubst mtg--start-of-string (state)                 
+  "Return the starting position of the current string at (‘parse-partial-state’'s) STATE."
+  (nth 8 state))                                       
+                                                       
+(defsubst mtg--exists-prior-sexp? (state)              
+  "Whether there exists a sexp prior to (‘parse-partial-state’'s) STATE."
+  (number-or-marker-p (mtg--start-of-last-sexp state)))
 
 ;;----------------------------------------------;;
 ;;; Abbreviations ------------------------------;;
@@ -1702,7 +1759,7 @@ Customize:
     (mtg--regexp-opt STRINGS)))
 
 ;;----------------------------------------------;;
-;; Images --------------------------------------;;
+;;; Images -------------------------------------;;
 ;;----------------------------------------------;;
 
 (defun mtg-toggle-inline-images (&optional force)
@@ -1743,37 +1800,61 @@ Effects:
       ())))
 
 ;;----------------------------------------------;;
-;; Font Lock -----------------------------------;;
+;;; Font Lock ----------------------------------;;
 ;;----------------------------------------------;;
 
-(defconst mtg-font-lock-keywords-keyword
+(defun mtg-font-lock-propertize ()
 
-  `(,(mtg-keyword-regexp) . mtg-keyword)
+  "."
+
+  (let* ()
+    (cond
+
+      (t (mtg-propertize-card)))))
+
+;;----------------------------------------------;;
+
+(defun mtg-propertize-card ()
+
+  "‘propertize’ a (textual) MTG Card.
+
+See URL ‘https://magic.wizards.com/en/articles/archive/magic-academy/anatomy-magic-card-2006-10-21’ (“Anatomy Of A Magic Card”)."
+
+  (let* (
+         )
+
+    ))
+
+;;==============================================;;
+
+(defconst mtg-font-lock-keywords/builtin-keyword
+
+  `(,(mtg-builtin-keyword-regexp) . mtg-keyword)
 
   "Highlighting MTG Keywords.")
 
 ;;----------------------------------------------;;
 
-(defconst mtg-font-lock-keywords-ability-word
+(defconst mtg-font-lock-keywords/builtin-ability-word
 
-  `(,(mtg-ability-word-regexp) . mtg-ability-word)
+  `(,(mtg-builtin-ability-word-regexp) . mtg-ability-word)
 
   "Highlighting MTG Ability-Words.")
 
 ;;----------------------------------------------;;
 
-(defconst mtg-font-lock-keywords-type
+(defconst mtg-font-lock-keywords/builtin-type
 
-  `(,(mtg-type-regexp) . mtg-type-face)
+  `(,(mtg-builtin-type-regexp) . mtg-type-face)
 
   "Highlighting MTG Types.")
 
 ;;----------------------------------------------;;
 
-(defconst mtg-font-lock-keywords-shebang
+(defconst mtg-font-lock-keywords/shebang
 
-  (list (rx buffer-start "#!" (0+ not-newline) eol)
-       '(0 font-lock-comment-face))
+  `(,(rx buffer-start "#!" (0+ not-newline) eol)
+     (0 font-lock-comment-face))
 
   "Highlighting the “shebang line” (e.g. « #!/bin/env mtg »).")
 
@@ -1781,17 +1862,17 @@ Effects:
 
 (defconst mtg-font-lock-keywords
 
-  (list mtg-font-lock-keywords-keyword
-        mtg-font-lock-keywords-ability-word
-        mtg-font-lock-keywords-type
-        mtg-font-lock-keywords-
-        mtg-font-lock-keywords-
-        mtg-font-lock-keywords-
+  (list mtg-font-lock-keywords/builtin-keyword
+        mtg-font-lock-keywords/builtin-ability-word
+        mtg-font-lock-keywords/builtin-type
+        mtg-font-lock-keywords/shebang
+        mtg-font-lock-keywords/
+        mtg-font-lock-keywords/
         )
 
   "`font-lock-keywords' for `mtg-mode'.
 
-a `listp' associating `regexpp's with `facep's.
+a `listp' associating `stringp's with `facep's (generally).
 
 (For “Search-based Fontification”,
 a.k.a. “Keyword-based Syntax-Highlighting”).")
@@ -1800,15 +1881,15 @@ a.k.a. “Keyword-based Syntax-Highlighting”).")
 
 (defconst mtg-font-lock-defaults
 
-  (let ((mtg-font-lock-keywords-only             t)   ; Search-Based Fontification
-        (mtg-font-lock-keywords-case-fold-search nil) ; Case-Insensitive
+  (let ((mtg-font-lock-keywords-only             nil)  ; both Syntactic Fontification and Search-Based Fontification.
+        (mtg-font-lock-keywords-case-fold-search t)    ; Case-Sensitive.
         )
-    (list 'mtg-font-lock-keywords mtg-font-lock-keywords-only mtg-font-lock-keywords-case-fold-search))
+    `(mtg-font-lock-keywords ,mtg-font-lock-keywords-only ,mtg-font-lock-keywords-case-fold-search))
 
   "`font-lock-defaults' for `mtg-mode'.")
 
 ;;----------------------------------------------;;
-;; Completion ----------------------------------;;
+;;; Completion ---------------------------------;;
 ;;----------------------------------------------;;
 
 (cl-defun mtg-completion-at-point ()
@@ -1822,7 +1903,7 @@ Behavior:
   ())
 
 ;;----------------------------------------------;;
-;; Indentation ---------------------------------;;
+;;; Indentation --------------------------------;;
 ;;----------------------------------------------;;
 
 (defcustom mtg-basic-offset 2
@@ -1879,7 +1960,7 @@ Related:
 ;; - (2) Alternatively, Emacs provides the Simple Minded Indentation Engine (SMIE). You write a BNF grammar and you get basic indentation and movement commands for free.
 
 ;;----------------------------------------------;;
-;; ElDoc ---------------------------------------;;
+;;; ElDoc --------------------------------------;;
 ;;----------------------------------------------;;
 
 (defun mtg-eldoc (&optional symbol)
@@ -1936,7 +2017,7 @@ Links:
 ;;
 
 ;;----------------------------------------------;;
-;; Keymaps -------------------------------------;;
+;;; Keymaps ------------------------------------;;
 ;;----------------------------------------------;;
 
 (defvar mtg-mode-map
@@ -1974,7 +2055,7 @@ its current bindings are:
   "Keymap for following links with mouse.")
 
 ;;----------------------------------------------;;
-;; Menu ----------------------------------------;;
+;;; Menubar ------------------------------------;;
 ;;----------------------------------------------;;
 
 (easy-menu-define mtg-mode-menu mtg-mode-map
@@ -1997,6 +2078,11 @@ its current bindings are:
     ))
 
 ;;----------------------------------------------;;
+;;; Toolbar ------------------------------------;;
+;;----------------------------------------------;;
+
+;;----------------------------------------------;;
+;;----------------------------------------------;;
 ;;; IMenu --------------------------------------;;
 ;;----------------------------------------------;;
 
@@ -2012,7 +2098,7 @@ Output:
   ())
 
 ;;----------------------------------------------;;
-;; Mode ----------------------------------------;;
+;;; Mode ---------------------------------------;;
 ;;----------------------------------------------;;
 
 ;;;###autoload
@@ -2162,7 +2248,7 @@ Call `mtg-version' to get the version of the currently-loaded Mtg Mode.
     #'mtg-mode))
 
 ;;----------------------------------------------;;
-;; Commands ------------------------------------;;
+;;; Commands -----------------------------------;;
 ;;----------------------------------------------;;
 
 (defun mtg-version ()

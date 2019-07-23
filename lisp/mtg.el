@@ -710,9 +710,20 @@ standard, modern, legacy, vintage, commander, future (future Standard), pauper, 
 ;;  ⇒ #s(mtg-rarity rare r nil)
 
 ;;----------------------------------------------;;
-;;; Types: “Enums” -----------------------------;;
+;;; Types --------------------------------------;;
 ;;----------------------------------------------;;
 
+(deftype mtg-mana-symbol ()
+  `(or symbol (integer 0 *)))
+
+;;----------------------------------------------;;
+
+(deftype mtg-mana-cost ()
+  `(or symbol list string))             ;TODO
+
+;;----------------------------------------------;;
+;;; Types: “Enums” -----------------------------;;
+;;----------------------------------------------;;
 
 ;;----------------------------------------------;;
 ;;; Groups -------------------------------------;;
@@ -1175,10 +1186,50 @@ an association `listp':
 
 ;;==============================================;;
 
-(defcustom mtg-symbols
+(defcustom mtg-mana-symbols
 
   '(
    )
+
+  "MTG Symbols.
+
+`listp' of `symbolp's."
+
+  :type '(repeat (symbol :tag "MTG Symbol"))
+
+  :safe #'listp
+  :group 'mtg)
+
+;;----------------------------------------------;;
+
+(defcustom mtg-mana-symbol-conversions
+
+  '((X . 0)
+    (Y . 0)
+    (Z . 0)
+
+    (2/W . 2)
+    (2/U . 2)
+    (2/B . 2)
+    (2/R . 2)
+    (2/G . 2))
+
+  "Convert MTG Symbols for CMC.
+
+an association-‘listp’, from ‘symbolp’s to ‘natnump’s."
+
+  :type '(alist :key-type   (symbol  :tag "MTG Symbol")
+                :value-type (integer :tag "CMC"))
+
+  :safe #'listp
+  :group 'mtg)
+
+;;==============================================;;
+
+(defcustom mtg-symbols
+
+  (append mtg-mana-symbols
+          '())
 
   "MTG Symbols.
 
@@ -1195,6 +1246,7 @@ an association `listp':
 
   `((tap                    . ,(make-mtg-symbol :name 'tap                    :abbr 'T   :char ?Ⓣ))
     (untap                  . ,(make-mtg-symbol :name 'untap                  :abbr 'Q   :char ?🅤))
+    (energy                 . ,(make-mtg-symbol :name 'energy-mana            :abbr 'E   :char ?⚡))
 
     ;; Mana...
 
@@ -1205,11 +1257,10 @@ an association `listp':
     (green-mana             . ,(make-mtg-symbol :name 'green-mana             :abbr 'G   :char ?🌲))
 
     (colorless-mana         . ,(make-mtg-symbol :name 'colorless-mana         :abbr 'C   :char ?◇))
-    (snow-mana              . ,(make-mtg-symbol :name 'snow-mana              :abbr 'S   :char ?❄))
-    (energy-mana            . ,(make-mtg-symbol :name 'energy-mana            :abbr 'E   :char ?⚡))
-    (variable-X-mana        . ,(make-mtg-symbol :name 'variable-X-mana        :abbr 'X   :char ?X))
-    (variable-Y-mana        . ,(make-mtg-symbol :name 'variable-Y-mana        :abbr 'Y   :char ?Y))
-    (variable-Z-mana        . ,(make-mtg-symbol :name 'variable-Z-mana        :abbr 'Z   :char ?Z))
+    (generic-snow-mana      . ,(make-mtg-symbol :name 'snow-mana              :abbr 'S   :char ?❄))
+    (variable-X-mana        . ,(make-mtg-symbol :name 'variable-X-mana        :abbr 'X   :char ?X :cmc 0))
+    (variable-Y-mana        . ,(make-mtg-symbol :name 'variable-Y-mana        :abbr 'Y   :char ?Y :cmc 0))
+    (variable-Z-mana        . ,(make-mtg-symbol :name 'variable-Z-mana        :abbr 'Z   :char ?Z :cmc 0))
 
     (phyrexian-white-mana   . ,(make-mtg-symbol :name 'phyrexian-white-mana   :abbr 'P/W :char ?ϕ))
     (phyrexian-blue-mana    . ,(make-mtg-symbol :name 'phyrexian-blue-mana    :abbr 'P/U :char ?ϕ))
@@ -1217,11 +1268,11 @@ an association `listp':
     (phyrexian-red-mana     . ,(make-mtg-symbol :name 'phyrexian-red-mana     :abbr 'P/R :char ?ϕ))
     (phyrexian-green-mana   . ,(make-mtg-symbol :name 'phyrexian-green-mana   :abbr 'P/G :char ?ϕ))
 
-    (monohybrid-white-mana  . ,(make-mtg-symbol :name 'monohybrid-white-mana  :abbr '2/W :char ?🌞))
-    (monohybrid-blue-mana   . ,(make-mtg-symbol :name 'monohybrid-blue-mana   :abbr '2/U :char ?🌢))
-    (monohybrid-black-mana  . ,(make-mtg-symbol :name 'monohybrid-black-mana  :abbr '2/B :char ?💀))
-    (monohybrid-red-mana    . ,(make-mtg-symbol :name 'monohybrid-red-mana    :abbr '2/R :char ?⛰))
-    (monohybrid-green-mana  . ,(make-mtg-symbol :name 'monohybrid-green-mana  :abbr '2/G :char ?🌲))
+    (monohybrid-white-mana  . ,(make-mtg-symbol :name 'monohybrid-white-mana  :abbr '2/W :char ?🌞 :cmc 2))
+    (monohybrid-blue-mana   . ,(make-mtg-symbol :name 'monohybrid-blue-mana   :abbr '2/U :char ?🌢 :cmc 2))
+    (monohybrid-black-mana  . ,(make-mtg-symbol :name 'monohybrid-black-mana  :abbr '2/B :char ?💀 :cmc 2))
+    (monohybrid-red-mana    . ,(make-mtg-symbol :name 'monohybrid-red-mana    :abbr '2/R :char ?⛰ :cmc 2))
+    (monohybrid-green-mana  . ,(make-mtg-symbol :name 'monohybrid-green-mana  :abbr '2/G :char ?🌲 :cmc 2))
 
     (zero-generic-mana      . ,(make-mtg-symbol :name 'zero-generic-mana      :abbr '0   :char ?⓪))
     (one-generic-mana       . ,(make-mtg-symbol :name 'one-generic-mana       :abbr '1   :char ?⓵))
@@ -1785,7 +1836,38 @@ Examples:
 ;;; Functions ----------------------------------;;
 ;;----------------------------------------------;;
 
-;;(cl-loop for STRING in mtg-data/card-names-vector do (intern STRING))
+(defun mtg-convert-mana-cost (mana-cost)
+
+  "Return the Converted Mana Cost of MANA-COST.
+
+Inputs:
+
+• MANA-COST — a ‘symbolp’ ‘listp’.
+
+Output:
+
+• a ‘natnump’."
+
+  (cl-loop for MANA-SYMBOL in mana-cost
+     with CONVERTED-MANA-SYMBOL = (mtg-convert-mana-symbol MANA-SYMBOL)
+     sum CONVERTED-MANA-SYMBOL))
+
+;;----------------------------------------------;;
+
+(defun mtg-convert-mana-symbol (mana-symbol)
+
+  "Return the Converted Mana Cost of MANA-SYMBOL (a singleton Mana Cost).
+
+Inputs:
+
+• MANA-SYMBOL — a ‘symbolp’.
+
+Output:
+
+• a ‘natnump’.
+  Defaults to ‘1’ for unknown MANA-SYMBOLS."
+
+  (or (get mana-symbol 'cmc) 1))
 
 ;;----------------------------------------------;;
 ;;; JSON ---------------------------------------;;
