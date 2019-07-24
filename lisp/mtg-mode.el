@@ -210,59 +210,167 @@ a ‘stringp’.")
 
 ;;----------------------------------------------;;
 
-(defconst mtg-rx/newline (rx (any "\n;")))
+(eval-and-compile
 
-(defconst mtg-rx/not-newline (rx (not (any "\n;"))))
+  (defconst mtg-rx/newline (rx (any "\n;")))
 
-(defconst mtg-rx/dash (rx (: symbol-start (or "--" "—") symbol-end)))
+  (defconst mtg-rx/not-newline (rx (not (any "\n;"))))
 
-(defconst mtg-rx/bullet (rx (: symbol-start (any "*•") symbol-end)))
+  (defconst mtg-rx/dash (rx (: symbol-start (or "--" "—") symbol-end)))
 
-;;
+  (defconst mtg-rx/bullet (rx (: symbol-start (any "*•") symbol-end)))
 
-(defconst mtg-rx/numeral (rx (1+ (any digit "0-9" "-+*" "÷×√"))))
+  ;;
 
-(defconst mtg-rx/power-toughness (rx-to-string `(: symbol-start ,mtg-rx/numeral "/" ,mtg-rx/numeral symbol-end)))
+  (defconst mtg-rx/numeral (rx (1+ (any digit "0-9" "-+*" "÷×√"))))
 
-;;
+  (defconst mtg-rx/power-toughness (rx-to-string `(: symbol-start ,mtg-rx/numeral "/" ,mtg-rx/numeral symbol-end)))
 
-(defconst mtg-rx/symbolic-char
-  (rx-to-string `(any "/" alpha digit "-!@#$%^∗_+="))
-  "Match a character within an MTG Symbol.")
+  ;;
 
-(defconst mtg-rx/symbol
-  (rx-to-string `(: symbol-start "{" (or (1+ ,mtg-rx/symbolic-char)) "}" symbol-end))
-  "Match an MTG Symbol.")
+  (defconst mtg-rx/symbolic-char
+    (rx-to-string `(any "/" alpha digit "-!@#$%^∗_+="))
+    "Match a character within an MTG Symbol.")
 
-;; ^ e.g. official mana symbols: {U} {u} {2} {15} {U/G} {UG} {ug} {P/U} {pU} {2/U} {2u}.
-;; ^ e.g. official symbols: {+}, "an Energy Counter"; 
-;; ^ e.g. custom symbols: {U/G/R}, "Temur Mana"; {hU}, "Thran Blue Mana"; {+}, "a +1/+1 Counter".
-;;
+  (defconst mtg-rx/symbol
+    (rx-to-string `(: symbol-start "{" (or (1+ ,mtg-rx/symbolic-char)) "}" symbol-end))
+    "Match an MTG Symbol.")
 
-;;
+  ;; ^ e.g. official mana symbols: {U} {u} {2} {15} {U/G} {UG} {ug} {P/U} {pU} {2/U} {2u}.
+  ;; ^ e.g. official symbols: {+}, "an Energy Counter"; 
+  ;; ^ e.g. custom symbols: {U/G/R}, "Temur Mana"; {hU}, "Thran Blue Mana"; {+}, "a +1/+1 Counter".
+  ;;
 
-(defconst mtg-rx/zero-or-more-oracle-words (rx-to-string `(0+ (any alpha blank "-'/,"))) "")
+  ;;
 
-;(defconst mtg-rx/one-or-more-oracle-words (rx-to-string `(1+ )) "")
+  (defconst mtg-rx/zero-or-more-oracle-words (rx-to-string `(0+ (any alpha blank "-'/,"))) "")
 
-(defconst mtg-rx/oracle-choice
-  (rx-to-string `(: (: bow (: (any "cC") "hoose") eow)
-                    ,mtg-rx/zero-or-more-oracle-words
-                    (: ,mtg-rx/dash)))
-  "")
+                                        ;(defconst mtg-rx/one-or-more-oracle-words (rx-to-string `(1+ )) "")
 
-;;
+  (defconst mtg-rx/oracle-choice
+    (rx-to-string `(: (: bow (: (any "cC") "hoose") eow)
+                      ,mtg-rx/zero-or-more-oracle-words
+                      (: ,mtg-rx/dash)))
+    "")
 
-(defconst mtg-rx/cost
-  (rx-to-string `(1+ (or ,mtg-rx/symbol (1+ (not (any ",:" "\n;" control))))))
-  "Match a single MTG Cost.
+  ;;
+
+  (defconst mtg-rx/cost
+    (rx-to-string `(1+ (or ,mtg-rx/symbol (1+ (not (any ",:" "\n;" control))))))
+    "Match a single MTG Cost.
 
 Includes both Symbolic Costs (e.g. “{1}”, “{T}”),
 and Textual Costs (e.g. “Pay 1 life”, “Remove a +1/+1 counter from ~”).")
 
-(defconst mtg-rx/activation-cost
-  (rx-to-string `(: ,mtg-rx/cost (0+ (: "," (0+ blank) ,mtg-rx/cost))))
-  "Match an MTG Activation Cost (multiple MTG Costs).")
+  (defconst mtg-rx/activation-cost
+    (rx-to-string `(: ,mtg-rx/cost (0+ (: "," (0+ blank) ,mtg-rx/cost))))
+    "Match an MTG Activation Cost (multiple MTG Costs).")
+
+  ;;--------------------------;;
+
+  (let ((DOWNCASED (if (bound-and-true-p mtg-builtin-english-card-name-downcased-words)
+                       mtg-builtin-english-card-name-downcased-words
+                     '("a" "an" "and" "as" "at" "but" "by" "for" "from" "in" "into" "of" "on" "or" "the" "to" "upon" "with" "en" "il" "le" "o'"))))
+
+    (defconst mtg-rx/card-name-word
+      (rx-to-string `(: word-start (or (or ,@DOWNCASED) (: (char upper) (0+ (char alpha digit)))) word-end))
+      "Match a word within an MTG Card Name."))
+
+  ;;--------------------------;;
+
+  (defconst mtg-rx-constituents
+
+    `(
+      ;;----------------------;;
+
+      (mtg-name-char          . ,mtg-name-char-regexp)
+      (mtg-type-char          . ,mtg-type-char-regexp)
+      (mtg-rules-char         . ,mtg-rules-char-regexp)
+
+      (mtg-capitalized-word   . ,(rx word-start (1+ (any alpha "- ")) word-end))
+
+      (mtg-downcased-word     . ,(rx word-start (1+ (any lower "- ")) word-end))
+
+      ;;----------------------;;
+
+      (mtg-symbol             . ,(rx "{" (1+ (any alpha digit ?/ )) "}"))
+
+      (mtg-type               . ,(rx word-start (1+ (syntax word)) word-end)) 
+
+      ;; ^ e.g.. “Urza's” is a valid subtype.
+      ;; Sub/Card/Super Types are syntactically identical, they're single words.
+
+      ;; (mtg-keyword            . ,(rx word-start mtg-capitalized-word word-end (1+ mtg-downcased-word)))
+
+      ;; ^ e.g. ‹Flying›, ‹First strike›.
+
+      (mtg-rarity             . ,(rx "(" (any alpha) ")"))
+
+      (mtg-edition            . ,(rx "(" (1+ (any upper digit)) ")"))
+
+      (mtg-card-name-word     . ,mtg-rx/card-name-word)
+
+      (mtg-rules-line         . (char "?" "\n"))
+
+      ;; ^ in Rules Text, newlines and semicolons are equivalent.
+      ;;
+      ;; (c.f. ‹Cryptic Command›'s original printing versus its recent printings).
+      ;;
+
+      ;;----------------------;;
+
+      (mtg-rules-keywords     . ,(rx (1+ (any alpha "- ")))) ; (mtg-keyword))
+
+      ;;
+
+      (mtg-card-name          . ,(rx word-start (1+ mtg-card-name-word) word-end))
+
+      (mtg-card-names         . ,(rx word-start mtg-card-name (? (: symbol-start "//" symbol-end) (? mtg-card-name)) word-end))
+
+      (mtg-mana-cost          . ,(rx symbol-start (1+ mtg-symbol) symbol-end))
+
+      (mtg-typeline           . ,(rx word-start (1+ mtg-type) (? (: symbol-start "—" symbol-end) (? (0+ mtg-type))) word-end)) 
+      ;; ^ One-or-More Cardtypes/Supertypes, then (optionally) a long-dash, then (optionally) Zero-or-More Subtypes.
+
+      (mtg-rules-text         . ,(rx word))
+
+      ;;----------------------;;
+
+      ;; (mtg-builtin-color        . ,(rx word-start (or ,@mtg-builtin-colors) word-end))
+      ;; (mtg-builtin-symbol       . ,(rx "{" (or ,@mtg-builtin-symbols) "}"))
+      ;; ;;(mtg-builtin-symbol     . ,(rx "{" (1+ (any upper digit ?/)) "}"))
+      ;; (mtg-builtin-mana-symbol  . ,(rx "{" (or ,@mtg-builtin-mana-symbols) "}"))
+      ;; (mtg-builtin-rarity       . ,(rx "(" (or ,@mtg-builtin-rarities) ")"))
+      ;; (mtg-builtin-edition      . ,(rx "(" (or ,@mtg-builtin-editions) ")"))
+
+      ;;
+      )
+    "MTG-specific ‘rx-constituents’ (for ‘mtg-rx’).")
+
+  ;;--------------------------;;
+
+  (defun mtg-rx-to-string (form &optional no-group)
+    "Markdown mode specialized `rx-to-string' function.
+This variant supports named Markdown expressions in FORM.
+NO-GROUP non-nil means don't put shy groups around the result."
+
+    (let ((rx-constituents (append mtg-rx-constituents rx-constituents)))
+      (rx-to-string form no-group)))
+
+  ;;--------------------------;;
+
+  (defmacro mtg-rx (&rest regexps)
+    "Markdown mode specialized rx macro.
+This variant of `rx' supports common Markdown named REGEXPS."
+
+    (pcase regexps
+      ('()                 (error "‘mtg-rx’ regexp"))
+      (`(,REGEXP)          (mtg-rx-to-string REGEXP           :no-group))
+      (_                   (mtg-rx-to-string `(and ,@regexps) :no-group))))
+
+  ;;--------------------------;;
+
+  ())
 
 ;;----------------------------------------------;;
 
@@ -417,8 +525,8 @@ a `regexpp'.")
 
 ;;   ;;--------------------------;;
 
-;;   (let ((DOWNCASED (if (bound-and-true-p mtg-known-english-card-name-downcased-words)
-;;                        mtg-known-english-card-name-downcased-words
+;;   (let ((DOWNCASED (if (bound-and-true-p mtg-builtin-english-card-name-downcased-words)
+;;                        mtg-builtin-english-card-name-downcased-words
 ;;                      '("a" "an" "and" "as" "at" "but" "by" "for" "from" "in" "into" "of" "on" "or" "the" "to" "upon" "with" "en" "il" "le" "o'"))))
 
 ;;     (defconst mtg-rx-constituents
@@ -479,12 +587,12 @@ a `regexpp'.")
 
 ;;         ;;----------------------;;
 
-;;         ;; (mtg-known-color        . ,(rx word-start (or ,@mtg-known-colors) word-end))
-;;         ;; (mtg-known-symbol       . ,(rx "{" (or ,@mtg-known-symbols) "}"))
-;;         ;; ;;(mtg-known-symbol     . ,(rx "{" (1+ (any upper digit ?/)) "}"))
-;;         ;; (mtg-known-mana-symbol  . ,(rx "{" (or ,@mtg-known-mana-symbols) "}"))
-;;         ;; (mtg-known-rarity       . ,(rx "(" (or ,@mtg-known-rarities) ")"))
-;;         ;; (mtg-known-edition      . ,(rx "(" (or ,@mtg-known-editions) ")"))
+;;         ;; (mtg-builtin-color        . ,(rx word-start (or ,@mtg-builtin-colors) word-end))
+;;         ;; (mtg-builtin-symbol       . ,(rx "{" (or ,@mtg-builtin-symbols) "}"))
+;;         ;; ;;(mtg-builtin-symbol     . ,(rx "{" (1+ (any upper digit ?/)) "}"))
+;;         ;; (mtg-builtin-mana-symbol  . ,(rx "{" (or ,@mtg-builtin-mana-symbols) "}"))
+;;         ;; (mtg-builtin-rarity       . ,(rx "(" (or ,@mtg-builtin-rarities) ")"))
+;;         ;; (mtg-builtin-edition      . ,(rx "(" (or ,@mtg-builtin-editions) ")"))
 
 ;;         ;;
 ;;         ))
@@ -1722,28 +1830,83 @@ run at the same time."
 
 (defconst mtg-default-prettify-symbols-alist
 
-  '(("--"   . ?—)
-    ("*"    . ?•)
+  '(("*"    . ?•)
+    ("--"   . ?—)
 
-    ("{T}"  . ?⟳) ; Ⓣ ⟳ ↻ ↷
-    ("{C}"  . ?◇) ; Ⓒ ◇ ♢ ♦
-    ("{W}"  . ?☀) ; Ⓦ ☀ 🌞 ☼
-    ("{U}"  . ?💧) ; Ⓤ 💧 🌊 🏝
-    ("{B}"  . ?💀) ; Ⓑ 💀 ☠️
-    ("{R}"  . ?🔥) ; Ⓡ 🔥 🌋 🏔 ⛰️ ⛰
-    ("{G}"  . ?🌳) ; Ⓖ 🌳 🌲 🌴
-    ("{Q}"  . ?⤻) ; Ⓠ ⤻ ⤿
-    ("{S}"  . ?❄) ; Ⓢ ❄ ❅ ❆ 
-    ("{E}"  . ?⚡) ; Ⓔ ⚡ ↯
-    ("{X}"  . ?Ⓧ)
-    ("{Y}"  . ?Ⓨ)
-    ("{Z}"  . ?Ⓩ)
+    ("{A}"  . ?Ⓐ) ;
+    ("{B}"  . ?💀) ; Ⓑ 💀 ☠️ (black mana)
+    ("{C}"  . ?◇) ; Ⓒ ◇ ♢ ♦ (colorless/generic mana)
+    ("{E}"  . ?⚡) ; Ⓔ ⚡ ↯ (energy counter)
+    ("{G}"  . ?🌳) ; Ⓖ 🌳 🌲 🌴 (green mana)
+    ("{Q}"  . ?⤻) ; Ⓠ ⤻ ⤿ (untap)
+    ("{R}"  . ?🔥) ; Ⓡ 🔥 🌋 🏔 ⛰️ ⛰ (red mana)
+    ("{S}"  . ?❄) ; Ⓢ ❄ ❅ ❆ ("snow mana")
+    ("{T}"  . ?⟳) ; Ⓣ ⟳ ↻ ↷ (tap)
+    ("{U}"  . ?💧) ; Ⓤ 💧 🌊 🏝 (blue mana)
+    ("{W}"  . ?☀) ; Ⓦ ☀ 🌞 ☼ (white mana)
+    ("{X}"  . ?Ⓧ) ; (variable mana)
+    ("{Y}"  . ?Ⓨ) ; (variable mana)
+    ("{Z}"  . ?Ⓩ) ; (variable mana)
 
+    ("{+}"  . ?⨁) ; ⨁ ⊕ (+1/+1 counter)
+
+    ;; ("Ae" . ?Æ)
+    ;; ("ae" . ?æ)
+
+;; (""  . ? )
+
+    ;; « CIRCLED DIGIT * »…
     ("{0}"  . ?⓪)
-    ;;TODO ...
-    ("{50}" . ?㊿)
-
-    (""  . ? ))
+    ;; ("{1}" . ?①)
+    ;; ("{2}" . ?)
+    ;; ("{3}" . ?)
+    ;; ("{4}" . ?)
+    ;; ("{5}" . ?)
+    ;; ("{6}" . ?)
+    ;; ("{7}" . ?)
+    ;; ("{8}" . ?)
+    ;; ("{9}" . ?)
+    ;; ("{10}" . ?)
+    ;; ("{11}" . ?)
+    ;; ("{12}" . ?)
+    ;; ("{13}" . ?)
+    ;; ("{14}" . ?)
+    ;; ("{15}" . ?)
+    ;; ("{16}" . ?)
+    ;; ("{17}" . ?)
+    ;; ("{18}" . ?)
+    ;; ("{19}" . ?)
+    ;; ("{20}" . ?)
+    ;; ("{21}" . ?)
+    ;; ("{22}" . ?)
+    ;; ("{23}" . ?)
+    ;; ("{24}" . ?)
+    ;; ("{25}" . ?)
+    ;; ("{26}" . ?)
+    ;; ("{27}" . ?)
+    ;; ("{28}" . ?)
+    ;; ("{29}" . ?)
+    ;; ("{30}" . ?)
+    ;; ("{31}" . ?)
+    ;; ("{32}" . ?)
+    ;; ("{33}" . ?)
+    ;; ("{34}" . ?)
+    ;; ("{35}" . ?)
+    ;; ("{36}" . ?)
+    ;; ("{37}" . ?)
+    ;; ("{38}" . ?)
+    ;; ("{39}" . ?)
+    ;; ("{40}" . ?)
+    ;; ("{41}" . ?)
+    ;; ("{42}" . ?)
+    ;; ("{43}" . ?)
+    ;; ("{44}" . ?)
+    ;; ("{45}" . ?)
+    ;; ("{46}" . ?)
+    ;; ("{47}" . ?)
+    ;; ("{48}" . ?)
+    ;; ("{49}" . ?)
+    ("{50}" . ?㊿))
 
   "Default ‘mtg-prettify-symbols-alist’.
 
@@ -1759,11 +1922,10 @@ URL ‘http://xahlee.info/comp/unicode_circled_numbers.html’")
 
   "‘prettify-symbols-alist’ for ‘mtg-mode’.
 
-Associates ‘stringp’s with ‘symbolp’s."
+Associates ‘stringp’s with ‘characterp’s."
 
-  :type '(alist :key-type   (string :tag "key")
-                :value-type (choice (const nil)
-                                    (string :tag "value")))
+  :type '(alist :key-type   (string :tag "Matching String")
+                :value-type (string :tag "Replacing Character"))
 
   :safe #'listp
   :group 'mtg)
@@ -1789,7 +1951,7 @@ Customize:
 
 • Variable `mtg-keywords'"
 
-  (mtg--regexp-opt mtg-known-keywords))
+  (mtg--regexp-opt mtg-builtin-keywords))
 
 ;;----------------------------------------------;;
 
@@ -1801,7 +1963,7 @@ Customize:
 
 • Variable `mtg-ability-words'"
 
-  (mtg--regexp-opt mtg-known-ability-words))
+  (mtg--regexp-opt mtg-builtin-ability-words))
 
 ;;----------------------------------------------;;
 
@@ -1814,7 +1976,7 @@ Customize:
 • Variable `mtg-types'"
 
   (let* ((STRINGS
-          (cl-loop for SYMBOL in mtg-known-types
+          (cl-loop for SYMBOL in mtg-builtin-types
              collect (symbol-name SYMBOL))))
 
     (mtg--regexp-opt STRINGS)))

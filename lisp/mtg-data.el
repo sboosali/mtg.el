@@ -3,7 +3,7 @@
 ;; Copyright © 2019 Spiros Boosalis
 
 ;; Version: 0.0.0
-;; Prefix: mtg-known-
+;; Prefix: mtg-builtin-
 ;; Package-Requires: ((emacs "25"))
 ;; Author:  Spiros Boosalis <samboosalis@gmail.com>
 ;; Homepage: https://github.com/sboosali/.emacs.d
@@ -32,9 +32,9 @@
 ;;
 ;; Includes:
 ;;
-;; • ‘mtg-known-card-names’ — card names.
-;; • ‘mtg-known-types’      — sub/super/card types.
-;; • ‘mtg-known-keyword’    — keyword abilities/actions.
+;; • ‘mtg-builtin-card-names’ — card names.
+;; • ‘mtg-builtin-types’      — sub/super/card types.
+;; • ‘mtg-builtin-keyword’    — keyword abilities/actions.
 ;;
 ;; ‘read’able LISP Data, from JSON Data (URL ‘https://mtgjson.com/json/version.json’).
 ;;
@@ -77,7 +77,7 @@ URL ‘https://mtgjson.com/json/version.json’")
 
 ;;----------------------------------------------;;
 
-(defconst mtg-known-card-names
+(defconst mtg-builtin-card-names
 
   [
    "A Display of My Dark Power"
@@ -19401,12 +19401,12 @@ and/or are Vintage-legal and/or are black-brodered.")
 
 ;; ^ e.g.:
 ;;
-;; M-: (cl-loop for STRING in mtg-known-card-names do (intern STRING))
+;; M-: (cl-loop for STRING in mtg-builtin-card-names do (intern STRING))
 ;;
 
 ;;==============================================;;
 
-(defconst mtg-known-cardtypes
+(defconst mtg-builtin-cardtypes
 
   '(instant sorcery artifact enchantment land creature planeswalker)
 
@@ -19418,7 +19418,7 @@ URL ‘https://mtgjson.com/json/CardTypes.json’ (circa 2019-07).")
 
 ;;----------------------------------------------;;
 
-(defconst mtg-known-supertypes
+(defconst mtg-builtin-supertypes
 
   '(basic legendary ongoing snow world)
 
@@ -19430,7 +19430,7 @@ URL ‘https://mtgjson.com/json/CardTypes.json’ (circa 2019-07).")
 
 ;;----------------------------------------------;;
 
-(defconst mtg-known-spell-subtypes
+(defconst mtg-builtin-spell-subtypes
 
   '(arcane trap)
 
@@ -19444,13 +19444,13 @@ Notes:
 
 URL ‘https://mtgjson.com/json/CardTypes.json’ (circa 2019-07).")
 
-(defvaralias 'mtg-known-instant-subtypes 'mtg-known-spell-subtypes)
+(defvaralias 'mtg-builtin-instant-subtypes 'mtg-builtin-spell-subtypes)
 
-(defvaralias 'mtg-known-sorcery-subtypes 'mtg-known-spell-subtypes)
+(defvaralias 'mtg-builtin-sorcery-subtypes 'mtg-builtin-spell-subtypes)
 
 ;;----------------------------------------------;;
 
-(defconst mtg-known-artifact-subtypes
+(defconst mtg-builtin-artifact-subtypes
 
   '(clue contraption equipment fortification treasure vehicle)
 
@@ -19468,7 +19468,7 @@ URL ‘https://mtgjson.com/json/CardTypes.json’ (circa 2019-07).")
 
 ;;
 
-(defconst mtg-known-enchantment-subtypes
+(defconst mtg-builtin-enchantment-subtypes
 
   '(aura cartouche curse saga shrine)
 
@@ -19484,7 +19484,7 @@ URL ‘https://mtgjson.com/json/CardTypes.json’ (circa 2019-07).")
 
 ;;----------------------------------------------;;
 
-(defconst mtg-known-land-subtypes
+(defconst mtg-builtin-land-subtypes
 
   '(plains island swamp mountain forest
     desert gate lair locust
@@ -19503,7 +19503,7 @@ URL ‘https://mtgjson.com/json/CardTypes.json’ (circa 2019-07).")
 
 ;;----------------------------------------------;;
 
-(defconst mtg-known-planeswalker-subtypes
+(defconst mtg-builtin-planeswalker-subtypes
 
   '(
     ajani
@@ -19566,7 +19566,7 @@ URL ‘https://mtgjson.com/json/CardTypes.json’ (circa 2019-07).")
 
 ;;----------------------------------------------;;
 
-(defconst mtg-known-creature-subtypes
+(defconst mtg-builtin-creature-subtypes
 
   '(
     advisor
@@ -19819,36 +19819,36 @@ a ‘listp’ of ‘symbolp’s.
 
 Notes:
 
-• « (length mtg-known-creature-subtypes) » is currently .
+• « (length mtg-builtin-creature-subtypes) » is currently .
 
 URL ‘https://mtgjson.com/json/CardTypes.json’ (circa 2019-07).")
 
 ;;----------------------------------------------;;
 
-(defconst mtg-known-subtypes
+(defconst mtg-builtin-subtypes
 
-  (append mtg-known-spell-subtypes
-          mtg-known-artifact-subtypes
-          mtg-known-enchantment-subtypes
-          mtg-known-land-subtypes
-          mtg-known-planeswalker-subtypes
-          mtg-known-creature-subtypes)
+  (append mtg-builtin-spell-subtypes
+          mtg-builtin-artifact-subtypes
+          mtg-builtin-enchantment-subtypes
+          mtg-builtin-land-subtypes
+          mtg-builtin-planeswalker-subtypes
+          mtg-builtin-creature-subtypes)
 
   "Known Subtypes (of any known Cardtype).
 
 a ‘listp’ of ‘symbolp’s.
 
-Merges the ‘mtg-known-*-subtypes’ of all ‘mtg-known-cardtypes’.
+Merges the ‘mtg-builtin-*-subtypes’ of all ‘mtg-builtin-cardtypes’.
 
 URL ‘https://mtgjson.com/json/CardTypes.json’ (circa 2019-07).")
 
 ;;----------------------------------------------;;
 
-(defconst mtg-known-types
+(defconst mtg-builtin-types
 
-  (append mtg-known-cardtypes
-          mtg-known-supertypes
-          mtg-known-subtypes)
+  (append mtg-builtin-cardtypes
+          mtg-builtin-supertypes
+          mtg-builtin-subtypes)
 
   "Known Card/Super/Sub Types.
 
@@ -19856,9 +19856,9 @@ a ‘listp’ of ‘symbolp’s.
 
 Merges:
 
-• ‘mtg-known-cardtypes’
-• ‘mtg-known-supertypes’
-• ‘mtg-known-subtypes’
+• ‘mtg-builtin-cardtypes’
+• ‘mtg-builtin-supertypes’
+• ‘mtg-builtin-subtypes’
 
 URL ‘https://mtgjson.com/json/CardTypes.json’ (circa 2019-07).")
 
@@ -19868,7 +19868,7 @@ URL ‘https://mtgjson.com/json/CardTypes.json’ (circa 2019-07).")
 
 ;;----------------------------------------------;;
 
-(defconst mtg-known-keyword-abilities
+(defconst mtg-builtin-keyword-abilities
 
   '(
     "absorb"
@@ -20008,7 +20008,7 @@ A `stringp' `listp'.")
 
 ;;----------------------------------------------;;
 
-(defconst mtg-known-keyword-actions
+(defconst mtg-builtin-keyword-actions
 
   '(
     "abandon"
@@ -20061,7 +20061,7 @@ A `stringp' `listp'.")
 
 ;;----------------------------------------------;;
 
-(defconst mtg-known-ability-words
+(defconst mtg-builtin-ability-words
 
   '(
     "addendum"
@@ -20113,10 +20113,10 @@ URL ‘https://mtgjson.com/json/Keywords.json’ (circa 2019-07).")
 
 ;;----------------------------------------------;;
 
-(defconst mtg-known-keywords
+(defconst mtg-builtin-keywords
 
-  (append mtg-known-keyword-abilities
-          mtg-known-keyword-actions)
+  (append mtg-builtin-keyword-abilities
+          mtg-builtin-keyword-actions)
 
   "Known MTG Keywords.
 
@@ -20124,8 +20124,8 @@ a ‘listp’ of ‘symbolp’s.
 
 Merges:
 
-• ‘mtg-known-keyword-abilities’
-• ‘mtg-known-keyword-actions’
+• ‘mtg-builtin-keyword-abilities’
+• ‘mtg-builtin-keyword-actions’
 
 URL ‘https://mtgjson.com/json/Keywords.json’ (circa 2019-07).")
 
@@ -20133,7 +20133,7 @@ URL ‘https://mtgjson.com/json/Keywords.json’ (circa 2019-07).")
 
 ;;; Data: Words...
 
-(defconst mtg-known-english-card-name-downcased-words
+(defconst mtg-builtin-english-card-name-downcased-words
 
   '("a" "an" "and" "as" "at" "but" "by" "for" "from" "in" "into" "of" "on" "or" "the" "to" "upon" "with"
     "en" "il"                 ; e.g. “en-Vec”, “il-Kor”.
@@ -20157,7 +20157,7 @@ a `listp' of `stringp's.")
 
 ;;; Data: Statistics...
 
-(defconst mtg--known-card-names-count (length mtg-known-card-names)
+(defconst mtg--builtin-card-names-count (length mtg-builtin-card-names)
 
   "How many unique card names there are known to be.
 
@@ -20167,10 +20167,10 @@ a `natnump'..")
 
 ;;----------------------------------------------;;
 
-(defconst mtg--known-longest-card-name-length
+(defconst mtg--builtin-longest-card-name-length
 
   (seq-reduce (lambda (*LENGTH* *STRING*) (max *LENGTH* (length *STRING*)))
-                mtg-known-card-names
+                mtg-builtin-card-names
                 0)
 
   "How long is the longest known card name (in English).
