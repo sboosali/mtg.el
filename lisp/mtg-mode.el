@@ -237,7 +237,7 @@ a ‘stringp’.")
     "Match an MTG Symbol.")
 
   ;; ^ e.g. official mana symbols: {U} {u} {2} {15} {U/G} {UG} {ug} {P/U} {pU} {2/U} {2u}.
-  ;; ^ e.g. official symbols: {+}, "an Energy Counter"; 
+  ;; ^ e.g. official symbols: {E}, "an Energy Counter"; 
   ;; ^ e.g. custom symbols: {U/G/R}, "Temur Mana"; {hU}, "Thran Blue Mana"; {+}, "a +1/+1 Counter".
   ;;
 
@@ -656,56 +656,6 @@ a `regexpp'.")
 
 ;;             (t
 ;;              (rx-to-string (car regexps) t))))))
-
-;;----------------------------------------------;;
-;;; Utilities ----------------------------------;;
-;;----------------------------------------------;;
-
-(defun mtg--regexp-opt (strings)
-
-  "Return a regular expression matching anything in STRINGS.
-
-Inputs:
-
-• STRINGS — a `listp' of `stringp's.
-
-Output:
-
-• a `regexp'.
-  Matches a syntactic symbol (see Info Node `(emacs) ') which is in STRINGS.
-
-Examples:
-
-• M-: (mtg--regexp-opt '(\"abc\" \"123\"))
-      \"\\_<\\(123\\|abc\\)\\_>\"
-
-Notes:
-
-• Boundaries are respected.
-  i.e. the output doesn't match substrings
-  within a word or symbol, only the entire string.
-
-Related:
-
-• Calls `regexp-opt'"
-
-  (let* ((STRINGS (identity strings))
-         )
-    (regexp-opt STRINGS 'words)))
-
-;; ^ e.g.:
-;;
-;; • M-: (mtg--regexp-opt '("def" "123"))
-;;     → "\\_<\\(123\\|def\\)\\_>"
-;;
-;; • M-: (if (string-match-p (mtg--regexp-opt '("def" "123")) "def") t nil)
-;;     → t
-;; • M-: (if (string-match-p (mtg--regexp-opt '("def" "123")) "abcdef") t nil)
-;;     → nil
-;; • M-: (if (string-match-p (mtg--regexp-opt '("def" "123")) "defghi") t nil)
-;;     → nil
-;;
-;;
 
 ;;----------------------------------------------;;
 ;;; Custom Variables ---------------------------;;
@@ -1493,6 +1443,9 @@ Inherits face ‘mtg-face’."
     (modify-syntax-entry ?\[ "(]" TABLE) ; MTG Symbols too?
     (modify-syntax-entry ?\] ")[" TABLE)
 
+    (modify-syntax-entry ?\（ "(）" TABLE) ; Chinese/Japanese
+    (modify-syntax-entry ?\） ")（" TABLE)
+
     ;; Punctuation...
 
     (modify-syntax-entry ?,  "." TABLE)
@@ -1519,15 +1472,25 @@ Inherits face ‘mtg-face’."
     ;;   (‘mtg-rules-text-mode’ is a ‘text-mode’ not than a ‘prog-mode’).
     ;;
 
+    (modify-syntax-entry ?\“ "$”" TABLE) ; English/Spanish/Italian/Portuguese/Russian
+    (modify-syntax-entry ?\” "$“" TABLE) 
+
+    (modify-syntax-entry ?\« "$»" TABLE) ; French
+    (modify-syntax-entry ?\» "$«" TABLE)
+
+    ;; (modify-syntax-entry ?\„ "$“" TABLE) ; German
+    ;; (modify-syntax-entry ?\“ "$„" TABLE) ; [TODO] interferes with English/Spanish/Italian/Portuguese/Russian quotes.
+
+    (modify-syntax-entry ?\「 "$」" TABLE) ; Chinese/Japanese
+    (modify-syntax-entry ?\」 "$「" TABLE)
+
+    ;; ^ Quotes in ‘mtg-languages’:
+    ;;
+    ;; e.g. URL ‘https://scryfall.com/card/fut/131/llanowar-mentor’
+
     ;; Words...
 
     (modify-syntax-entry ?~ "." TABLE) ; the tilde is a placeholder for an MTG Card Name.
-
-    (dolist (CHAR '(?0 ?1 ?2 ?3 ?4 ?5 ?6 ?7 ?8 ?9))
-      (modify-syntax-entry CHAR "w" TABLE)) ; digits 
-
-    (dolist (CHAR '(?a ?A ?b ?B ?c ?C ?d ?D ?e ?E ?f ?F ?g ?G ?h ?H ?i ?I ?j ?J ?k ?K ?l ?L ?m ?M ?n ?N ?o ?O ?p ?P ?q ?Q ?r ?R ?s ?S ?t ?T ?u ?U ?v ?V ?w ?W ?x ?X ?y ?Y ?z ?Z))
-      (modify-syntax-entry CHAR "w" TABLE)) ; letters
 
     (modify-syntax-entry ?!  "." TABLE)
     (modify-syntax-entry ?@  "." TABLE)
@@ -1547,6 +1510,12 @@ Inherits face ‘mtg-face’."
     (modify-syntax-entry ?\? "." TABLE)
     (modify-syntax-entry ?\\ "." TABLE)
     (modify-syntax-entry ?|  "." TABLE)
+
+    (dolist (CHAR '(?0 ?1 ?2 ?3 ?4 ?5 ?6 ?7 ?8 ?9))
+      (modify-syntax-entry CHAR "w" TABLE)) ; digits 
+
+    (dolist (CHAR '(?a ?A ?b ?B ?c ?C ?d ?D ?e ?E ?f ?F ?g ?G ?h ?H ?i ?I ?j ?J ?k ?K ?l ?L ?m ?M ?n ?N ?o ?O ?p ?P ?q ?Q ?r ?R ?s ?S ?t ?T ?u ?U ?v ?V ?w ?W ?x ?X ?y ?Y ?z ?Z))
+      (modify-syntax-entry CHAR "w" TABLE)) ; letters
 
     ;; Symbols...
 
@@ -1688,28 +1657,45 @@ Inputs:
 ;;; Abbreviations ------------------------------;;
 ;;----------------------------------------------;;
 
-(define-abbrev-table 'mtg-mode-abbrev-table
+(defcustom mtg-abbrev-alist
 
-    '(("cmc"    "converted mana cost"             nil :system t)
-      ("etb"    "enters the battlefield"          nil :system t)
-      ("ueot"   "until end of turn"               nil :system t)
-      ("ltoet"  "less than or equal to"           nil :system t)
-      ("gtoet"  "greater than or equal to"        nil :system t)
-      ("atboyu" "at the beginning of your upkeep" nil :system t)
-      (""    ""          nil :system t)
-      (""    ""          nil :system t)
-      (""    ""          nil :system t)
-      (""    ""          nil :system t)
-      (""    ""          nil :system t)
-      (""    ""          nil :system t)
-      (""    ""          nil :system t)
-      (""    ""          nil :system t)
-      (""    ""          nil :system t)
-      (""    ""          nil :system t)
-      (""    ""          nil :system t)
+    `(("cmc"    . "converted mana cost")
+      ("etb"    . "enters the battlefield")
+      ("ueot"   . "until end of turn")
+      ("ltoet"  . "less than or equal to")
+      ("gtoet"  . "greater than or equal to")
+      ("atboyu" . "at the beginning of your upkeep")
       )
 
-  "‘abbrev-table-p’ for `mtg-mode'.
+  "MTG Abbreviations."
+
+  :type '(alist :key-type   (string :tag "Abbreviation")
+                :value-type (string :tag "Expansion"))
+
+  :safe #'listp
+  :group 'mtg)
+
+;;----------------------------------------------;;
+
+(define-abbrev-table 'mtg-mode-abbrev-table
+
+    (append (cl-loop for (ABBREVIATION . EXPANSION) in mtg-abbrev-alist
+               collect `(,ABBREVIATION ,EXPANSION nil :system t))
+
+      ;; (""    ""          nil :system t)
+      ;; (""    ""          nil :system t)
+      ;; (""    ""          nil :system t)
+      ;; (""    ""          nil :system t)
+      ;; (""    ""          nil :system t)
+      ;; (""    ""          nil :system t)
+      ;; (""    ""          nil :system t)
+      ;; (""    ""          nil :system t)
+      ;; (""    ""          nil :system t)
+      ;; (""    ""          nil :system t)
+      ;; (""    ""          nil :system t)
+            )
+
+  "The ‘abbrev-table-p’ for `mtg-mode'.
 
 URL `https://mtg.gamepedia.com/List_of_Magic_slang'"
 
@@ -1722,7 +1708,31 @@ URL `https://mtg.gamepedia.com/List_of_Magic_slang'"
 ;; • 
 ;; • 
 ;; • 
+;;
+
+;; ^ e.g.
+;;
+;; M-: (type-of mtg-mode-abbrev-table)
+;;  ↪ 'vector
+;; M-: (abbrev-table-p mtg-mode-abbrev-table)
+;;  ↪ t
+;; M-: (obarrayp mtg-mode-abbrev-table)
+;;  ↪ t
+;; M-: (vectorp mtg-mode-abbrev-table)
+;;  ↪ t
+;; M-: (arrayp mtg-mode-abbrev-table)
+;;  ↪ t
+;; M-: (char-table-p mtg-mode-abbrev-table)
+;;  ↪ nil
+;;
+;; M-: (map-values mtg-mode-abbrev-table)
+;;  ↪ '(## 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ltoet etb 0 0 0 atboyu gtoet 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 cmc 0 0 0 0 ueot 0 0 0 0 0 0)
 ;; 
+;; M-: (nth 20 (map-values mtg-mode-abbrev-table))
+;;  ↪ 'ltoet
+;;
+;; 
+;;
 
 ;;----------------------------------------------;;
 ;;; Comments -----------------------------------;;

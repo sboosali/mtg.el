@@ -264,6 +264,59 @@ Related:
 • ‘mtg-card/is-known-spell-p’")
 
 ;;----------------------------------------------;;
+
+(defconst mtg-default-english-card-name-styled-words
+
+  '("en" "il")
+
+  "Default ‘mtg-english-card-name-styled-words’.")
+
+;;----------------------------------------------;;
+;;; Macros -------------------------------------;;
+;;----------------------------------------------;;
+
+(eval-when-compile
+
+  (defmacro mtg--with-buffer-or-string (buffer-or-string &rest body)
+
+    "Eval BODY “within” BUFFER-OR-STRING.
+
+BUFFER-OR-STRING is a ‘stringp’ or ‘bufferp’ or nil.
+
+BODY is a form which accesses and/or modifies the ‘current-buffer’.
+
+\(fn BUFFER-OR-STRING BODY...\)"
+
+    (declare (debug t)
+             (indent 1))
+
+    `(progn
+       (let ((BUFFER-OR-STRING ,buffer-or-string))
+
+         (cl-check-type BUFFER-OR-STRING (or string buffer null))
+
+         (cl-typecase BUFFER-OR-STRING
+
+           (string (with-temp-buffer
+                     (insert BUFFER-OR-STRING)
+                     (goto-char (point-min))
+                     ,@body
+                     (buffer-substring (point-min) (point-max))))
+
+           (buffer (with-current-buffer BUFFER-OR-STRING
+                     ,@body))
+
+           (t        ,@body)))))
+
+  ())
+
+;; ^ e.g...
+;;
+;; M-: (mtg--with-buffer-or-string "abc xyz" (upcase-word +1))
+;;   ↪ "ABC xyz"
+;;
+
+;;----------------------------------------------;;
 ;;; Types --------------------------------------;;
 ;;----------------------------------------------;;
 
@@ -1666,10 +1719,6 @@ a `listp' of `mtg-block-p's."
   :safe #'listp
   :group 'mtg)
 
-;;==============================================;;
-
-
-
 ;;----------------------------------------------;;
 ;;; Variables (‘mtg-json’) ---------------------;;
 ;;----------------------------------------------;;
@@ -1691,6 +1740,8 @@ a `listp' of: `stringp's-and/or `symbolp's."
   :safe #'listp
   :group 'mtg)
 
+;;----------------------------------------------;;
+;;; Variables (‘propertize’) -------------------;;
 ;;----------------------------------------------;;
 
 (defcustom mtg-card-name-punctuation-characters-list
@@ -1740,6 +1791,26 @@ Exceptions to English Titlecasing (which ‘capitalize’s most words), includin
 • MTG-specific modifiers — e.g. “en-Vec” and “il-Kor”.
 
 a `listp' of `stringp's."
+
+  :type '(repeat (string :tag "Word"))
+
+  :safe #'listp
+  :group 'mtg)
+
+;;----------------------------------------------;;
+
+(defcustom mtg-english-card-name-styled-words mtg-default-english-card-name-styled-words
+
+  "Words to style within Card Names.
+
+a `listp' of `stringp's.
+
+Includes: modifiers, epithets.
+
+For example:
+
+• Italicize the “en” in “en-Vec”.
+• Italicize the “il” in “il-Kor”."
 
   :type '(repeat (string :tag "Word"))
 
@@ -1831,6 +1902,33 @@ Examples:
        end
 
        finally return (seq-uniq SEARCH-PATH))))
+
+;;==============================================;;
+
+(cl-defun mtg--english-card-name-styled-regexp (&key extra)
+
+  "Return a regexp matching ‘mtg-english-card-name-styled-words’ / EXTRA."
+
+  (let* ((WORDS (append mtg-english-card-name-styled-words extra)))
+
+    (mtg--regexp-opt WORDS 'words)))
+
+;; e.g.:
+;;
+;; • M-: (mtg--english-card-name-styled-regexp)
+;;     ↪ "\\<\\(en\\|il\\)\\>"
+
+;;----------------------------------------------;;)
+
+(cl-defun mtg--abbreviatable-regexp (&key)
+
+  "Return a regexp matching ‘mtg-abbreviations’.
+
+i.e. match a phrase/sentence which can be abbreviated."
+
+  (let* ((PHRASES (cl-loop for (_ . PHRASE) in mtg-abbreviations collect PHRASE)))
+
+    (mtg--regexp-opt PHRASES 'words)))
 
 ;;----------------------------------------------;;
 ;;; Functions ----------------------------------;;
@@ -2377,65 +2475,6 @@ For example, this command skips across/until these ‘mtg-card-name’s:
 ;;
 
 ;;----------------------------------------------;;
-;;; Styling ------------------------------------;;
-;;----------------------------------------------;;
-
-(cl-defun mtg-propertize-card-name (text)
-
-  "`propertize' TEXT as a Card Name.
-
-Inputs:
-
-• TEXT — a `stringp'.
-
-Output:
-
-• a `stringp'.
-  TEXT, with different Text Properties.
-
-Properties:
-
-• Italics — Italicize some prefixes,
-  like the “il” in  “il-Kor”.
-"
-
-  ())
-
-;;----------------------------------------------;;
-
-(cl-defun mtg-propertize-rules-text (text)
-
-  "`propertize' TEXT as Rules Text.
-
-Inputs:
-
-• TEXT — a `stringp'.
-
-Output:
-
-• a `stringp'.
-  TEXT, with different Text Properties."
-
-  ())
-
-;;----------------------------------------------;;
-
-(cl-defun mtg-propertize-flavor-text (text)
-
-  "`propertize' TEXT as Flavor Text.
-
-Inputs:
-
-• TEXT — a `stringp'.
-
-Output:
-
-• a `stringp'.
-  TEXT, with different Text Properties."
-
-  ())
-
-;;----------------------------------------------;;
 ;;; Integration: ‘seq.el’ ----------------------;;
 ;;----------------------------------------------;;
 
@@ -2616,6 +2655,201 @@ Output:
 
 
 
+
+
+
+
+
+
+;;----------------------------------------------;;
+;;; Propertization -----------------------------;;
+;;----------------------------------------------;;
+
+(cl-defun mtg-propertize-card-name (native-text &optional english-text)
+
+  "`propertize' NATIVE-TEXT as a Card Name.
+
+Inputs:
+
+• NATIVE-TEXT — a `stringp'.
+
+Inputs (Options):
+
+• ENGLISH-TEXT — an optional `stringp'.
+
+Output:
+
+• a `stringp'.
+• The input(s), with different Text Properties.
+
+Properties:
+
+• See ‘mtg-propertize-english-card-name’"
+
+  (let ((NATIVE-TEXT  (propertize native-text 'face 'mtg-card-name))
+        (ENGLISH-TEXT (when english-text
+                        (propertize english-text 'face 'mtg-card-name)))
+        )
+
+    (if english-text
+        (concat NATIVE-TEXT "(" ENGLISH-TEXT ")")
+      NATIVE-TEXT)))
+
+;;----------------------------------------------;;
+
+(cl-defun mtg-propertize-english-card-name (text)
+
+  "‘propertize’ TEXT as an English-language Card Name.
+
+Inputs:
+
+• TEXT — a `stringp'.
+
+Output:
+
+• a `stringp'.
+• Modifies TEXT's Text Properties.
+
+Properties:
+
+• Font — Display with the Beleren font (if available).
+
+• Italics — Italicize some prefixes.
+e.g. the “il” in “il-Kor”
+(URL ‘https://scryfall.com/card/tsp/66/looter-il-kor’)."
+
+  (let ((FACE   'mtg-card-name)
+        (REGEXP (mtg--english-card-name-styled-regexp)))
+
+    (save-match-data
+
+      (let* ((PROPERTIZED-TEXT (propertize text 'face FACE))
+
+             (ITALICIZED-TEXT  (mtg--with-buffer-or-string PROPERTIZED-TEXT
+
+                                 (while (re-search-forward REGEXP nil t)
+                                   (let ((BEG (match-beginning 0))
+                                         (END (match-end       0)))
+                                     (add-text-properties BEG END `(face ((:slant italic :inherit ,FACE))) nil)))))
+
+             (TEXT ITALICIZED-TEXT)
+             )
+
+        TEXT))))
+
+;; ^ e.g.
+;;
+;; M-: (mtg-propertize-english-card-name "Merfolk Looter")
+;;   ↪ #("Merfolk Looter" 0 14 (face mtg-card-name))
+;;
+;; M-: (mtg-propertize-english-card-name "Looter il-Kor")
+;;   ↪ #("Looter il-Kor" 0 7 (face mtg-card-name) 7 9 (face ((:slant italic :inherit mtg-card-name))) 9 13 (face mtg-card-name))
+;;
+;;
+
+;;----------------------------------------------;;
+
+(cl-defun mtg-propertize-rules-text (text)
+
+  "`propertize' TEXT as Rules Text.
+
+Inputs:
+
+• TEXT — a `stringp'.
+
+Output:
+
+• a `stringp'.
+  TEXT, with different Text Properties."
+
+  ())
+
+;;----------------------------------------------;;
+
+(cl-defun mtg-propertize-flavor-text (text)
+
+  "`propertize' TEXT as Flavor Text.
+
+Inputs:
+
+• TEXT — a `stringp'.
+
+Output:
+
+• a `stringp'.
+  TEXT, with different Text Properties."
+
+  ())
+
+;;----------------------------------------------;;
+;;; Pretty-Printing ----------------------------;;
+;;----------------------------------------------;;
+
+(defun mtg-summarize (name)
+
+  "Return a one-line summary of NAME.
+
+Inputs:
+
+• NAME — a ‘stringp’ or ‘symbolp’.
+  A card name and/or edition name.
+
+Output:
+
+• a ‘stringp’."
+
+  ;;TODO  (pcase-let* 
+
+  (let ((CARD (mtg-get-card-by-name name)))
+    (if CARD (mtg-summarize-card CARD)
+
+      (let ((EDITION (mtg-get-edition-by-name name)))
+        (if EDITION (mtg-summarize-edition EDITION)
+
+          ())))))
+
+;;----------------------------------------------;;
+
+(defun mtg-summarize-card (card)
+
+  "Return a one-line summary of CARD.
+
+Inputs:
+
+• CARD — an ‘mtg-card-p’.
+
+Output:
+
+• a ‘stringp’."
+
+  (with-mtg-card card
+
+    (concat (propertize ()
+                        'face 'italic
+                       'mouse-face 'bold-italic)
+           " "
+           (propertize "bar" 'face 'italic
+                       'mouse-face 'bold-italic))
+    ))
+
+;;----------------------------------------------;;
+
+(defun mtg-summarize-edition (edition)
+
+  "Return a one-line summary of EDITION.
+
+Inputs:
+
+• EDITION — an ‘mtg-edition-p’.
+
+Output:
+
+• a ‘stringp’."
+
+  (with-mtg-edition edition
+
+    ()))
+
 ;;----------------------------------------------;;
 ;;; ElDoc --------------------------------------;;
 ;;----------------------------------------------;;
@@ -2645,22 +2879,6 @@ Inflect and fontify STRING for `eldoc-mode'.
   (let* ((STRING (upcase string))
          )
     (propertize STRING 'face 'font-lock-variable-name-face)))
-
-;;----------------------------------------------;;
-
-(defun mtg-summarize (name)
-
-  "Return a oneline summary of NAME.
-
-Inputs:
-
-• NAME — a `stringp'.
-  A card name and/or edition name."
-
-  (when-let* ((CARD (or (mtg-get-card-by-name name) (mtg-get-edition-by-name name)))
-
-
-    ())))
 
 ;;----------------------------------------------;;
 ;;; Indentation --------------------------------;;
@@ -3348,6 +3566,60 @@ Effects:
     ()))
 
 ;;----------------------------------------------;;
+;;; Utilities ----------------------------------;;
+;;----------------------------------------------;;
+
+(defun mtg--regexp-opt (strings &optional parens)
+
+  "Return a regular expression matching anything in STRINGS.
+
+Inputs:
+
+• STRINGS — a ‘stringp’ ‘listp’.
+What to match.
+
+• PARENS  — an optional ‘sybmolp’.
+How to match the boundaries (before/after).
+
+Output:
+
+• a ‘stringp’ (a regexp).
+
+Examples:
+
+• M-: (mtg--regexp-opt '(\"abc\" \"123\") 'symbols)
+      \"\\_<\\(123\\|abc\\)\\_>\"
+
+Notes:
+
+• Boundaries are respected.
+  i.e. the output doesn't match substrings
+  within a word or symbol, only the entire string.
+
+Related:
+
+• Calls `regexp-opt'"
+
+  (let* ((STRINGS (identity strings))
+         (PARENS  (or parens 'symbols))
+         )
+    (regexp-opt STRINGS PARENS)))
+
+;; ^ e.g.:
+;;
+;; • M-: (mtg--regexp-opt '("def" "123") 'symbols)
+;;     → "\\_<\\(123\\|def\\)\\_>"
+;;
+;; • M-: (if (string-match-p (mtg--regexp-opt '("def" "123")) "def") t nil)
+;;     → t
+;; • M-: (if (string-match-p (mtg--regexp-opt '("def" "123")) "abcdef") t nil)
+;;     → nil
+;; • M-: (if (string-match-p (mtg--regexp-opt '("def" "123")) "defghi") t nil)
+;;     → nil
+;;
+;;
+
+;;----------------------------------------------;;
 ;;; Effects ------------------------------------;;
 ;;----------------------------------------------;;
 
@@ -3368,6 +3640,29 @@ Effects:
 ;;
 ;; > Expression prefixes: ‘'’
 ;; > Characters used for syntactic operators that are considered as part of an expression if they appear next to one. In Lisp modes, these characters include the apostrophe, ‘'’ (used for quoting), the comma, ‘,’ (used in macros), and ‘#’ (used in the read syntax for certain data types).
+;;
+
+;; ‘add-text-properties’…
+;;
+;; (settext-properties BEG END PROPS &optional OBJECT)
+;;
+;; >If the optional fourth argument OBJECT is a buffer (or nil, which means the current buffer), START and END are buffer positions (integers or markers). If OBJECT is a string, START and END are 0-based indices into it. If PROPERTIES is nil, the effect is to remove all properties from the designated part of OBJECT.
+;;
+;;
+
+;; ‘add-text-properties’…
+;;
+;; (add-text-properties BEG END PROPS &optional OBJECT)
+;;
+
+;; URL ‘https://www.gnu.org/software/emacs/manual/html_node/elisp/Changing-Properties.html’
+
+;; ‘format-replace-strings’…
+;;
+;; M-: (format-replace-strings `(("--" . "—") ("*" . "•")) "Choose one —\n• Draw a card" :reverse)
+;;
+;;   ↪"Choose one --
+;; * Draw a card"
 ;;
 
 ;;----------------------------------------------;;
