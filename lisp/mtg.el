@@ -272,6 +272,10 @@ Related:
   "Default ‘mtg-english-card-name-styled-words’.")
 
 ;;----------------------------------------------;;
+
+
+
+;;----------------------------------------------;;
 ;;; Macros -------------------------------------;;
 ;;----------------------------------------------;;
 
@@ -616,7 +620,7 @@ Related:
   (artist        nil))
 
 ;; M-: (mtg--create :abbr ' :name "")
-;;  ⇒ #s(mtg- )
+;;   ↪ #s(mtg- )
 
 ;;----------------------------------------------;;
 
@@ -662,63 +666,87 @@ Related:
 
 ;;==============================================;;
 
-(cl-defstruct (mtg-translations
-               (:constructor mtg--create)
+(cl-defstruct (mtg-language
+               (:constructor mtg-language--create)
                (:copier      nil))
 
-  abbr (name ""))
+  name
+  abbr
+  ;;
+  endonym
+  (flag nil))
 
-;; M-: (mtg--create :abbr ' :name "")
-;;  ⇒ #s(mtg- )
+;; M-: (mtg-language--create :name 'spanish :abbr 'es :endonym "Español")
+;;   ↪ #s(mtg-language spanish es "Español" nil)
+
+(defalias 'make-mtg-language #'mtg-language--create)
 
 ;;==============================================;;
 
-(cl-defstruct (mtg-language
-               (:constructor mtg-language-create)
+(cl-defstruct (mtg-rarity
+               (:constructor mtg-rarity--create)
                (:copier      nil))
 
-  name abbr endonym (flag nil))
+  name
+  abbr
+  ;;
+  (char  nil)
+  (image nil)
+  )
 
-;; M-: (mtg-language-create :name 'spanish :abbr 'es :endonym "Español")
-;;  ⇒ #s(mtg-language spanish es "Español" nil)
+;; M-: (mtg-rarity--create :name 'rare :abbr 'r)
+;;   ↪ #s(mtg-rarity rare r nil)
+
+(defalias 'make-mtg-rarity #'mtg-rarity--create)
 
 ;;==============================================;;
 
 (cl-defstruct (mtg-edition
-               (:constructor mtg-edition-create)
+               (:constructor mtg-edition--create)
                (:copier      nil))
 
-  abbr name (type 'expansion) (image nil))
+  abbr
+  name
+  ;;
+  (type 'expansion)
+  ;;
+  (char  nil)
+  (image nil)
+  )
 
-;; M-: (mtg-edition-create :abbr 'abu :name "Alpha Beta Unlimited")
-;;  ⇒ #s(mtg-edition abu "Alpha Beta Unlimited" nil)
+;; M-: (mtg-edition--create :abbr 'abu :name "Alpha Beta Unlimited")
+;;   ↪ #s(mtg-edition abu "Alpha Beta Unlimited" nil)
 
 ;;==============================================;;
 
 (cl-defstruct (mtg-block
-               (:constructor mtg-block-create)
+               (:constructor mtg-block--create)
                (:copier      nil))
 
-  abbr (name "") (editions '()))
+  abbr
+  (name "")
+  ;;
+  (editions '())
+  )
 
-;; M-: (mtg-block-create :abbr 'ia :name "Ice Age Block" :editions '())
-;;  ⇒ #s(mtg-block ia "Ice Age Block" ())
+;; M-: (mtg-block--create :abbr 'ia :name "Ice Age Block" :editions '())
+;;   ↪ #s(mtg-block ia "Ice Age Block" ())
 
 ;;==============================================;;
 
 (cl-defstruct (mtg-card-ruling 
-               (:constructor mtg-card-ruling-create)
+               (:constructor mtg-card-ruling--create)
                (:copier      nil))
 
   text (date nil))
 
 ;; M-: (mtg--create :abbr ' :name "")
-;;  ⇒ #s(mtg- )
+;;   ↪ #s(mtg- )
 
 ;;==============================================;;
 
 (cl-defstruct (mtg-card-legality
-               (:constructor mtg-card-legality-create)
+               (:constructor mtg-card-legality--create)
                (:copier      nil))
 
   "
@@ -738,40 +766,93 @@ standard, modern, legacy, vintage, commander, future (future Standard), pauper, 
    (legalities nil))
 
 ;; M-: (mtg--create :abbr ' :name "")
-;;  ⇒ #s(mtg- )
+;;   ↪ #s(mtg- )
 
 ;;==============================================;;
 
 (cl-defstruct (mtg-symbol
-               (:constructor mtg-symbol-create)
+               (:constructor mtg-symbol--create)
                (:copier      nil))
 
-  name abbr (image nil) (char nil))
+  name
+  abbr
+  ;;
+  (char  nil)
+  (image nil)
+  )
 
-;; M-: (mtg-symbol-create :name 'tap :abbr 'T :image 'mtg-tap-symbol-svg-image :char 'mtg-tap-symbol-char)
-;;  ⇒ #s(mtg-symbol tap T mtg-tap-symbol-svg-image mtg-tap-symbol-char)
+;; M-: (mtg-symbol--create :name 'tap :abbr 'T :image 'mtg-tap-symbol-svg-image :char 'mtg-tap-symbol-char)
+;;   ↪ #s(mtg-symbol tap T mtg-tap-symbol-svg-image mtg-tap-symbol-char)
+
+(defalias 'make-mtg-symbol #'mtg-symbol--create)
 
 ;;==============================================;;
 
-(cl-defstruct (mtg-rarity
-               (:constructor mtg-rarity-create)
+(cl-defstruct (mtg-mana-symbol (:include     mtg-symbol)
+                               (:constructor mtg-mana-symbol--create)
+                               (:copier      nil))
+
+  (cmc 0)
+  (colors ())
+  )
+
+;; M-: (mtg-mana-symbol--create :name 'monohybrid-black-mana :cmc 2 :abbr '2/B)
+;;   ↪ #s(mtg-mana-symbol monohybrid-black-mana 2/B nil nil 2 nil)
+
+(defalias 'make-mtg-mana-symbol #'mtg-mana-symbol--create)
+
+;;==============================================;;
+
+(cl-defstruct (mtg-mana-cost
+               (:constructor mtg-mana-cost--create)
                (:copier      nil))
 
-  name abbr color)
+  (name nil)
+  ;;
+  (mana ())
+  )
 
-;; M-: (mtg-rarity-create :name 'rare :abbr 'r)
-;;  ⇒ #s(mtg-rarity rare r nil)
+;; M-: (mtg-mana-cost--create :mana '(3 B B))
+;;   ↪ #s(mtg-mana-cost nil (3 B B))
+
+(defalias 'make-mtg-mana-cost #'mtg-mana-cost--create)
+
+;;==============================================;;
+
+(cl-defstruct (mtg-cost (:include     mtg-mana-cost)
+                        (:constructor mtg-cost--create)
+                        (:copier      nil))
+
+  (symbols ())
+  (actions ())
+  )
+
+;; M-: (mtg-cost--create :mana '(1) :symbols '(T) :actions '("Pay 1 life"))
+;;   ↪ #s(mtg-cost nil (1) (T) ("Pay 1 life"))
+
+(defalias 'make-mtg-cost #'mtg-cost--create)
+
+;; e.g. ‘llanowar-mentor’'s activation cost:
+;;
+;; "{G}, {T}, Discard a card: …"
+;;
+;; M-: (make-mtg-cost :mana '(g) :symbols '(T) :actions '("Discard a card"))
+;;   ↪ #s(mtg-cost nil (g) (T) ("Discard a card"))
+;;
+;; 
 
 ;;----------------------------------------------;;
 ;;; Types --------------------------------------;;
 ;;----------------------------------------------;;
 
-(deftype mtg-mana-symbol ()
-  `(or symbol (integer 0 *)))
+(deftype mtg-mana-like ()
+  `(or (integer 0 *)
+       mtg-mana-symbol
+       symbol))
 
 ;;----------------------------------------------;;
 
-(deftype mtg-mana-cost ()
+(deftype mtg-cost-like ()
   `(or symbol list string))             ;TODO
 
 ;;----------------------------------------------;;
@@ -1239,107 +1320,66 @@ an association `listp':
 
 ;;==============================================;;
 
-(defcustom mtg-mana-symbols
+(defcustom mtg-mana-symbol-alist
 
-  '(
-   )
+  `((white-mana             . ,(make-mtg-mana-symbol :name 'white-mana             :cmc 1 :abbr 'W   :char ?🌞))
+    (blue-mana              . ,(make-mtg-mana-symbol :name 'blue-mana              :cmc 1 :abbr 'U   :char ?🌢))
+    (black-mana             . ,(make-mtg-mana-symbol :name 'black-mana             :cmc 1 :abbr 'B   :char ?💀))
+    (red-mana               . ,(make-mtg-mana-symbol :name 'red-mana               :cmc 1 :abbr 'R   :char ?⛰))
+    (green-mana             . ,(make-mtg-mana-symbol :name 'green-mana             :cmc 1 :abbr 'G   :char ?🌲))
 
-  "MTG Symbols.
+    (colorless-mana         . ,(make-mtg-mana-symbol :name 'colorless-mana         :cmc 1 :abbr 'C   :char ?◇))
 
-`listp' of `symbolp's."
+    (variable-X-mana        . ,(make-mtg-mana-symbol :name 'variable-X-mana        :cmc 0 :abbr 'X   :char ?Ⓧ))
+    (variable-Y-mana        . ,(make-mtg-mana-symbol :name 'variable-Y-mana        :cmc 0 :abbr 'Y   :char ?Ⓨ))
+    (variable-Z-mana        . ,(make-mtg-mana-symbol :name 'variable-Z-mana        :cmc 0 :abbr 'Z   :char ?Ⓩ))
 
-  :type '(repeat (symbol :tag "MTG Symbol"))
+    (phyrexian-white-mana   . ,(make-mtg-mana-symbol :name 'phyrexian-white-mana   :cmc 1 :abbr 'P/W :char ?ϕ))
+    (phyrexian-blue-mana    . ,(make-mtg-mana-symbol :name 'phyrexian-blue-mana    :cmc 1 :abbr 'P/U :char ?ϕ))
+    (phyrexian-black-mana   . ,(make-mtg-mana-symbol :name 'phyrexian-black-mana   :cmc 1 :abbr 'P/B :char ?ϕ))
+    (phyrexian-red-mana     . ,(make-mtg-mana-symbol :name 'phyrexian-red-mana     :cmc 1 :abbr 'P/R :char ?ϕ))
+    (phyrexian-green-mana   . ,(make-mtg-mana-symbol :name 'phyrexian-green-mana   :cmc 1 :abbr 'P/G :char ?ϕ))
 
-  :safe #'listp
-  :group 'mtg)
+    (monohybrid-white-mana  . ,(make-mtg-mana-symbol :name 'monohybrid-white-mana  :cmc 2 :abbr '2/W :char ?🌞))
+    (monohybrid-blue-mana   . ,(make-mtg-mana-symbol :name 'monohybrid-blue-mana   :cmc 2 :abbr '2/U :char ?🌢))
+    (monohybrid-black-mana  . ,(make-mtg-mana-symbol :name 'monohybrid-black-mana  :cmc 2 :abbr '2/B :char ?💀))
+    (monohybrid-red-mana    . ,(make-mtg-mana-symbol :name 'monohybrid-red-mana    :cmc 2 :abbr '2/R :char ?⛰))
+    (monohybrid-green-mana  . ,(make-mtg-mana-symbol :name 'monohybrid-green-mana  :cmc 2 :abbr '2/G :char ?🌲))
 
-;;----------------------------------------------;;
+    (generic-snow-mana      . ,(make-mtg-mana-symbol :name 'snow-mana              :cmc 1 :abbr 'S   :char ?❄))
 
-(defcustom mtg-mana-symbol-conversions
+    (zero-generic-mana      . ,(make-mtg-mana-symbol :name 'zero-generic-mana      :cmc 0 :abbr '0   :char ?⓪))
+    (one-generic-mana       . ,(make-mtg-mana-symbol :name 'one-generic-mana       :cmc 1 :abbr '1   :char ?⓵))
+    (two-generic-mana       . ,(make-mtg-mana-symbol :name 'two-generic-mana       :cmc 2 :abbr '2   :char ?⓶))
+    (three-generic-mana     . ,(make-mtg-mana-symbol :name 'three-generic-mana     :cmc 3 :abbr '3   :char ?⓷))
+    (four-generic-mana      . ,(make-mtg-mana-symbol :name 'four-generic-mana      :cmc 4 :abbr '4   :char ?⓸))
+    (five-generic-mana      . ,(make-mtg-mana-symbol :name 'five-generic-mana      :cmc 5 :abbr '5   :char ?⓹))
+    (six-generic-mana       . ,(make-mtg-mana-symbol :name 'six-generic-mana       :cmc 6 :abbr '6   :char ?⓺))
+    (seven-generic-mana     . ,(make-mtg-mana-symbol :name 'seven-generic-mana     :cmc 7 :abbr '7   :char ?⓻))
+    (eight-generic-mana     . ,(make-mtg-mana-symbol :name 'eight-generic-mana     :cmc 8 :abbr '8   :char ?⓼))
+    (nine-generic-mana      . ,(make-mtg-mana-symbol :name 'nine-generic-mana      :cmc 9 :abbr '9   :char ?⓽))
+    )
 
-  '((X . 0)
-    (Y . 0)
-    (Z . 0)
+  "MTG Mana Symbols.
 
-    (2/W . 2)
-    (2/U . 2)
-    (2/B . 2)
-    (2/R . 2)
-    (2/G . 2))
+an assoc-‘listp’ from ‘symbolp’s to ‘mtg-mana-symbol-p’s."
 
-  "Convert MTG Symbols for CMC.
-
-an association-‘listp’, from ‘symbolp’s to ‘natnump’s."
-
-  :type '(alist :key-type   (symbol  :tag "MTG Symbol")
-                :value-type (integer :tag "CMC"))
+  :type '(alist :key-type   (symbol          :tag "Symbol")
+                :value-type (mtg-mana-symbol :tag "Symbol Info"))
 
   :safe #'listp
   :group 'mtg)
 
 ;;==============================================;;
 
-(defcustom mtg-symbols
-
-  (append mtg-mana-symbols
-          '())
-
-  "MTG Symbols.
-
-`listp' of `symbolp's."
-
-  :type '(repeat (symbol :tag "MTG Symbol"))
-
-  :safe #'listp
-  :group 'mtg)
-
-;;----------------------------------------------;;
-
 (defcustom mtg-symbol-alist
 
   `((tap                    . ,(make-mtg-symbol :name 'tap                    :abbr 'T   :char ?Ⓣ))
     (untap                  . ,(make-mtg-symbol :name 'untap                  :abbr 'Q   :char ?🅤))
     (energy                 . ,(make-mtg-symbol :name 'energy-mana            :abbr 'E   :char ?⚡))
-
-    ;; Mana...
-
-    (white-mana             . ,(make-mtg-symbol :name 'white-mana             :abbr 'W   :char ?🌞))
-    (blue-mana              . ,(make-mtg-symbol :name 'blue-mana              :abbr 'U   :char ?🌢))
-    (black-mana             . ,(make-mtg-symbol :name 'black-mana             :abbr 'B   :char ?💀))
-    (red-mana               . ,(make-mtg-symbol :name 'red-mana               :abbr 'R   :char ?⛰))
-    (green-mana             . ,(make-mtg-symbol :name 'green-mana             :abbr 'G   :char ?🌲))
-
-    (colorless-mana         . ,(make-mtg-symbol :name 'colorless-mana         :abbr 'C   :char ?◇))
-    (generic-snow-mana      . ,(make-mtg-symbol :name 'snow-mana              :abbr 'S   :char ?❄))
-    (variable-X-mana        . ,(make-mtg-symbol :name 'variable-X-mana        :abbr 'X   :char ?X :cmc 0))
-    (variable-Y-mana        . ,(make-mtg-symbol :name 'variable-Y-mana        :abbr 'Y   :char ?Y :cmc 0))
-    (variable-Z-mana        . ,(make-mtg-symbol :name 'variable-Z-mana        :abbr 'Z   :char ?Z :cmc 0))
-
-    (phyrexian-white-mana   . ,(make-mtg-symbol :name 'phyrexian-white-mana   :abbr 'P/W :char ?ϕ))
-    (phyrexian-blue-mana    . ,(make-mtg-symbol :name 'phyrexian-blue-mana    :abbr 'P/U :char ?ϕ))
-    (phyrexian-black-mana   . ,(make-mtg-symbol :name 'phyrexian-black-mana   :abbr 'P/B :char ?ϕ))
-    (phyrexian-red-mana     . ,(make-mtg-symbol :name 'phyrexian-red-mana     :abbr 'P/R :char ?ϕ))
-    (phyrexian-green-mana   . ,(make-mtg-symbol :name 'phyrexian-green-mana   :abbr 'P/G :char ?ϕ))
-
-    (monohybrid-white-mana  . ,(make-mtg-symbol :name 'monohybrid-white-mana  :abbr '2/W :char ?🌞 :cmc 2))
-    (monohybrid-blue-mana   . ,(make-mtg-symbol :name 'monohybrid-blue-mana   :abbr '2/U :char ?🌢 :cmc 2))
-    (monohybrid-black-mana  . ,(make-mtg-symbol :name 'monohybrid-black-mana  :abbr '2/B :char ?💀 :cmc 2))
-    (monohybrid-red-mana    . ,(make-mtg-symbol :name 'monohybrid-red-mana    :abbr '2/R :char ?⛰ :cmc 2))
-    (monohybrid-green-mana  . ,(make-mtg-symbol :name 'monohybrid-green-mana  :abbr '2/G :char ?🌲 :cmc 2))
-
-    (zero-generic-mana      . ,(make-mtg-symbol :name 'zero-generic-mana      :abbr '0   :char ?⓪))
-    (one-generic-mana       . ,(make-mtg-symbol :name 'one-generic-mana       :abbr '1   :char ?⓵))
-    (two-generic-mana       . ,(make-mtg-symbol :name 'two-generic-mana       :abbr '2   :char ?⓶))
-    (three-generic-mana     . ,(make-mtg-symbol :name 'three-generic-mana     :abbr '3   :char ?⓷))
-    (four-generic-mana      . ,(make-mtg-symbol :name 'four-generic-mana      :abbr '4   :char ?⓸))
-    (five-generic-mana      . ,(make-mtg-symbol :name 'five-generic-mana      :abbr '5   :char ?⓹))
-    (six-generic-mana       . ,(make-mtg-symbol :name 'six-generic-mana       :abbr '6   :char ?⓺))
-    (seven-generic-mana     . ,(make-mtg-symbol :name 'seven-generic-mana     :abbr '7   :char ?⓻))
-    (eight-generic-mana     . ,(make-mtg-symbol :name 'eight-generic-mana     :abbr '8   :char ?⓼))
-    (nine-generic-mana      . ,(make-mtg-symbol :name 'nine-generic-mana      :abbr '9   :char ?⓽))
     )
 
-  "Symbol metadata (abbreviations and endonyms).
+  "MTG (non-mana) Symbols.
 
 `listp' of `mtg-symbol-p's:
 
@@ -1440,17 +1480,17 @@ Languages into which cards have been translated."
 
 (defcustom mtg-language-alist
 
-  `((english    . ,(mtg-language-create :name 'english    :abbr 'en :endonym "English"   :flag "🇺🇸"))
-    (german     . ,(mtg-language-create :name 'german     :abbr 'de :endonym "Deutsch"   :flag "🇩🇪"))
-    (french     . ,(mtg-language-create :name 'french     :abbr 'fr :endonym "Français"  :flag "🇫🇷"))
-    (italian    . ,(mtg-language-create :name 'italian    :abbr 'it :endonym "Italiano"  :flag "🇮🇹"))
-    (spanish    . ,(mtg-language-create :name 'spanish    :abbr 'es :endonym "Español"   :flag "🇲🇽")) ; by population.
-    (portuguese . ,(mtg-language-create :name 'portuguese :abbr 'pt :endonym "Português" :flag "🇧🇷")) ; by population.
-    (japanese   . ,(mtg-language-create :name 'japanese   :abbr 'jp :endonym "日本語"    :flag "🇯🇵"))
-    (chinese    . ,(mtg-language-create :name 'chinese    :abbr 'cn :endonym "简体中文"  :flag "🇨🇳"))
-    (russian    . ,(mtg-language-create :name 'russian    :abbr 'ru :endonym "Русский"   :flag "🇷🇺"))
-    (taiwanese  . ,(mtg-language-create :name 'taiwanese  :abbr 'tw :endonym "繁體中文"  :flag "🇹🇼"))
-    (korean     . ,(mtg-language-create :name 'korean     :abbr 'ko :endonym "한국어"    :flag "🇰🇷")) ; by population.
+  `((english    . ,(make-mtg-language :name 'english    :abbr 'en :endonym "English"   :flag "🇺🇸"))
+    (german     . ,(make-mtg-language :name 'german     :abbr 'de :endonym "Deutsch"   :flag "🇩🇪"))
+    (french     . ,(make-mtg-language :name 'french     :abbr 'fr :endonym "Français"  :flag "🇫🇷"))
+    (italian    . ,(make-mtg-language :name 'italian    :abbr 'it :endonym "Italiano"  :flag "🇮🇹"))
+    (spanish    . ,(make-mtg-language :name 'spanish    :abbr 'es :endonym "Español"   :flag "🇲🇽")) ; by population.
+    (portuguese . ,(make-mtg-language :name 'portuguese :abbr 'pt :endonym "Português" :flag "🇧🇷")) ; by population.
+    (japanese   . ,(make-mtg-language :name 'japanese   :abbr 'jp :endonym "日本語"    :flag "🇯🇵"))
+    (chinese    . ,(make-mtg-language :name 'chinese    :abbr 'cn :endonym "简体中文"  :flag "🇨🇳"))
+    (russian    . ,(make-mtg-language :name 'russian    :abbr 'ru :endonym "Русский"   :flag "🇷🇺"))
+    (taiwanese  . ,(make-mtg-language :name 'taiwanese  :abbr 'tw :endonym "繁體中文"  :flag "🇹🇼"))
+    (korean     . ,(make-mtg-language :name 'korean     :abbr 'ko :endonym "한국어"    :flag "🇰🇷")) ; by population.
     )
 
   "Language metadata (abbreviations and endonyms).
@@ -1514,12 +1554,12 @@ Customization:
 
 (defcustom mtg-rarity-alist
 
-  `((common      . ,(mtg-rarity-create :name 'common      :abbr 'C :color "black"))
-    (uncommon    . ,(mtg-rarity-create :name 'uncommon    :abbr 'U :color "silver"))
-    (rare        . ,(mtg-rarity-create :name 'rare        :abbr 'R :color "gold"))
-    (mythic      . ,(mtg-rarity-create :name 'mythic      :abbr 'M :color "bronze"))
+  `((common      . ,(make-mtg-rarity :name 'common      :abbr 'C :color "black"))
+    (uncommon    . ,(make-mtg-rarity :name 'uncommon    :abbr 'U :color "silver"))
+    (rare        . ,(make-mtg-rarity :name 'rare        :abbr 'R :color "gold"))
+    (mythic      . ,(make-mtg-rarity :name 'mythic      :abbr 'M :color "bronze"))
     ;;
-    (timeshifted . ,(mtg-rarity-create :name 'timeshifted :abbr 'T :color "purple")))
+    (timeshifted . ,(make-mtg-rarity :name 'timeshifted :abbr 'T :color "purple")))
 
   "Rarity metadata (abbreviations and endonyms).
 
@@ -1596,7 +1636,7 @@ Customization:
     ai
     cs
     tsts
-    ts                                  ; ?⌛
+    ts                                   ; ?⌛
     pc                                  ; ?꩜
     fut                                 ; ?👁
     lw
@@ -1931,7 +1971,7 @@ i.e. match a phrase/sentence which can be abbreviated."
     (mtg--regexp-opt PHRASES 'words)))
 
 ;;----------------------------------------------;;
-;;; Functions ----------------------------------;;
+;;; Functions: ‘mtg-mana-cost’ -----------------;;
 ;;----------------------------------------------;;
 
 (defun mtg-convert-mana-cost (mana-cost)
@@ -1965,7 +2005,9 @@ Output:
 • a ‘natnump’.
   Defaults to ‘1’ for unknown MANA-SYMBOLS."
 
-  (or (get mana-symbol 'cmc) 1))
+  (or (get mana-symbol 'cmc)
+      (assoc mtg-mana-symbols)
+      1))
 
 ;;----------------------------------------------;;
 ;;; JSON ---------------------------------------;;
@@ -2727,7 +2769,7 @@ e.g. the “il” in “il-Kor”
 
              (ITALICIZED-TEXT  (mtg--with-buffer-or-string PROPERTIZED-TEXT
 
-                                 (while (re-search-forward REGEXP nil t)
+                                 (while (re-search-forward REGEXP nil :no-error)
                                    (let ((BEG (match-beginning 0))
                                          (END (match-end       0)))
                                      (add-text-properties BEG END `(face ((:slant italic :inherit ,FACE))) nil)))))
@@ -2745,7 +2787,7 @@ e.g. the “il” in “il-Kor”
 ;; M-: (mtg-propertize-english-card-name "Looter il-Kor")
 ;;   ↪ #("Looter il-Kor" 0 7 (face mtg-card-name) 7 9 (face ((:slant italic :inherit mtg-card-name))) 9 13 (face mtg-card-name))
 ;;
-;;
+;; 
 
 ;;----------------------------------------------;;
 

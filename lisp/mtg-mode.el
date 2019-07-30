@@ -1672,6 +1672,8 @@ Inputs:
   :type '(alist :key-type   (string :tag "Abbreviation")
                 :value-type (string :tag "Expansion"))
 
+  ;;TODO :modify mtg-mode--custom-set to update mtg-mode-abbrev-table
+
   :safe #'listp
   :group 'mtg)
 
@@ -2125,15 +2127,7 @@ a.k.a. “Keyword-based Syntax-Highlighting”).")
 ;;; Completion ---------------------------------;;
 ;;----------------------------------------------;;
 
-(cl-defun mtg-completion-at-point ()
 
-  "`completion-at-point' for `mtg-mode'.
-
-Behavior:
-
-• « import \" » completes with filenames of the proper extension."
-
-  ())
 
 ;;----------------------------------------------;;
 ;;; Indentation --------------------------------;;
