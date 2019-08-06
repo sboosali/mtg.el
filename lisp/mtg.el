@@ -281,6 +281,8 @@ Related:
 
 (eval-when-compile
 
+  ;;--------------------------;;
+
   (defmacro mtg--with-buffer-or-string (buffer-or-string &rest body)
 
     "Eval BODY “within” BUFFER-OR-STRING.
@@ -312,6 +314,97 @@ BODY is a form which accesses and/or modifies the ‘current-buffer’.
 
            (t        ,@body)))))
 
+  ;;--------------------------;;
+
+  (defmacro mtg--check-struct (form struct-type)
+    "Check that FORM is a STRUCT-TYPE ‘defstruct’ whose slots match STRUCT-TYPE's ‘:type’s)"
+    (declare (debug (form symbolp)))
+    `(let ((FORM ,form))
+       ( FORM ,struct-type)))
+
+  ;; ^ e.g. (mtg--check-struct (mtg-card--create :name "" :types '()) 'mtg-card)
+
+  ;;--------------------------;;
+
+  (defmacro mtg-define-check-struct (struct-type-name &optional struct-check-name struct-slots-name)
+    "Define a typechecker (named STRUCT-CHECK-NAME) for STRUCT-TYPE-NAME.
+
+== Usage ===
+
+M-: (defstruct (point-2d) (x 0 :type number) (y 0 :type number))
+
+M-: (pp-macroexpand-expression (quote (mtg-define-check-struct point-2d)))
+↪ (progn
+↪
+↪   (defconst point-2d-slots (cdr (cl-struct-slot-info 'point-2d))
+↪     \"\")
+↪
+↪   (defun check-point-2d (object)
+↪     \"Typecheck OBJECT and its slots as a `point-2d-p'.\"
+↪     (and (point-2d-p object)
+↪          (let ((SLOT-ERRORS
+↪                  (cl-loop for SLOT-PROPS in point-2d-slots
+↪                           for SLOT-NAME = (car SLOT-PROPS)
+↪                           for SLOT-TYPE = (plist-get SLOT-PROPS :type)
+↪                           for VALUE = (cl-struct-slot-value 'point-2d SLOT-NAME object)
+↪                           unless (cl-typep VALUE SLOT-TYPE)
+↪                           collect SLOT-NAME)))
+↪            (if (not SLOT-ERRORS)
+↪                t
+↪                SLOT-ERRORS))))
+↪
+↪   '(check-point-2d point-2d-slots))
+
+M-: (check-point-2d (make-point-2d))
+↪   t
+M-: (check-point-2d (make-point-2d :x 1 :y 'two))
+↪   '(y)
+M-: (check-point-2d (make-point-2d :x 'one :y 'two))
+↪   '(x y)
+M-: (check-point-2d '(:x 1 :y 2))
+↪   nil
+
+(pp-macroexpand-expression (quote (mtg-define-check-struct point-2d typecheck-point-2d point-2d-slot-info)))
+
+"
+
+    (let* ((*STRUCT*       struct-type-name)
+
+           (*STRUCT-p*     (intern (format "%s-p" (symbol-name *STRUCT*))))
+
+           (*STRUCT-slots* (or struct-slots-name
+                               (intern (format "%s-slots" (symbol-name *STRUCT*)))))
+
+           (*check-STRUCT* (or struct-check-name
+                               (intern (format "check-%s" (symbol-name *STRUCT*)))))
+           )
+
+      `(progn
+
+         ;;
+
+         (defconst ,*STRUCT-slots* (cdr (cl-struct-slot-info (quote ,*STRUCT*)))
+           "")
+
+         ;;
+
+         (defun ,*check-STRUCT* (object)
+           ""
+           (and (,*STRUCT-p* object)  ; (cl-typep object (quote ,*STRUCT-p*))
+                (let ((SLOT-ERRORS (cl-loop for SLOT-PROPS in ,*STRUCT-slots*
+                                      for SLOT-NAME = (car SLOT-PROPS)
+                                      for SLOT-TYPE = (plist-get SLOT-PROPS :type)
+                                      for VALUE = (cl-struct-slot-value (quote ,*STRUCT*) SLOT-NAME object)
+                                      unless (cl-typep VALUE SLOT-TYPE)
+                                      collect SLOT-NAME)))
+                  (if (not SLOT-ERRORS)
+                      t
+                    SLOT-ERRORS))))
+
+         '(,*check-STRUCT* ,*STRUCT-slots*))))
+
+  ;;--------------------------;;
+
   ())
 
 ;; ^ e.g...
@@ -320,11 +413,31 @@ BODY is a form which accesses and/or modifies the ‘current-buffer’.
 ;;   ↪ "ABC xyz"
 ;;
 
+;; ^ e.g...
+;;
+;; M-: (mtg-define-check-struct 'point-3d)
+;; M-: (check-point-3d (make-point-3d))
+;;
+
 ;;----------------------------------------------;;
-;;; Types --------------------------------------;;
+;;; Types: ‘cl-deftype’s -----------------------;;
 ;;----------------------------------------------;;
 
-(cl-defstruct (mtg-card (:constructor mtg-card-create)
+(cl-deftype mtg-mana-like ()
+  `(or (integer 0 *)
+       mtg-mana-symbol
+       symbol))
+
+;;----------------------------------------------;;
+
+(cl-deftype mtg-cost-like ()
+  `(or symbol list string))             ;TODO
+
+;;----------------------------------------------;;
+;;; Types: ‘cl-defstruct’s ---------------------;;
+;;----------------------------------------------;;
+
+(cl-defstruct (mtg-card (:constructor mtg-card--create)
                         (:copier      nil))
 
   "`mtg-card' represents a (unique) “Magic: The Gathering” card.
@@ -405,7 +518,7 @@ Related:
   (scryfall      nil)
   (uuid          nil))
 
-;; M-: (mtg-card-create :name "" :cost "" :types "" :supertypes "" :subtypes "" :colors "" :rules "" :power "" :toughness "" :loyalty "" :cmc 1 :coloridentity "" :image "" :flavor "" :frame "" :layout "" :rarity "" :typeline "" :language "" :artist "" :rulings "" :legality "" :scryfall "")
+;; M-: (mtg-card--create :name "" :cost "" :types "" :supertypes "" :subtypes "" :colors "" :rules "" :power "" :toughness "" :loyalty "" :cmc 1 :coloridentity "" :image "" :flavor "" :frame "" :layout "" :rarity "" :typeline "" :language "" :artist "" :rulings "" :legality "" :scryfall "")
 ;;  ⇒
 
 ;;TODO color cmc supertypes subtypes layout watermark collector language
@@ -492,7 +605,7 @@ Output:
 Example:
 
 • M-: (make-mtg-card)
-    ⇒ (mtg-card-create)
+    ⇒ (mtg-card--create)
     ⇒ #s(mtg-card nil nil nil nil nil nil nil nil nil nil 0 ...)
 
 Links:
@@ -501,7 +614,7 @@ Links:
 
 Related:
 
-• wraps `mtg-card-create'
+• wraps `mtg-card--create'
 • calls `make-mtg-printing'"
 
   (let* ((NAME          (cl-typecase name
@@ -545,32 +658,34 @@ Related:
                                         :language      LANGUAGE
                                         :artist        ARTIST))
 
-         (CARD     (mtg-card-create :name          NAME
-                                    :cost          COST
-                                    :types         TYPES
-                                    :subtypes      SUBTYPES
-                                    :supertypes    SUPERTYPES
-                                    :colors        COLORS
-                                    :rules         RULES
-                                    :power         POWER
-                                    :toughness     TOUGHNESS
-                                    :loyalty       LOYALTY
-                                    :cmc           CMC
-                                    :coloridentity COLORIDENTITY
-                                    :printings     (if PRINTING (list PRINTING) nil)
+         (CARD     (mtg-card--create :name          NAME
+                                     :cost          COST
+                                     :types         TYPES
+                                     :subtypes      SUBTYPES
+                                     :supertypes    SUPERTYPES
+                                     :colors        COLORS
+                                     :rules         RULES
+                                     :power         POWER
+                                     :toughness     TOUGHNESS
+                                     :loyalty       LOYALTY
+                                     :cmc           CMC
+                                     :coloridentity COLORIDENTITY
+                                     :printings     (if PRINTING (list PRINTING) nil)
 
-                                    :date          DATE
-                                    :identifiers   IDENTIFIERS
-                                    :rulings       RULINGS
-                                    :legality      LEGALITY
-                                    :scryfall      SCRYFALL)))
+                                     :date          DATE
+                                     :identifiers   IDENTIFIERS
+                                     :rulings       RULINGS
+                                     :legality      LEGALITY
+                                     :scryfall      SCRYFALL)))
+
+    ;; (mtg--check-struct CARD 'mtg-card)
 
     CARD))
 
 ;;==============================================;;
 
 (cl-defstruct (mtg-printing
-                (:constructor mtg-printing-create)
+                (:constructor mtg-printing--create)
                 (:copier      nil))
 
   "`mtg-printing' represents a single printing of a “Magic: The Gathering” card.
@@ -670,14 +785,24 @@ Related:
                (:constructor mtg-language--create)
                (:copier      nil))
 
-  name
-  abbr
-  ;;
-  endonym
-  (flag nil))
+  (name    nil :type symbol)
+  (abbr    nil :type (or null symbol)))
+  (endonym nil :type (or null string))
+  (flag    nil :type (or null character string)))
 
-;; M-: (mtg-language--create :name 'spanish :abbr 'es :endonym "Español")
-;;   ↪ #s(mtg-language spanish es "Español" nil)
+;; M-: (make-mtg-language :name 'french :abbr 'fr :endonym "Français" :flag "🇫🇷")
+;;   ↪ #s(mtg-language french fr "Français" "🇫🇷")
+
+;; M-: (cl-struct-slot-info 'mtg-language)
+;;   ↪ '((cl-tag-slot) (name nil :type symbol) (abbr nil :type symbol) (endonym nil :type (or null string)) (flag nil :type (or null character string)))
+;;
+;; M-: (assq 'name (cl-struct-slot-info 'mtg-language))
+;;   ↪ '(name . (nil :type symbol))
+;;   ↪ '(name nil :type symbol)
+;;
+;; M-: (plist-get (assq 'name (cl-struct-slot-info 'mtg-language)) :type)
+;;   ↪ 'symbol
+;;
 
 (defalias 'make-mtg-language #'mtg-language--create)
 
@@ -840,20 +965,6 @@ standard, modern, legacy, vintage, commander, future (future Standard), pauper, 
 ;;   ↪ #s(mtg-cost nil (g) (T) ("Discard a card"))
 ;;
 ;; 
-
-;;----------------------------------------------;;
-;;; Types --------------------------------------;;
-;;----------------------------------------------;;
-
-(deftype mtg-mana-like ()
-  `(or (integer 0 *)
-       mtg-mana-symbol
-       symbol))
-
-;;----------------------------------------------;;
-
-(deftype mtg-cost-like ()
-  `(or symbol list string))             ;TODO
 
 ;;----------------------------------------------;;
 ;;; Types: “Enums” -----------------------------;;
