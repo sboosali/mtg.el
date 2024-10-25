@@ -1,3 +1,5 @@
+[WIP]
+
 # `mtg`
 
 the `mtg` package provides libraries for editing custom *MTG* cards (with syntax-highlighting, completions and abbreviations, embedded images, *Magic Set Editor* importing/exporting, etc), for searching efficiently through all *MTG* cards (with regular expressions, extensible predicates, etc), and more.
