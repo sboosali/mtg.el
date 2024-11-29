@@ -1,4 +1,4 @@
-;;; mtg.el --- Magic The Gathering search engine and custom card editor -*- coding: utf-8; lexical-binding: t -*-
+;;; mtg.el --- Magic The Gathering search engine and custom card editor -*- coding: utf-8; lexical-binding: t; -*-
 
 ;; Copyright © 2019 Spiros Boosalis
 
